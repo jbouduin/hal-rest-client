@@ -1,7 +1,10 @@
 {
   "name": "hal-rest-client",
-  "author": "Thomas Deblock <deblock.thomas.62@gmail.com>",
-  "version": "0.5.0",
+  "author": "Johan Bouduin",
+  "contributors": [
+    "Thomas Deblock <deblock.thomas.62@gmail.com>"
+  ],
+  "version": "0.6.0-beta",
   "description": "Hal rest client for typescript",
   "tags": [
     "HAL",
@@ -18,24 +21,25 @@
     "url": "http://github.com/deblockt/hal-rest-client/issues"
   },
   "dependencies": {
-    "axios": "^0.18.1",
-    "reflect-metadata": "^0.1.9",
-    "uri-templates": "^0.1.9"
+    "axios": "^0.25.0",
+    "reflect-metadata": "^0.1.13",
+    "uri-templates": "^0.2.0",
+    "version": "^0.1.2"
   },
   "main": "dist/index",
   "typings": "dist/index",
   "devDependencies": {
-    "@types/nock": "^8.2.0",
-    "@types/node": "^7.0.5",
-    "coveralls": "^2.11.16",
+    "@types/nock": "^11.1.0",
+    "@types/node": "^16.11.21",
+    "coveralls": "^3.1.1",
     "istanbul": "^0.4.5",
-    "nock": "^9.0.5",
-    "remap-istanbul": "^0.9.1",
-    "tap-spec": "^4.1.1",
-    "tape": "^4.6.3",
+    "nock": "^13.2.2",
+    "remap-istanbul": "^0.13.0",
+    "tap-spec": "^5.0.0",
+    "tape": "^5.4.1",
     "tape-async": "^2.1.1",
     "tslint": "^4.5.1",
-    "typescript": "^2.2.1"
+    "typescript": "^4.5.5"
   },
   "scripts": {
     "coverage": "istanbul cover node_modules/tape/bin/tape dist/test/*.js; remap-istanbul -i coverage/coverage.json -o html-report -t html",

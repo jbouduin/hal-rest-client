@@ -1,4 +1,8 @@
-# hal-rest-client
+# @jbouduin/hal-rest-client
+
+This is a friendly fork of the original [hal-rest-client](https://github.com/deblockt/hal-rest-client) repository.
+Reason for doing this: the original repository has been archived and is showing some severe vulnerabilities.
+I have no intention to heavily extend this library.
 
 [![Build Status](https://travis-ci.org/deblockt/hal-rest-client.svg?branch=master)](https://travis-ci.org/deblockt/hal-rest-client)
 [![Coverage Status](https://coveralls.io/repos/github/deblockt/hal-rest-client/badge.svg)](https://coveralls.io/github/deblockt/hal-rest-client)
@@ -6,8 +10,6 @@
 
 [![NPM](https://nodei.co/npm/hal-rest-client.png?downloads=true&downloadRank=true&stars=true)](https://nodei.co/npm/hal-rest-client/)
 
-
-> :warning: This project is archived. I have no time to maintain it. I someone wants to take it back, he can contact me.  
 
 hal-rest-client library to help you work with Hypertext Application Language (HAL) on Typescript. It's work fine with browser or nodejs app.
 
@@ -23,7 +25,7 @@ npm install hal-rest-client
 
 ### From 0.2
 
-Warning : `uri` property of HalResource are now `URI` type. Si if you use this property you must now use 
+Warning : `uri` property of HalResource are now `URI` type. Si if you use this property you must now use
 ```ts
 halResource.uri.fetchedURI // get the uri used to fetch resource
 halResource.uri.uri // get the uri provided from server
@@ -96,14 +98,14 @@ const name = link.prop("name");
 
 If you link is templated, you can set parameter to fetch to compute fetch URL.
 ```ts
-// link "link_name" is a templated link like this 
+// link "link_name" is a templated link like this
 // /bookings{?projection}
 const link = resource.link("link_name");
 const bookings = await link.fetch(); // fetch /bookings
 const bookingsWithName = await link.fetch({projection : "name"}); // fetch /bookings?projection=name
 ```
 ```ts
-// link "link_infos" is like this 
+// link "link_infos" is like this
 // /infos{/path*}
 const link = resource.link("link_infos");
 const infos = await link.fetch(); // fetch /infos
@@ -243,11 +245,11 @@ const ownerName = resourceOwner.name;
 
 you can fetch a templated link like this
 ``` ts
-// link "booking" is a templated link like this 
+// link "booking" is a templated link like this
 // /bookings{?projection}
 const bookings = await resource.booking.fetch(); // fetch /bookings
 const bookingsWithName = await resource.booking.fetch({projection : "name"}); // fetch /bookings?projection=name
-// link "infos" is like this 
+// link "infos" is like this
 // /infos{/path*}
 const infos = await resource.infos.fetch(); // fetch /infos
 const infosForFoo = await resource.infos.fetch({path: "foo"});
