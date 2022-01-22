@@ -1,7 +1,5 @@
 import "reflect-metadata";
 import { HalResource } from "./hal-resource";
-import { IHalResourceConstructor } from "./hal-resource-interface";
-import { HalRestClient } from "./hal-rest-client";
 
 /**
  * get the transco decorator

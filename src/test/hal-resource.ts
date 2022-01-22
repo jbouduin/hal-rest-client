@@ -1,6 +1,5 @@
-import { test } from "tape-async";
 
-import { createClient, createResource, HalResource, HalRestClient, resetCache } from "../";
+import { createClient, createResource, HalResource, resetCache } from "../";
 import { URI } from "../uri";
 
 import * as nock from "nock";
@@ -132,7 +131,7 @@ function initTests() {
 test("fetch contains list", async (t) => {
   initTests();
   const value = await createClient().fetch("http://test.fr/projects", HalResource);
-  t.equals(value.uri.fill(), "http://test.fr/projects");
+  t.equals(value.uri.fill({}), "http://test.fr/projects");
   t.equals(value.prop("projects").length, 2);
   t.equals(value.prop("projects")[0].prop("name"), "Project 1");
   t.equals(value.prop("projects")[0].uri.fill(), "http://test.fr/projects/1");
@@ -259,7 +258,7 @@ test("fetch non hal object throw exception", async (t) => {
 test("can read link without href", async (t) => {
   initTests();
   const project = await createClient("http://test.fr").fetchResource("/project/3");
-  t.equals(project.uri.fill(), "http://test.fr/projects/3");
+  t.equals(project.uri.fill({}), "http://test.fr/projects/3");
   t.equals(project.prop("subResource").uri.fill(), "http://test.fr/projects/3/subResource");
   t.equals(project.link("versions").uri.fill(), "http://test.fr/projects/3/versions");
 });

@@ -5,7 +5,6 @@ import { test } from "tape-async";
 
 import { Contacts } from "./model/contacts";
 import { Cyclical, CyclicalList } from "./model/cyclical";
-import { Location } from "./model/location";
 import { Person } from "./model/person";
 
 // mock list response

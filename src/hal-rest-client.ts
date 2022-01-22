@@ -1,9 +1,8 @@
 import Axios from "axios";
-import { AxiosInstance, AxiosInterceptorManager, AxiosRequestConfig, AxiosResponse } from "axios";
+import { AxiosInstance, AxiosRequestConfig, AxiosResponse } from "axios";
 
 import "reflect-metadata";
 
-import { createResource } from "./hal-factory";
 import { JSONParser } from "./hal-json-parser";
 import { HalResource } from "./hal-resource";
 import { IHalResource, IHalResourceConstructor} from "./hal-resource-interface";

@@ -2,7 +2,10 @@
 
 This is a friendly fork of the original [hal-rest-client](https://github.com/deblockt/hal-rest-client) repository.
 Reason for doing this: the original repository has been archived and is showing some severe vulnerabilities.
-I have no intention to heavily extend this library.
+I switched from tslint to eslint. Which caused me to make a lot of changes.
+Some vulnerabilities where in the testing framework, so I switched that one to jest.
+
+I have no intention to invest much more time in this library.
 
 [![Build Status](https://travis-ci.org/deblockt/hal-rest-client.svg?branch=master)](https://travis-ci.org/deblockt/hal-rest-client)
 [![Coverage Status](https://coveralls.io/repos/github/deblockt/hal-rest-client/badge.svg)](https://coveralls.io/github/deblockt/hal-rest-client)
@@ -21,15 +24,6 @@ Using npm :
 
 ```
 npm install hal-rest-client
-```
-
-### From 0.2
-
-Warning : `uri` property of HalResource are now `URI` type. Si if you use this property you must now use
-```ts
-halResource.uri.fetchedURI // get the uri used to fetch resource
-halResource.uri.uri // get the uri provided from server
-halResource.uri.fill({params: "test"}) // fill the templated uri with given parameters
 ```
 
 ## How to use
@@ -59,8 +53,7 @@ const resource = await client.fetchResource("http://exemple.com/api/resources/5"
 or
 const resource = await client.fetchResource("/resources/5");
 ```
-> fetchResource return a promise. you can use `then` and `catch` to get result. Otherwise you can use `await` see [this article](https://blog.mariusschulz.com/2016/12/09/typescript-2-1-async-await-for-es3-es5)
-
+> fetchResource return a promise. you can use `then` and `catch` to get result.
 you can get resource property, embedded property or link using `prop` method.
 ``` ts
 const name = resource.prop("name");

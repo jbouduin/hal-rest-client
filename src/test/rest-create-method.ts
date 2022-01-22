@@ -1,9 +1,8 @@
-import { createClient, createResource, HalProperty, HalResource, resetCache } from "../";
+import { createClient, createResource, HalResource, resetCache } from "../";
 
 import * as nock from "nock";
 import { test } from "tape-async";
 
-import { Contacts } from "./model/contacts";
 
 let testNock;
 const basePath = "http://test.fr/";

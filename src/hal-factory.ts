@@ -1,5 +1,4 @@
 import { AxiosRequestConfig } from "axios";
-import { HalResource } from "./hal-resource";
 import { IHalResource, IHalResourceConstructor} from "./hal-resource-interface";
 import { HalRestClient } from "./hal-rest-client";
 import { URI } from "./uri";

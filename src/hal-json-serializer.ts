@@ -1,6 +1,4 @@
-import { createResource } from "./hal-factory";
 import { IHalResource } from "./hal-resource-interface";
-import { HalRestClient } from "./hal-rest-client";
 
 export interface IJSONSerializer {
   /**
