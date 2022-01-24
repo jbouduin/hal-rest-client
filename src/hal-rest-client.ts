@@ -130,7 +130,6 @@ export class HalRestClient {
     type: IHalResourceConstructor<any> = HalResource,
   ): Promise<any> {
     const method = full ? "put" : "patch";
-
     return new Promise((resolve, reject) => {
       this.axios.request({data, method, url}).then((value) => {
         this.resolveUnknowTypeReturn(resolve, value, type, url);
