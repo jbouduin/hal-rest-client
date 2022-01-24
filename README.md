@@ -2,17 +2,21 @@
 
 This is a friendly fork of the original [hal-rest-client](https://github.com/deblockt/hal-rest-client) repository.
 Reason for doing this: the original repository has been archived and is showing some severe vulnerabilities.
+
+What I did:
 * updated the dependencies
 * switched from tslint to eslint and linted the sources (causing a lot of work and I still had to throw a few eslint-disable's in)
 * switched the testing framework to jest.
+* Braking change: HalProperty has a different parameter signature, compared to the original library.
 
-I have no intention to invest much more time in this library.
+What I intend to do (without the intention to invest lots of time):
+* Do some clean-up where appropriate
+* Correct bugs
 
-[![Build Status](https://travis-ci.org/deblockt/hal-rest-client.svg?branch=master)](https://travis-ci.org/deblockt/hal-rest-client)
-[![Coverage Status](https://coveralls.io/repos/github/deblockt/hal-rest-client/badge.svg)](https://coveralls.io/github/deblockt/hal-rest-client)
-[![Known Vulnerabilities](https://snyk.io/test/npm/hal-rest-client/badge.svg)](https://snyk.io/test/npm/hal-rest-client)
+[![Travis (.com)](https://img.shields.io/travis/jbouduin/hal-rest-client)](https://travis-ci.com/github/jbouduin/holiday)
+[![Coverage Status](https://coveralls.io/repos/github/jbouduin/hal-rest-client/badge.svg?branch=master)](https://coveralls.io/github/jbouduin/hal-rest-client?branch=master)
 
-[![NPM](https://nodei.co/npm/hal-rest-client.png?downloads=true&downloadRank=true&stars=true)](https://nodei.co/npm/hal-rest-client/)
+[![NPM](https://nodei.co/npm/hal-rest-client.png?downloads=true&downloadRank=true&stars=true)](https://nodei.co/npm/@jbouduin/hal-rest-client/)
 
 
 hal-rest-client library to help you work with Hypertext Application Language (HAL) on Typescript. It's work fine with browser or nodejs app.
@@ -177,13 +181,13 @@ class Resource extends HalResource {
   @HalProperty()
   public name;
 
-  // for array, you must specify class item as parameter
-  @HalProperty(Resource)
+  // for array, you must(!) specify the resource type
+  @HalProperty({ resourceType: Resource})
   public subResources: Array<Resource>;
 
-  // if name on hal-service is not equals at attribute name
-  // you can add hal-service property name as parameter
-  @HalProperty("main-owner")
+  // if name on hal-service is not the same as the  attribute name
+  // you can add the hal-service property name as parameter
+  @HalProperty({ name: "main-owner"})
   public owner: Person;
 
 }

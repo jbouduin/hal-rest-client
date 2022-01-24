@@ -1,10 +1,11 @@
 {
-  "name": "hal-rest-client",
+  "name": "@jbouduin/hal-rest-client",
   "author": "Johan Bouduin",
   "contributors": [
-    "Thomas Deblock <deblock.thomas.62@gmail.com>"
+    "Johan Bouduin",
+    "Thomas Deblock (original library)"
   ],
-  "version": "0.6.0-beta",
+  "version": "0.6.0-beta.0",
   "description": "Hal rest client for typescript",
   "tags": [
     "HAL",
@@ -15,10 +16,13 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/deblockt/hal-rest-client.git"
+    "url": "git+https://github.com/jbouduin/hal-rest-client.git"
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "bugs": {
-    "url": "http://github.com/deblockt/hal-rest-client/issues"
+    "url": "http://github.com/jbouduin/hal-rest-client/issues"
   },
   "dependencies": {
     "axios": "^0.25.0",
@@ -33,26 +37,21 @@
     "@types/jest": "^27.4.0",
     "@types/nock": "^11.1.0",
     "@types/node": "^16.11.21",
-    "@types/tape-async": "^2.3.1",
     "@types/uri-templates": "^0.1.31",
     "@typescript-eslint/eslint-plugin": "^5.10.0",
     "@typescript-eslint/parser": "^5.10.0",
     "coveralls": "^3.1.1",
     "eslint": "^8.7.0",
-    "istanbul": "^0.4.5",
     "nock": "^13.2.2",
-    "remap-istanbul": "^0.13.0",
-    "tape-async": "^2.1.1",
     "ts-jest": "^27.1.3",
     "typescript": "^4.5.5"
   },
   "scripts": {
-    "coverage": "istanbul cover node_modules/tape/bin/tape dist/test/*.js; remap-istanbul -i coverage/coverage.json -o html-report -t html",
-    "test": "jest --coverage && coveralls < coverage/lcov.info",
-    "testold": "tsc && tape dist/test/*.js | tap-spec",
-    "coveralls": "remap-istanbul -i coverage/coverage.json -t lcovonly | coveralls",
-    "compile": "tsc",
+    "test": "jest --coverage",
+    "build": "tsc",
     "lint": "eslint ./src --ext .js,.jsx,.ts,.tsx",
-    "lintold": "tslint \"src/**/*.ts\" --project tsconfig.json --type-check"
+    "preversion": "npm test",
+    "version": "npm run build",
+    "postversion": "git push && git push --tags && rm -rf build/temp"
   }
 }
