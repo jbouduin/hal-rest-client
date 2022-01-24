@@ -1,9 +1,7 @@
 import * as nock from 'nock';
-import { createClient, HalResource, resetCache } from '../';
-import { Person } from './model/person';
-// import { Person } from './model/person';
+import { createClient, HalResource, resetCache } from '..';
 
-// mock list response
+//#region setup/teardown ------------------------------------------------------
 beforeAll(() => {
   nock.cleanAll();
   resetCache();
@@ -99,9 +97,14 @@ beforeAll(() => {
     .reply(200, person1);
 });
 
+afterAll(() => nock.restore());
+afterEach(() => {
+  resetCache();
+});
+//#endregion
+
 describe('Cache', () => {
   test('Issue 30: lists are refreshed when calling fetchArray', () => {
-    const scope = nock('http://test.fr/').persist();
     return createClient()
       .fetchArray('http://test.fr/projects', HalResource)
       .then((projects: Array<HalResource>) => {

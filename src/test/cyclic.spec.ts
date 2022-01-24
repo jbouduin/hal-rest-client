@@ -1,8 +1,8 @@
 import * as nock from 'nock';
-import { createClient, HalResource, resetCache } from '../';
-import { CyclicalList } from './model/cyclical';
+import { createClient, resetCache } from '..';
+import { CyclicalList } from './models';
 
-// mock list response
+//#region setup/teardown ------------------------------------------------------
 beforeAll(() => {
   nock.cleanAll();
   resetCache();
@@ -43,6 +43,7 @@ afterAll(() => nock.restore());
 afterEach(() => {
   resetCache();
 });
+//#endregion
 
 describe('Cyclical ojbects', () => {
   test('Cyclical property have the correct class type', () => {

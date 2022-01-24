@@ -1,13 +1,9 @@
-import { createClient, createResource, HalProperty, HalResource, resetCache } from '..';
 import * as nock from 'nock';
+import { createClient, createResource, resetCache } from '..';
+import { Contacts } from './models/contacts';
+import { DashboardInfo, Location, Person } from './models';
 
-import { Contacts } from './model/contacts';
-import { Cyclical, CyclicalList } from './model/cyclical';
-import { DashboardInfo } from './model/dashboard-info';
-import { Location } from './model/location';
-import { Person } from './model/person';
-
-// mock list response
+//#region setup/teardown ------------------------------------------------------
 beforeAll(() => {
   nock.cleanAll();
   resetCache();
@@ -143,6 +139,7 @@ afterAll(() => nock.restore());
 afterEach(() => {
   resetCache();
 });
+//#endregion
 
 describe('Resource class tests', () => {
   test('can get single string prop', () => {

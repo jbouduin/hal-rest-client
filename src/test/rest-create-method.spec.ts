@@ -1,5 +1,5 @@
-import { createClient, createResource, HalResource, resetCache } from '..';
 import * as nock from 'nock';
+import { createClient, createResource, HalResource } from '..';
 
 const basePath = 'http://test.fr/';
 
@@ -20,7 +20,7 @@ describe('Test Rest create api', () => {
 
   test('can create person using HalResource', () => {
     const client = createClient();
-    let resource = createResource(client, HalResource, 'http://test.fr/persons');
+    const resource = createResource(client, HalResource, 'http://test.fr/persons');
     resource.prop('name', 'ThoMas');
     const scope = nock(basePath)
       .post('/persons', { name: 'ThoMas' })

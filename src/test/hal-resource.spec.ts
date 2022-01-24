@@ -1,10 +1,9 @@
 
-import { createClient, createResource, HalResource, resetCache } from '..';
-import { URI } from '../uri';
-
 import * as nock from 'nock';
+import { createClient, createResource, HalResource, resetCache } from '..';
+import { URI } from '..';
 
-// mock list response
+//#region setup/teardown ------------------------------------------------------
 beforeAll(() => {
   nock.cleanAll();
   resetCache();
@@ -100,6 +99,7 @@ afterAll(() => nock.restore());
 afterEach(() => {
   resetCache();
 });
+//#endregion
 
 describe('hal-resource tests', () => {
 

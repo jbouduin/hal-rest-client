@@ -1,4 +1,4 @@
-import { HalResource, HalProperty } from "../../";
+import { HalResource, HalProperty } from "../..";
 
 export class DashboardInfo extends HalResource {
   @HalProperty()

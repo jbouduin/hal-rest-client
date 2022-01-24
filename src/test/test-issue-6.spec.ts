@@ -6,7 +6,7 @@ class DashboardInfo extends HalResource {
   public name: string;
 }
 
-// mock list response
+//#region setup/teardown ------------------------------------------------------
 beforeAll(() => {
   nock.cleanAll();
   resetCache();
@@ -44,8 +44,9 @@ beforeAll(() => {
     .get('/dashboard')
     .reply(200, dashBoardInfo);
 });
+//#endregion
 
-test('can fetch specific class after fetch HalResource', () => {
+test('Issue 6: can fetch specific class after fetch HalResource', () => {
 
   const client = createClient('http://test.fr/');
   return client

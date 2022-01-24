@@ -1,6 +1,7 @@
+import * as nock from 'nock';
 import { createClient, HalResource, resetCache } from '..';
 
-import * as nock from 'nock';
+//#region setup/teardown ------------------------------------------------------
 beforeAll(() => {
   nock.cleanAll();
   resetCache();
@@ -21,6 +22,7 @@ beforeAll(() => {
     });
 
 });
+//#endregion
 
 describe('test headers', () => {
   test('loader with header on constructor', () => {

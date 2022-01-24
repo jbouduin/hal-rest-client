@@ -1,4 +1,4 @@
-import { HalProperty, HalResource } from "../../";
+import { HalProperty, HalResource } from "../..";
 
 import { Contacts } from "./contacts";
 import { Location } from "./location";
@@ -8,7 +8,7 @@ export class Person extends HalResource {
   public name;
 
   @HalProperty("my-friends", Person)
-  public myFriends: Person[];
+  public myFriends: Array<Person>;
 
   @HalProperty(Person)
   public mother: any;

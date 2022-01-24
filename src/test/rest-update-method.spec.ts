@@ -252,7 +252,7 @@ describe('Rest update calls', () => {
       .intercept('/person/1', 'PUT', { name: 'test' })
       .reply(200, { name: 'test', _links: { self: { url: 'http://test.fr/person/1' } } });
 
-    client
+    return client
       .update('http://test.fr/person/1', { name: 'test' }, true)
       .then((result: HalResource) => {
         expect(result.prop('name')).toBe<string>('test');

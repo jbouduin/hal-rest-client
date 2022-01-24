@@ -1,27 +1,8 @@
 import * as nock from 'nock';
+import { createClient, resetCache } from '..';
+import { HalNotification } from './models';
 
-import { createClient, HalProperty, HalResource, resetCache } from '..';
-
-class NotificationConfig {
-  public category: string;
-  public notificationDescription: string;
-  public subcategory: string;
-  public email: NotificationEmail;
-}
-
-class HalNotification extends HalResource {
-  @HalProperty()
-  public cellphoneSet: boolean;
-
-  @HalProperty(NotificationConfig)
-  public notificationConfigs: Array<NotificationConfig>;
-}
-
-class NotificationEmail {
-  public id: number;
-  public enabled: boolean;
-}
-
+//#region setup/teardown ------------------------------------------------------
 beforeAll(() => {
   const scope = nock('http://test.fr/').persist();
 
@@ -62,6 +43,7 @@ afterAll(() => nock.restore());
 afterEach(() => {
   resetCache();
 });
+//#endregion
 
 describe('Handling non-hal data', () => {
   test('fetch non hal object throw exception', () => {

@@ -1,7 +1,6 @@
-import { createClient, createResource, HalResource, resetCache } from '..';
-
 import * as nock from 'nock';
-import { Contacts } from './model/contacts';
+import { createClient, createResource, HalResource, resetCache } from '..';
+import { Contacts } from './models';
 
 //#region setup/teardown ------------------------------------------------------
 beforeAll(() => {

@@ -2,8 +2,9 @@
 
 This is a friendly fork of the original [hal-rest-client](https://github.com/deblockt/hal-rest-client) repository.
 Reason for doing this: the original repository has been archived and is showing some severe vulnerabilities.
-I switched from tslint to eslint. Which caused me to make a lot of changes.
-Some vulnerabilities where in the testing framework, so I switched that one to jest.
+* updated the dependencies
+* switched from tslint to eslint
+* switched the testing framework to jest.
 
 I have no intention to invest much more time in this library.
 

@@ -1,7 +1,7 @@
 import * as nock from 'nock';
 import { createClient, HalResource, resetCache } from '..';
 
-// mock list response
+//#region setup/teardown ------------------------------------------------------
 beforeAll(() => {
   nock.cleanAll();
   resetCache();
@@ -63,6 +63,7 @@ afterAll(() => nock.restore());
 afterEach(() => {
   resetCache();
 });
+//#endregion
 
 describe('Issue 10: Testing resources with no "self"', () => {
   test('can fetch resource withouth self link', () => {
@@ -88,7 +89,6 @@ describe('Issue 10: Testing resources with no "self"', () => {
   });
 
   test('can fetch entity with subresource', () => {
-    const client = createClient('http://test.fr/');
     return createClient('http://test.fr/')
       .fetchResource('/withSubResourceWithoutSelf')
       .then((resource: HalResource) => {

@@ -1,8 +1,7 @@
 import * as nock from 'nock';
 import { createClient, HalResource, resetCache } from '..';
 
-
-// mock list response
+//#region setup/teardown ------------------------------------------------------
 beforeAll(() => {
   nock.cleanAll();
   resetCache();
@@ -97,6 +96,7 @@ afterAll(() => nock.restore());
 afterEach(() => {
   resetCache();
 });
+//#endregion
 
 describe('Templated links', () => {
   test('can fetch resource with self templated link', () => {

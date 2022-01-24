@@ -1,8 +1,7 @@
 import * as nock from 'nock';
 import { createClient, HalResource, resetCache } from '..';
 
-
-// mock list response
+//#region setup/teardown ------------------------------------------------------
 beforeAll(() => {
   nock.cleanAll();
   resetCache();
@@ -72,6 +71,7 @@ afterAll(() => nock.restore());
 afterEach(() => {
   resetCache();
 });
+//#endregion
 
 describe('Issue32: Array of links of Halresources', () => {
   test('Issue32: array of links contains resources', () => {

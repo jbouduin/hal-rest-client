@@ -1,7 +1,7 @@
 import * as nock from 'nock';
 import { createClient, HalResource, resetCache } from '..';
 
-// mock list response
+//#region setup/teardown ------------------------------------------------------
 beforeAll(() => {
   nock.cleanAll();
   resetCache();
@@ -43,6 +43,7 @@ afterAll(() => nock.restore());
 afterEach(() => {
   resetCache();
 });
+//#endregion
 
 describe('Additional properties of a link', () => {
   test('Issue 17: get property of a non-fetched link', () => {
