@@ -70,7 +70,6 @@ describe('Issue 10: Testing resources with no "self"', () => {
     return createClient('http://test.fr/')
       .fetchResource('/testResource')
       .then((resource: HalResource) => {
-
         expect(resource.uri).toBeUndefined();
         expect(resource.prop('name')).toBe<string>('test');
       });

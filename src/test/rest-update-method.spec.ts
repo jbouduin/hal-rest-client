@@ -191,11 +191,9 @@ describe('Rest update calls', () => {
       .then((result: [HalResource, HalResource]) => {
         result[0].prop('name', 'test');
         result[0].prop('project', result[1]);
-        console.log(['2a', ...nock.activeMocks()]);
         const scope = nock(basePath)
           .intercept('/person/1', 'PATCH', { name: 'serializer.test', project: 'serializer2.http://test.fr/project/5' })
           .reply(200);
-        console.log(['2b', ...nock.activeMocks()]);
         return result[0]
           .update({
             parseProp: (value: string) => 'serializer.' + value,

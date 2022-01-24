@@ -1,30 +1,30 @@
-import { HalProperty, HalResource } from "../..";
+import { HalProperty, HalResource } from '../..';
 
-import { Contacts } from "./contacts";
-import { Location } from "./location";
+import { Contacts } from './contacts';
+import { Location } from './location';
 
 export class Person extends HalResource {
   @HalProperty()
   public name;
 
-  @HalProperty("my-friends", Person)
+  @HalProperty({ name: 'my-friends', resourceType: Person })
   public myFriends: Array<Person>;
 
-  @HalProperty(Person)
   public mother: any;
+  @HalProperty({ resourceType: Person })
 
-  @HalProperty(Person)
+  @HalProperty({ resourceType: Person })
   public father: any;
 
   @HalProperty()
   public contacts: Contacts;
 
-  @HalProperty("best-friend")
+  @HalProperty({ name: 'best-friend' })
   public bestFriend: Person;
 
-  @HalProperty(Location)
+  @HalProperty({ resourceType: Location })
   public home: Location;
 
-  @HalProperty("place-of-employment", Location)
+  @HalProperty({ name: 'place-of-employment', resourceType: Location })
   public work: Location;
 }

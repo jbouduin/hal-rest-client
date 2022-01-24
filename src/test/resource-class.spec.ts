@@ -95,41 +95,22 @@ beforeAll(() => {
     name: "test",
   };
 
-  const testNock = nock('http://test.fr/').persist();
+  const scope = nock('http://test.fr/').persist();
 
-  testNock
+  scope
     .get('/person/1')
     .reply(200, person1);
-  testNock
-    .get('/person/1')
-    .reply(200, person1);
-  testNock
+  scope
     .get('/person/2/contacts')
     .reply(200, contacts);
-  testNock
+  scope
     .get('/person/1/location/home')
     .reply(200, home);
-  testNock
+  scope
     .get('/person/1/location/work')
     .reply(200, work);
-  testNock
-    .get('/persons')
-    .reply(200, {
-      _embedded: { persons: [JSON.parse(JSON.stringify(person1))] },
-      _links: { self: { href: 'http://test.fr/person' } },
-    });
-  testNock
-    .get('/personsSimpleArray')
-    .reply(200, [JSON.parse(JSON.stringify(person1)), {
-      _links: {
-        self: {
-          href: 'http://test.fr/person/13',
-        },
-      },
-      name: null,
-    }]);
 
-  testNock
+  scope
     .get("/dashboard")
     .reply(200, dashBoardInfo);
 
@@ -178,49 +159,11 @@ describe('Resource class tests', () => {
             expect(person.contacts.phone).toBe<string>('xxxxxxxxxx');
             expect(value[0]).toBeInstanceOf(Contacts);
             expect(value[0].phone).toBe<string>('xxxxxxxxxx');
+            console.log(person.home.address);
+            console.log(person.work.address);
             expect(person.home.address).toBe<string>('country');
             expect(person.work.address).toBe<string>('city');
           });
-      });
-  });
-
-  test('can fetch Array of Person', () => {
-    return createClient('http://test.fr/')
-      .fetchArray('/persons', Person)
-      .then((persons: Array<Person>) => {
-        expect(persons).toHaveLength(1);
-        expect(persons[0]).toBeInstanceOf(Person);
-        expect(persons[0].name).toBe<string>('Project 1');
-      });
-  });
-
-
-  test('non-hal resource array throws exception', () => {
-    expect.assertions(1);
-    return createClient('http://test.fr/')
-      .fetchArray('/person/1', Person)
-      .catch(e => {
-        expect(e.message).toBe<string>('property _embedded.best-friend is not an array');
-      });
-  });
-
-  test('hal-resource with wrong format throws exception', () => {
-    expect.assertions(1);
-    return createClient('http://test.fr/')
-      .fetchArray('/person/2/contacts', Contacts)
-      .catch(e => {
-        expect(e.message).toBe<string>('unparsable array. it\'s neither an array nor an halResource');
-      });
-  });
-
-  test('fetch simple Array of Person', () => {
-    return createClient('http://test.fr/')
-      .fetchArray('/personsSimpleArray', Person)
-      .then((persons: Array<Person>) => {
-        expect(persons).toHaveLength(2);
-        expect(persons[0]).toBeInstanceOf(Person);
-        expect(persons[0].name).toBe<string>('Project 1');
-        expect(persons[1].name).toBeNull();
       });
   });
 

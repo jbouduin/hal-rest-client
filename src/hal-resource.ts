@@ -1,30 +1,41 @@
 import { DefaultSerializer, IJSONSerializer } from "./hal-json-serializer";
 import { IHalResource, IHalResourceConstructor } from "./hal-resource-interface";
 import { HalRestClient } from "./hal-rest-client";
-import { URI, URITemplateValues } from "./uri";
+import { URI } from "./uri";
 
 export class HalResource implements IHalResource {
-  public readonly links = {};
-  public readonly props = {};
+  protected _links: Record<string, any>;
+  protected _props: Record<string, any>;
+  protected _uri?: URI;
+
+  public get links(): Record<string, any> { return this._links; }
+  public get props(): Record<string, any> { return this._props; }
+
   public isLoaded = false;
 
   protected restClient: HalRestClient;
 
-  private readonly settedProps = [];
-  private readonly settedLinks = [];
+  private readonly settedProps: Array<string>;
+  private readonly settedLinks: Array<string>;
   private initEnded = false;
 
-  constructor(restClient: HalRestClient | HalResource, protected _uri?: URI) {
-    if (restClient instanceof HalRestClient) {
-      this.restClient = restClient;
-    } else {
-      this.restClient = restClient.restClient;
-      this.links = restClient.links;
-      this.props = restClient.props;
-      this.settedLinks = restClient.settedLinks;
-      this.settedProps = restClient.settedProps;
-      this._uri = restClient._uri;
-    }
+
+  constructor(restClient: HalRestClient, uri?: URI) {
+    this.restClient = restClient;
+    this._uri = uri;
+    this._links = {};
+    this._props = {};
+    this.settedLinks = new Array<string>();
+    this.settedProps = new Array<string>();
+  }
+
+  public static createFromExisting<T extends HalResource>(existing: T, type: IHalResourceConstructor<T>): T {
+    const result = new type(existing.restClient, existing._uri);
+    result._links = existing.links;
+    result._props = existing.props;
+    result.settedLinks.push(...existing.settedLinks);
+    result.settedProps.push(...existing.settedProps);
+    return result;
   }
 
   public fetch(forceOrParams?: boolean | object): Promise<this> {
@@ -35,23 +46,9 @@ export class HalResource implements IHalResource {
         this.uri.fill(forceOrParams as object),
         this.constructor as IHalResourceConstructor<this>,
         this,
-      ) as Promise<this>;
-      }
+      );
     }
-  // public fetch(force: boolean = false, params: URITemplateValues = {}): Promise<this> {
-  //   if ((this.isLoaded && !force) || this.uri === undefined) {
-  //     return new Promise((resolve) => resolve(this));
-  //   } else {
-  //     console.log('filled');
-  //     const filled = this.uri.fill(params);
-  //     console.log(filled)
-  //     return this.restClient.fetch(
-  //       filled,
-  //       this.constructor as IHalResourceConstructor<this>,
-  //       this,
-  //     ) as Promise<this>;
-  //   }
-  // }
+  }
 
   /**
    * to clear value use null not undefined
@@ -145,20 +142,20 @@ export class HalResource implements IHalResource {
    * get the service prop name corresponding to ts attribute name
    */
   protected tsProptoHalProd(prop: string) {
-    const tsToHal = Reflect.getMetadata("halClient:tsToHal", this.constructor.prototype) || {};
-    return tsToHal[prop] || prop;
+    const tsToHal = Reflect.getMetadata("halClient:tsToHal", this)
+    return tsToHal ? tsToHal[prop] : prop;
   }
 
   /**
    * serialize this object to json
    */
-  private serialize(props: string[], links: string[], serializer: IJSONSerializer = new DefaultSerializer()): object {
+  private serialize(props: Array<string>, links: Array<string>, serializer: IJSONSerializer = new DefaultSerializer()): object {
     const json = {};
 
     for (const prop of props) {
       const jsonKey = this.tsProptoHalProd(prop);
       if (this.props[prop] !== undefined && this.props[prop] !== null && this.props[prop].onInitEnded !== undefined) {
-        json[jsonKey] = serializer.parseResource(this.props[prop]);
+        json[jsonKey] = serializer.parseResource(this.props[prop] as IHalResource);
       } else {
         json[jsonKey] = serializer.parseProp(this.props[prop]);
       }
@@ -166,7 +163,7 @@ export class HalResource implements IHalResource {
 
     for (const link of links) {
       const jsonKey = this.tsProptoHalProd(link);
-      json[jsonKey] = serializer.parseResource(this.links[link]);
+      json[jsonKey] = serializer.parseResource(this.links[link] as IHalResource);
     }
 
     return json;

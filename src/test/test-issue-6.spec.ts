@@ -11,7 +11,7 @@ beforeAll(() => {
   nock.cleanAll();
   resetCache();
 
-  const json = {
+  const spa = {
     _links: {
       dashboardInfos: {
         href: 'http://test.fr/dashboard',
@@ -38,7 +38,7 @@ beforeAll(() => {
 
   testNock
     .get('/spa')
-    .reply(200, json);
+    .reply(200, spa);
 
   testNock
     .get('/dashboard')

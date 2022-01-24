@@ -1,10 +1,7 @@
 import * as uriTemplates from "uri-templates";
 
-export type URITemplateValues = { [key: string]: string | { [key: string]: string } }
-
 export class URI {
-    // public templates: uriTemplates.URITemplate;
-    public uriTemplates;
+    private uriTemplates;
     constructor(public uri: string, public templated: boolean = false, public fetchedURI = "") {
         if (templated) {
             this.uriTemplates = uriTemplates(uri);
@@ -29,11 +26,4 @@ export class URI {
             return this.uri;
         }
     }
-    // public fill(params: URITemplateValues): string {
-    //     if (this.templated && this.templates) {
-    //         return this.templates.fill(params);
-    //     } else {
-    //         return this.uri;
-    //     }
-    // }
 }
