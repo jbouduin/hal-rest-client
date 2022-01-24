@@ -16,7 +16,7 @@ What I intend to do (without the intention to invest lots of time):
 [![Travis (.com)](https://img.shields.io/travis/jbouduin/hal-rest-client)](https://travis-ci.com/github/jbouduin/holiday)
 [![Coverage Status](https://coveralls.io/repos/github/jbouduin/hal-rest-client/badge.svg?branch=master)](https://coveralls.io/github/jbouduin/hal-rest-client?branch=master)
 
-[![NPM](https://nodei.co/npm/hal-rest-client.png?downloads=true&downloadRank=true&stars=true)](https://nodei.co/npm/@jbouduin/hal-rest-client/)
+[![NPM](https://nodei.co/npm/@jbouduin/hal-rest-client.png?downloads=true&downloadRank=true&stars=true)](https://nodei.co/npm/@jbouduin/hal-rest-client/)
 
 
 hal-rest-client library to help you work with Hypertext Application Language (HAL) on Typescript. It's work fine with browser or nodejs app.
