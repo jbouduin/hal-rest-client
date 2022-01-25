@@ -1,5 +1,12 @@
 # @jbouduin/hal-rest-client
 
+
+[![Travis (.com)](https://img.shields.io/travis/jbouduin/hal-rest-client)](https://travis-ci.com/github/jbouduin/hal-rest-client)
+[![Coverage Status](https://coveralls.io/repos/github/jbouduin/hal-rest-client/badge.svg?branch=master)](https://coveralls.io/github/jbouduin/hal-rest-client?branch=master)
+
+[![NPM](https://nodei.co/npm/@jbouduin/hal-rest-client.png?downloads=true&downloadRank=true&stars=true)](https://nodei.co/npm/@jbouduin/hal-rest-client/)
+
+
 This is a friendly fork of the original [hal-rest-client](https://github.com/deblockt/hal-rest-client) repository.
 Reason for doing this: the original repository has been archived and is showing some severe vulnerabilities.
 
@@ -11,12 +18,8 @@ What I did:
 
 What I intend to do (without the intention to invest lots of time):
 * Do some clean-up where appropriate
+* Adapt and extend the library to my own needs
 * Correct bugs
-
-[![Travis (.com)](https://img.shields.io/travis/jbouduin/hal-rest-client)](https://travis-ci.com/github/jbouduin/holiday)
-[![Coverage Status](https://coveralls.io/repos/github/jbouduin/hal-rest-client/badge.svg?branch=master)](https://coveralls.io/github/jbouduin/hal-rest-client?branch=master)
-
-[![NPM](https://nodei.co/npm/@jbouduin/hal-rest-client.png?downloads=true&downloadRank=true&stars=true)](https://nodei.co/npm/@jbouduin/hal-rest-client/)
 
 
 hal-rest-client library to help you work with Hypertext Application Language (HAL) on Typescript. It's work fine with browser or nodejs app.
@@ -28,10 +31,10 @@ It can map rest service return to Typescript object for simply access link or pr
 Using npm :
 
 ```
-npm install hal-rest-client
+npm install @jbouduin/hal-rest-client
 ```
 
-## How to use
+## How to use (original documentation)
 
 The library provide two access method :
 1. use generic object `HalResource` to map service return
