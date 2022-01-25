@@ -1,8 +1,7 @@
 import * as uriTemplates from "uri-templates";
 
 export class URI {
-    public uriTemplates;
-
+    private uriTemplates;
     constructor(public uri: string, public templated: boolean = false, public fetchedURI = "") {
         if (templated) {
             this.uriTemplates = uriTemplates(uri);

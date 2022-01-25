@@ -4,63 +4,65 @@ import { IHalResource, IHalResourceConstructor } from "./hal-resource-interface"
 import { HalRestClient } from "./hal-rest-client";
 import { URI } from "./uri";
 
-export class JSONParser {
+export interface IJSONParser {
+  jsonToResource<T extends IHalResource>(
+    json: any,
+    c: IHalResourceConstructor<T>,
+    resource?: T,
+    fetchedURI?: string,
+  ): T;
+}
 
-  constructor(private halRestClient: HalRestClient) {}
+export class JSONParser implements IJSONParser {
+
+  constructor(private halRestClient: HalRestClient) { }
 
   /**
    * convert a json to an halResource
    */
   public jsonToResource<T extends IHalResource>(
-    json: any,
+    json: Record<string, any>,
     c: IHalResourceConstructor<T>,
     resource?: T,
     fetchedURI?: string,
   ): T {
     if (!("_links" in json)) {
-        throw new Error("object is not hal resource " + JSON.stringify(json));
+      throw new Error("object is not hal resource " + JSON.stringify(json));
     }
 
     if (!resource) {
-      let uri;
+      let uri: string;
       if (json._links.self) {
-        uri = "string" === typeof json._links.self ? json._links.self : json._links.self.href;
+        uri = typeof json._links.self === "string" ? json._links.self : json._links.self.href;
       }
       resource = createResource(this.halRestClient, c, uri);
       resource.reset();
     }
 
     // get translation between hal-service-name and name on ts class
-    const halToTs = Reflect.getMetadata("halClient:halToTs", c.prototype) || {};
-
-    const processLink = (link, type) => {
-      const href = this.extractURI(link);
-      const linkResource = createResource(this.halRestClient, type, href);
-      for (const propKey of Object.keys(link)) {
-        linkResource.prop(propKey, link[propKey]);
-      }
-      return linkResource;
-    };
-
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+    const halToTs: Record<string, string> = Reflect.getMetadata("halClient:halToTs", c.prototype)  || {};
     for (const key in json) {
-      if ("_links" === key) {
-        const links = json._links;
+      if (key === "_links") {
+        const links: Record<string, unknown> = json._links;
         for (const linkKey in json._links) {
-          if ("self" !== linkKey) {
+          if (linkKey !== "self") {
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
             const type = Reflect.getMetadata("halClient:specificType", c.prototype, linkKey) || HalResource;
             const propKey = halToTs[linkKey] || linkKey;
-            const link = links[linkKey];
+            const link = this.tryConvertLink(links[linkKey]);
+
             const result = Array.isArray(link)
-              ? link.map((item) => processLink(item, type))
-              : processLink(link, type);
+              ? link.map((item) => this.processLink(this.tryConvertLink(item), type)) // eslint-disable-line
+              : this.processLink(link, type); // eslint-disable-line
             resource.link(propKey, result);
           }
         }
         if (links.self) {
-          resource.uri = this.extractURI(links.self, fetchedURI);
+          resource.uri = this.extractURI(this.tryConvertLink(links.self), fetchedURI);
         }
       } else if ("_embedded" === key) {
-        const embedded = json._embedded;
+        const embedded: Record<string, unknown> = json._embedded;
         for (const prop of Object.keys(embedded)) {
           const propKey = halToTs[prop] || prop;
           resource.prop(propKey, this.parseJson(embedded[prop], c, propKey));
@@ -77,25 +79,35 @@ export class JSONParser {
     return resource;
   }
 
+  private processLink<T extends IHalResource>(link: string | { href?: string, templated?: boolean }, type: IHalResourceConstructor<T>): T {
+    const href = this.extractURI(link);
+    const linkResource = createResource(this.halRestClient, type, href);
+    for (const propKey of Object.keys(link)) {
+      linkResource.prop(propKey, link[propKey]);
+    }
+    return linkResource;
+  }
+
   /**
    * parse a json to object
    */
-  private parseJson(json, clazz ?: {prototype: any}, key ?: string): any {
+  private parseJson(json, clazz?: { prototype: any }, key?: string): any {
     // if there are _links prop object is a resource
-    if (null === json) {
+    if (json === null) {
       return null;
     } else if (Array.isArray(json)) {
-      const type = Reflect.getMetadata("halClient:specificType", clazz.prototype, key) || HalResource;
       return json.map((item) => this.parseJson(item, clazz, key));
     } else if (typeof json === "object" && json._links !== undefined) {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       const type = Reflect.getMetadata("halClient:specificType", clazz.prototype, key) || HalResource;
+      // eslint-disable-next-line
       return this.jsonToResource(json, type);
     } else {
       return json;
     }
   }
 
-  private extractURI(link: string|{href ?: string, templated ?: boolean}, fetchedURI?: string): URI {
+  private extractURI(link: string | { href?: string, templated?: boolean }, fetchedURI?: string): URI {
     if (typeof link === "string") {
       return new URI(link, false, fetchedURI);
     } else {
@@ -103,5 +115,18 @@ export class JSONParser {
       const templated = link.templated || false;
       return new URI(uri, templated, fetchedURI);
     }
+  }
+
+  private tryConvertLink(value: unknown): string | { href?: string, templated?: boolean } {
+    let result: string | { href?: string, templated?: boolean };
+    if (typeof value === 'string') {
+      result = value;
+    } else if ((value as any).href) {
+      result = value;
+      result.templated = (value as any).templated
+    } else {
+      result = value;
+    }
+    return result;
   }
 }

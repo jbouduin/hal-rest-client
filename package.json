@@ -1,7 +1,11 @@
 {
-  "name": "hal-rest-client",
-  "author": "Thomas Deblock <deblock.thomas.62@gmail.com>",
-  "version": "0.5.0",
+  "name": "@jbouduin/hal-rest-client",
+  "author": "Johan Bouduin",
+  "contributors": [
+    "Johan Bouduin",
+    "Thomas Deblock (original library)"
+  ],
+  "version": "0.6.0-beta.1",
   "description": "Hal rest client for typescript",
   "tags": [
     "HAL",
@@ -12,36 +16,41 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/deblockt/hal-rest-client.git"
+    "url": "git+https://github.com/jbouduin/hal-rest-client.git"
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "bugs": {
-    "url": "http://github.com/deblockt/hal-rest-client/issues"
+    "url": "http://github.com/jbouduin/hal-rest-client/issues"
   },
   "dependencies": {
-    "axios": "^0.18.1",
-    "reflect-metadata": "^0.1.9",
-    "uri-templates": "^0.1.9"
+    "axios": "^0.25.0",
+    "jest": "^27.4.7",
+    "reflect-metadata": "^0.1.13",
+    "uri-templates": "^0.2.0",
+    "version": "^0.1.2"
   },
   "main": "dist/index",
   "typings": "dist/index",
   "devDependencies": {
-    "@types/nock": "^8.2.0",
-    "@types/node": "^7.0.5",
-    "coveralls": "^2.11.16",
-    "istanbul": "^0.4.5",
-    "nock": "^9.0.5",
-    "remap-istanbul": "^0.9.1",
-    "tap-spec": "^4.1.1",
-    "tape": "^4.6.3",
-    "tape-async": "^2.1.1",
-    "tslint": "^4.5.1",
-    "typescript": "^2.2.1"
+    "@types/jest": "^27.4.0",
+    "@types/node": "^16.11.21",
+    "@types/uri-templates": "^0.1.31",
+    "@typescript-eslint/eslint-plugin": "^5.10.0",
+    "@typescript-eslint/parser": "^5.10.0",
+    "coveralls": "^3.1.1",
+    "eslint": "^8.7.0",
+    "nock": "^13.2.2",
+    "ts-jest": "^27.1.3",
+    "typescript": "^4.5.5"
   },
   "scripts": {
-    "coverage": "istanbul cover node_modules/tape/bin/tape dist/test/*.js; remap-istanbul -i coverage/coverage.json -o html-report -t html",
-    "test": "tsc && tape dist/test/*.js | tap-spec",
-    "coveralls": "remap-istanbul -i coverage/coverage.json -t lcovonly | coveralls",
-    "compile": "tsc",
-    "lint": "tslint \"src/**/*.ts\" --project tsconfig.json --type-check"
+    "test": "jest --coverage",
+    "build": "tsc",
+    "lint": "eslint ./src --ext .js,.jsx,.ts,.tsx",
+    "preversion": "npm test",
+    "version": "npm run build",
+    "postversion": "git push && git push --tags"
   }
 }

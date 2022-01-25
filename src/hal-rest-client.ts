@@ -1,12 +1,11 @@
 import Axios from "axios";
-import { AxiosInstance, AxiosInterceptorManager, AxiosRequestConfig, AxiosResponse } from "axios";
+import { AxiosInstance, AxiosRequestConfig, AxiosResponse } from "axios";
 
 import "reflect-metadata";
 
-import { createResource } from "./hal-factory";
-import { JSONParser } from "./hal-json-parser";
+import { IJSONParser, JSONParser } from "./hal-json-parser";
 import { HalResource } from "./hal-resource";
-import { IHalResource, IHalResourceConstructor} from "./hal-resource-interface";
+import { IHalResource, IHalResourceConstructor } from "./hal-resource-interface";
 
 /**
  * base to rest client
@@ -27,9 +26,9 @@ import { IHalResource, IHalResourceConstructor} from "./hal-resource-interface";
  */
 export class HalRestClient {
   private axios: AxiosInstance;
-  private jsonPaser;
+  private jsonParser: IJSONParser;
 
-  constructor(private baseURL ?: string, options: AxiosRequestConfig = {}) {
+  constructor(baseURL?: string, options: AxiosRequestConfig = {}) {
     const config = options;
     config.baseURL = baseURL;
     this.axios = Axios.create(config);
@@ -46,30 +45,36 @@ export class HalRestClient {
   }
 
   /**
-   * fetch an array by URI. Rest result can be a simple array of hal resouce, or han hal resource who have a
-   * property who is array of resource on _embedded.
+   * fetch an array by URI. Rest result can be a simple array of hal resources, or a hal resource whos first
+   * property of _embedded is an array of hal resources
    *
    * @param resourceURI : the uri of resource to fetch
    * @param c : model class to map result (array items). if you don't write your model, use HalResource class
    */
-  public fetchArray<T extends IHalResource>(resourceURI: string, c: IHalResourceConstructor<T>): Promise<T[]> {
+  public fetchArray<T extends IHalResource>(resourceURI: string, c: IHalResourceConstructor<T>): Promise<Array<T>> {
     return new Promise((resolve, reject) => {
       this.axios.get(resourceURI).then((value) => {
-        let array;
+        let array: Array<unknown>;
         if (!Array.isArray(value.data)) {
           if ("_embedded" in value.data) {
-            const embedded = value.data._embedded;
-            array = embedded[Object.keys(embedded)[0]];
-            if (!Array.isArray(array)) {
-              reject(new Error("property _embedded." + Object.keys(embedded)[0] + " is not an array"));
+            const embedded: unknown = value.data._embedded;
+            const firstKey = Object.keys(embedded)[0];
+            if (firstKey) {
+              array = embedded[firstKey];
+              if (!Array.isArray(array)) {
+                reject(new Error("property _embedded." + Object.keys(embedded)[0] + " is not an array"));
+              }
+            } else {
+              reject(new Error("property _embedded does not contain an array"));
             }
+
           } else {
-            reject(new Error("unparsable array. it's neither an array nor an halResource"));
+            reject(new Error("Unparsable array: it's neither an array nor an halResource"));
           }
         } else {
           array = value.data;
         }
-        resolve(array.map((item) => this.jsonPaser.jsonToResource(item, c)));
+        resolve(array.map((item: unknown) => this.jsonParser.jsonToResource(item, c)));
       }).catch(reject);
     });
   }
@@ -81,10 +86,10 @@ export class HalRestClient {
    * @param c : the class to use to fetch. If you don't want to write you model, use HalResource or @{see fetchResource}
    * @param resource : don't use. internal only
    */
-  public fetch<T extends IHalResource>(resourceURI: string, c: IHalResourceConstructor<T>,  resource ?: T): Promise<T> {
+  public fetch<T extends IHalResource>(resourceURI: string, c: IHalResourceConstructor<T>, resource?: T): Promise<T> {
     return new Promise((resolve, reject) => {
       this.axios.get(resourceURI).then((value) => {
-        resolve(this.jsonPaser.jsonToResource(value.data, c, resource, value.config.url));
+        resolve(this.jsonParser.jsonToResource(value.data, c, resource, value.config.url));
       }).catch(reject);
     });
   }
@@ -99,8 +104,8 @@ export class HalRestClient {
    *
    * @param resource : The resource to delete
    */
-  public delete(resource: IHalResource|string): Promise<any> {
-    let uri;
+  public delete(resource: IHalResource | string): Promise<any> {
+    let uri: string;
     let type;
     if (typeof resource === "string") {
       uri = resource;
@@ -112,7 +117,7 @@ export class HalRestClient {
 
     return new Promise((resolve, reject) => {
       this.axios.delete(uri).then((value) => {
-        this.resolveUnknowTypeReturn(resolve, value, type);
+        this.resolveUnknowTypeReturn(resolve, value, type); // eslint-disable-line
       }).catch(reject);
     });
   }
@@ -127,13 +132,12 @@ export class HalRestClient {
   public update(
     url: string,
     data: object,
-    full: boolean = false,
+    full = false,
     type: IHalResourceConstructor<any> = HalResource,
   ): Promise<any> {
     const method = full ? "put" : "patch";
-
     return new Promise((resolve, reject) => {
-      this.axios.request({data, method, url}).then((value) => {
+      this.axios.request({ data, method, url }).then((value) => {
         this.resolveUnknowTypeReturn(resolve, value, type, url);
       }).catch(reject);
     });
@@ -187,8 +191,8 @@ export class HalRestClient {
    * set the json parser
    * @param {JSONParser} the new json parser
    */
-  public setJsonParser(parser: JSONParser) {
-    this.jsonPaser = parser;
+  public setJsonParser(parser: IJSONParser) {
+    this.jsonParser = parser;
   }
 
   /**
@@ -198,14 +202,14 @@ export class HalRestClient {
    * @param value : the returned value
    */
   private resolveUnknowTypeReturn(
-    resolve: (data?) => void,
+    resolve: (data: unknown) => void,
     value: AxiosResponse,
-    type ?: IHalResourceConstructor<any>,
+    type?: IHalResourceConstructor<any>,
     fetchedURI?: string,
   ) {
     if (value.data) {
       if (typeof value.data === "object" && "_links" in value.data) {
-        resolve(this.jsonPaser.jsonToResource(value.data, type, undefined, fetchedURI));
+        resolve(this.jsonParser.jsonToResource(value.data, type, undefined, fetchedURI));
       } else {
         resolve(value.data);
       }
