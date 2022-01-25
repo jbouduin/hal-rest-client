@@ -53,7 +53,7 @@
     "build": "tsc",
     "lint": "eslint ./src --ext .js,.jsx,.ts,.tsx",
     "prepare": "npm run build",
-    "preversion": "npm test && npm lint",
+    "preversion": "npm test && npm run lint",
     "prepublishOnly": "npm test && npm run lint",
     "version": "npm run build",
     "postversion": "git push && git push --tags",
