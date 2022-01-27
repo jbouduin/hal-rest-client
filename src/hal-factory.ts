@@ -54,7 +54,7 @@ export function createResource<T extends IHalResource>(
   } else if (uri instanceof URI && uri.templated) {
     result = new c(client, uri);
   } else {
-    const objectURI = typeof uri === 'string' ? new URI(uri, false, uri) : uri;
+    const objectURI = typeof uri === 'string' ? new URI(uri, false) : uri;
     if (!cachedResources.has(objectURI.uri)) {
       result = new c(client, objectURI);
       cachedResources.set(objectURI.uri, result);

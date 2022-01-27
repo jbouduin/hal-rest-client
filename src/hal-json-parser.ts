@@ -107,14 +107,19 @@ export class JSONParser implements IJSONParser {
     }
   }
 
-  private extractURI(link: string | { href?: string, templated?: boolean }, fetchedURI?: string): URI {
+  private extractURI(link: string | { href?: string, templated?: boolean }, fetchedUri?: string): URI {
+    let result: URI;
     if (typeof link === "string") {
-      return new URI(link, false, fetchedURI);
+      result = new URI(link, false);
     } else {
       const uri = link.href;
       const templated = link.templated || false;
-      return new URI(uri, templated, fetchedURI);
+      result = new URI(uri, templated);
+      if (templated) {
+        result.setFetchedUri(fetchedUri || '');
+      }
     }
+    return result;
   }
 
   private tryConvertLink(value: unknown): string | { href?: string, templated?: boolean } {

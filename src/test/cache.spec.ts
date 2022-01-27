@@ -174,7 +174,6 @@ describe('Cache', () => {
     return client
       .fetch('dummy', HalResource)
       .then(() => {
-        console.log(getCacheKeys);
         expect(getCacheKeys('Resource')).toContain<string>('http://test.fr/dummy');
       })
   });

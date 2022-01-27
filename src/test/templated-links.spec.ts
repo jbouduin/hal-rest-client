@@ -46,7 +46,7 @@ beforeAll(() => {
     },
     _links: {
       self: {
-        href: 'http://test.fr/q=test',
+        href: 'http://test.fr/data?q=test',
       },
     },
   };
@@ -99,39 +99,38 @@ afterEach(() => {
 //#endregion
 
 describe('Templated links', () => {
-  test('can fetch resource with self templated link', () => {
+  test.only('can fetch resource with self templated link', () => {
     return createClient('http://test.fr/')
       .fetchResource('/data?page=1')
       .then((resource: HalResource) => {
         expect(resource.uri.uri).toBe<string>('http://test.fr/data{?page,size,sort}');
-        // TODO check here (same issue with other tests: fetched uri is the fetchResource parameter and the original test expected the complete URI)
-        expect(resource.uri.fetchedURI).toBe<string>('/data?page=1');
+        expect(resource.uri.resourceURI).toBe<string>('http://test.fr/data{?page,size,sort}');
         expect(resource.prop('data')).toHaveLength(1);
       });
   });
 
-  test('can fetch resource with self templated link', () => {
+  test.only('can fetch resource with self templated link', () => {
     return createClient()
       .fetchResource('http://test.fr/data?page=1')
       .then((resource: HalResource) => {
         expect(resource.uri.uri).toBe<string>('http://test.fr/data{?page,size,sort}');
-        expect(resource.uri.fetchedURI).toBe<string>('http://test.fr/data?page=1');
+        expect(resource.uri.resourceURI).toBe<string>('http://test.fr/data{?page,size,sort}');
         expect(resource.prop('data')).toHaveLength(1);
       });
   });
 
-  test('can fetch link using parameters', () => {
+  test('fetch templated link using parameter', () => {
     return createClient('http://test.fr/')
       .fetchResource('/data?page=1')
       .then((resource: HalResource) => {
         const findLink = resource.link('find');
         expect(findLink.uri.templated).toBe<boolean>(true);
-        expect(findLink.uri.fetchedURI).toBe<string>('');
+        expect(findLink.uri.resourceURI).toBe<string>('');
         return findLink
           .fetch({ q: 'test' })
           .then((found: HalResource) => {
             expect(found.prop('data')[0].prop('name')).toBe<string>('test');
-            expect(found.uri.fetchedURI).toBe<string>('/data?q=test');
+            expect(found.uri.resourceURI).toBe<string>('http://test.fr/data?q=test');
           });
       });
   });
@@ -145,7 +144,7 @@ describe('Templated links', () => {
           .fetch()
           .then((found: HalResource) => {
             expect(found.prop('test')).toBe<string>('emptyData');
-            expect(found.uri.fetchedURI).toBe<string>('/data');
+            expect(found.uri.resourceURI).toBe<string>('http://test.fr/data');
           });
       });
   });
@@ -161,4 +160,6 @@ describe('Templated links', () => {
           });
       });
   });
+
+  test.todo('Probably already covered: after fetching a resource using a templated URI, the fetched URI should be filled');
 });

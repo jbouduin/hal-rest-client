@@ -159,8 +159,6 @@ describe('Resource class tests', () => {
             expect(person.contacts.phone).toBe<string>('xxxxxxxxxx');
             expect(value[0]).toBeInstanceOf(Contacts);
             expect(value[0].phone).toBe<string>('xxxxxxxxxx');
-            console.log(person.home.address);
-            console.log(person.work.address);
             expect(person.home.address).toBe<string>('country');
             expect(person.work.address).toBe<string>('city');
           });
