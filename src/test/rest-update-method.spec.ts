@@ -1,11 +1,11 @@
-import { createClient, HalResource, resetCache } from '..';
+import { createClient, HalResource, cache } from '..';
 import * as nock from 'nock';
 
 const basePath = 'http://test.fr/';
 
 //#region setup/teardown ------------------------------------------------------
 beforeAll(() => {
-  resetCache();
+  cache.reset();
   nock.cleanAll();
 
   const newBestFriend = {
@@ -82,7 +82,7 @@ beforeAll(() => {
 
 afterAll(() => nock.restore());
 afterEach(() => {
-  resetCache();
+  cache.reset();
 });
 //#endregion
 

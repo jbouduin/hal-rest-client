@@ -1,5 +1,5 @@
 import * as nock from 'nock';
-import { createClient, resetCache } from '..';
+import { createClient, cache } from '..';
 import { HalNotification } from './models';
 
 //#region setup/teardown ------------------------------------------------------
@@ -41,7 +41,7 @@ beforeAll(() => {
 
 afterAll(() => nock.restore());
 afterEach(() => {
-  resetCache();
+  cache.reset();
 });
 //#endregion
 

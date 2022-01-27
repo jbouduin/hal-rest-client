@@ -1,12 +1,12 @@
 import * as nock from 'nock';
-import { createClient, createResource, resetCache } from '..';
+import { createClient, createResource, cache } from '..';
 import { Contacts } from './models/contacts';
 import { DashboardInfo, Location, Person } from './models';
 
 //#region setup/teardown ------------------------------------------------------
 beforeAll(() => {
   nock.cleanAll();
-  resetCache();
+  cache.reset();
 
   const person1 = {
     _embedded: {
@@ -118,7 +118,7 @@ beforeAll(() => {
 
 afterAll(() => nock.restore());
 afterEach(() => {
-  resetCache();
+  cache.reset();
 });
 //#endregion
 

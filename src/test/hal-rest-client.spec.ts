@@ -1,5 +1,5 @@
 import * as nock from 'nock';
-import { createClient, HalProperty, HalResource, resetCache } from '..';
+import { createClient, HalProperty, HalResource, cache } from '..';
 
 class DashboardInfo extends HalResource {
   @HalProperty()
@@ -9,7 +9,7 @@ class DashboardInfo extends HalResource {
 //#region setup/teardown ------------------------------------------------------
 beforeAll(() => {
   nock.cleanAll();
-  resetCache();
+  cache.reset();
 
   const spa = {
     _links: {
@@ -46,19 +46,21 @@ beforeAll(() => {
 });
 //#endregion
 
-test('Issue 6: can fetch specific class after fetch HalResource', () => {
+describe('hal-rest-client tests', () => {
+  test('Fetch specific class after fetching a generic HalResource', () => {
 
-  const client = createClient('http://test.fr/');
-  return client
-    .fetch('/spa', HalResource)
-    .then((spa: HalResource) => {
-      return client
-        .fetch('/dashboard', DashboardInfo)
-        .then((dashboard: DashboardInfo) => {
-          expect(dashboard).toBeInstanceOf(DashboardInfo);
-          expect(dashboard.name).toBe<string>('test');
-          spa.link('dashboardInfos').prop('name', 'updated');
-          expect(dashboard.name).toBe<string>('updated');
-        });
-    });
+    const client = createClient('http://test.fr/');
+    return client
+      .fetch('/spa', HalResource)
+      .then((spa: HalResource) => {
+        return client
+          .fetch('/dashboard', DashboardInfo)
+          .then((dashboardInfo: DashboardInfo) => {
+            expect(dashboardInfo).toBeInstanceOf(DashboardInfo);
+            expect(dashboardInfo.name).toBe<string>('test');
+            spa.link('dashboardInfos').prop('name', 'updated');
+            expect(dashboardInfo.name).toBe<string>('updated');
+          });
+      });
+  });
 });

@@ -1,12 +1,12 @@
 
 import * as nock from 'nock';
-import { createClient, createResource, HalResource, resetCache } from '..';
+import { createClient, createResource, HalResource, cache } from '..';
 import { URI } from '..';
 
 //#region setup/teardown ------------------------------------------------------
 beforeAll(() => {
   nock.cleanAll();
-  resetCache();
+  cache.reset();
   const project1 = {
     _embedded: {
       test: {
@@ -97,7 +97,7 @@ beforeAll(() => {
 
 afterAll(() => nock.restore());
 afterEach(() => {
-  resetCache();
+  cache.reset();
 });
 //#endregion
 

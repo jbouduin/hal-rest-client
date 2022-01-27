@@ -1,10 +1,10 @@
 import * as nock from 'nock';
-import { createClient, HalResource, resetCache } from '..';
+import { createClient, HalResource, cache } from '..';
 
 //#region setup/teardown ------------------------------------------------------
 beforeAll(() => {
   nock.cleanAll();
-  resetCache();
+  cache.reset();
 
   const resource = {
     _links: {
@@ -41,7 +41,7 @@ beforeAll(() => {
 
 afterAll(() => nock.restore());
 afterEach(() => {
-  resetCache();
+  cache.reset();
 });
 //#endregion
 

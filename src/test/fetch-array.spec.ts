@@ -1,5 +1,5 @@
 import * as nock from 'nock';
-import { createClient, HalResource, resetCache } from "..";
+import { createClient, HalResource, cache } from "..";
 import { Person, Contacts } from "./models";
 
 //#region setup/teardown ------------------------------------------------------
@@ -98,7 +98,7 @@ beforeAll(() => {
 
 afterAll(() => nock.restore());
 afterEach(() => {
-  resetCache();
+  cache.reset();
 });
 //#endregion
 

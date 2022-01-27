@@ -1,3 +1,4 @@
+export * from './hal-cache';
 export * from './hal-decorator';
 export * from './hal-factory';
 export * from './hal-json-serializer';

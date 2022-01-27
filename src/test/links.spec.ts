@@ -1,10 +1,10 @@
 import * as nock from 'nock';
-import { createClient, HalResource, resetCache } from '..';
+import { createClient, HalResource, cache } from '..';
 
 //#region setup/teardown ------------------------------------------------------
 beforeAll(() => {
   nock.cleanAll();
-  resetCache();
+  cache.reset();
   const project1 = {
     _links: {
       related: [
@@ -69,7 +69,7 @@ beforeAll(() => {
 
 afterAll(() => nock.restore());
 afterEach(() => {
-  resetCache();
+  cache.reset();
 });
 //#endregion
 

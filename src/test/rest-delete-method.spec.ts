@@ -1,10 +1,10 @@
 import * as nock from 'nock';
-import { createClient, createResource, HalResource, resetCache } from '..';
+import { createClient, createResource, HalResource, cache } from '..';
 import { Contacts } from './models';
 
 //#region setup/teardown ------------------------------------------------------
 beforeAll(() => {
-  resetCache();
+  cache.reset();
   nock.cleanAll();
 
   const testNock = nock('http://test.fr/').persist();
@@ -31,7 +31,7 @@ beforeAll(() => {
 
 afterAll(() => nock.restore());
 afterEach(() => {
-  resetCache();
+  cache.reset();
 });
 //#endregion
 

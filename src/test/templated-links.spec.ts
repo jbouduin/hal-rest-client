@@ -1,10 +1,10 @@
 import * as nock from 'nock';
-import { createClient, HalResource, resetCache } from '..';
+import { createClient, HalResource, cache } from '..';
 
 //#region setup/teardown ------------------------------------------------------
 beforeAll(() => {
   nock.cleanAll();
-  resetCache();
+  cache.reset();
 
   const templatedSelf = {
     _embedded: {
@@ -94,7 +94,7 @@ beforeAll(() => {
 
 afterAll(() => nock.restore());
 afterEach(() => {
-  resetCache();
+  cache.reset();
 });
 //#endregion
 
@@ -109,7 +109,7 @@ describe('Templated links', () => {
       });
   });
 
-  test.only('can fetch resource with self templated link', () => {
+  test('can fetch resource with self templated link', () => {
     return createClient()
       .fetchResource('http://test.fr/data?page=1')
       .then((resource: HalResource) => {

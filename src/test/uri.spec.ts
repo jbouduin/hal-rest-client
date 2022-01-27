@@ -1,9 +1,9 @@
-import { createClient, HalResource, resetCache, URI } from '..';
+import { cache, URI } from '..';
 import * as nock from 'nock';
 
 const testUri = 'http://test.fr/data{?page,size,sort}';
 beforeAll(() => {
-  resetCache();
+  cache.reset();
   nock.cleanAll();
 });
 

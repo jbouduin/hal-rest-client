@@ -1,11 +1,11 @@
 import * as nock from 'nock';
-import { createClient, resetCache } from '..';
+import { createClient, cache } from '..';
 import { CyclicalList } from './models';
 
 //#region setup/teardown ------------------------------------------------------
 beforeAll(() => {
   nock.cleanAll();
-  resetCache();
+  cache.reset();
 
   const cyclicals = {
     _embedded: {
@@ -41,7 +41,7 @@ beforeAll(() => {
 
 afterAll(() => nock.restore());
 afterEach(() => {
-  resetCache();
+  cache.reset();
 });
 //#endregion
 
