@@ -1,11 +1,13 @@
-import { AxiosRequestConfig } from "axios";
-import { HalResource } from "./hal-resource";
-import { IHalResource, IHalResourceConstructor } from "./hal-resource-interface";
-import { HalRestClient } from "./hal-rest-client";
-import { URI } from "./uri";
+import { AxiosRequestConfig } from 'axios';
+import { HalResource } from './hal-resource';
+import { IHalResource, IHalResourceConstructor } from './hal-resource-interface';
+import { HalRestClient } from './hal-rest-client';
+import { URI } from './uri';
 
 const cachedClients = new Map<string, HalRestClient>();
 const cachedResources = new Map<string, IHalResource>();
+
+export type CacheType = 'Client' | 'Resource';
 
 /**
  * create hal rest client
@@ -52,7 +54,7 @@ export function createResource<T extends IHalResource>(
   } else if (uri instanceof URI && uri.templated) {
     result = new c(client, uri);
   } else {
-    const objectURI = typeof uri === "string" ? new URI(uri, false, uri) : uri;
+    const objectURI = typeof uri === 'string' ? new URI(uri, false, uri) : uri;
     if (!cachedResources.has(objectURI.uri)) {
       result = new c(client, objectURI);
       cachedResources.set(objectURI.uri, result);
@@ -65,9 +67,33 @@ export function createResource<T extends IHalResource>(
 }
 
 /**
- * reset cache for client or resource
+ * Clear the cache for clients and/or resources
+ * @param type the type of cache to clear. If not specified both are cleared
  */
-export function resetCache() {
-  cachedClients.clear();
-  cachedResources.clear();
+export function resetCache(type?: CacheType) {
+  if (!type || type === 'Client') {
+    cachedClients.clear();
+  }
+  if (!type || type === 'Resource') {
+    cachedResources.clear();
+  }
+}
+
+/**
+ * Get the key of the cached client resp. resources
+ * @param type the type of cache
+ * @returns an array strings
+ */
+export function getCacheKeys(type: CacheType): Array<string> {
+  let result: Array<string>;
+  switch (type) {
+    case 'Client':
+      result = Array.from(cachedClients.keys());
+      break;
+    case 'Resource':
+      result = Array.from(cachedResources.keys())
+    default:
+      break;
+  }
+  return result;
 }

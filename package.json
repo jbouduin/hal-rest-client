@@ -50,7 +50,7 @@
   },
   "scripts": {
     "test": "jest --coverage",
-    "build": "tsc",
+    "build": "tsc --project tsconfig.build.json",
     "lint": "eslint ./src --ext .js,.jsx,.ts,.tsx",
     "prepare": "npm run build",
     "preversion": "npm test && npm run lint",
