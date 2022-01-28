@@ -34,7 +34,6 @@ describe('Cyclical ojbects', () => {
     }
 
     const cyclicals = dataFactory.createResourceListData('org', 'cyclicals', listData, links);
-    console.log(JSON.stringify(cyclicals.result, null, 2))
     const baseUri = uriBuilder.orgBaseURI;
     const scope = nock(baseUri);
     scope

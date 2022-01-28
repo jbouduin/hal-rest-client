@@ -106,12 +106,10 @@ export class DataFactory {
   }
 
   private getLinks(selfUri: string, links?: ILinkCollection): ILinkCollection {
-    console.log(JSON.stringify(links))
     const result: ILinkCollection = links || {};
     result['self'] = {
       href: selfUri
     };
-    console.log(JSON.stringify(result))
     return result
   }
   //#endregion
