@@ -1,11 +1,11 @@
 import * as nock from 'nock';
 import { createClient, HalResource, cache } from '..';
-import { DummyFactory, IDummy, IScopeResult } from './data/dummy-factory';
+import { DataFactory, IData, IScopeResult } from './data/data-factory';
 import { HostTld, UriBuilder } from './data/uri-builder';
 import { Person } from './models';
 
 const uriBuilder = new UriBuilder();
-const dummyFactory = new DummyFactory(uriBuilder);
+const dummyFactory = new DataFactory(uriBuilder);
 //#region setup/teardown ------------------------------------------------------
 beforeAll(() => {
   nock.cleanAll();
@@ -25,7 +25,7 @@ describe('Basic cache functionality', () => {
 
   test('Fetched resource is cached', () => {
     const client = createClient(orgBaseUri);
-    const dummy = dummyFactory.createDummyData('org', 'dummy', 1);
+    const dummy = dummyFactory.createResourceData('org', 'dummy', 1);
     const scope = nock(orgBaseUri);
     scope
       .get(dummy.resourceUri)
@@ -52,7 +52,7 @@ describe('Basic cache functionality', () => {
 
 describe('Reset cache', () => {
   const orgBaseUri = uriBuilder.orgBaseURI;
-  const dummy = dummyFactory.createDummyData('org', 'dummy', 1);
+  const dummy = dummyFactory.createResourceData('org', 'dummy', 1);
   let scope: nock.Scope;
   beforeEach(() => {
     scope = nock(orgBaseUri);
@@ -183,18 +183,18 @@ describe('clear client cache tests', () => {
 
 describe('clear resource cache tests', () => {
   const dummyPath = 'dummy';
-  let dummies: Array<IScopeResult<IDummy>>;
+  let dummies: Array<IScopeResult<IData>>;
   let scope: nock.Scope;
   beforeEach(() => {
     const promises = new Array<Promise<HalResource>>();
-    dummies = new Array<IScopeResult<IDummy>>();
+    dummies = new Array<IScopeResult<IData>>();
     ['com', 'org']
       .forEach((tld: HostTld) => {
         const baseUri = uriBuilder.baseUri(tld);
         const client = createClient(baseUri)
         scope = nock(baseUri);
         for (let i = 1; i <= 5; i++) {
-          const dummy = dummyFactory.createDummyData(tld, dummyPath, i);
+          const dummy = dummyFactory.createResourceData(tld, dummyPath, i);
           dummies.push(dummy);
           scope
             .get(dummy.resourceUri)
@@ -269,8 +269,8 @@ describe('refreshing mechanism', () => {
 
   test('Lists are refreshed when calling fetchArray', () => {
     const orgBaseUri = uriBuilder.orgBaseURI;
-    const dummy1 = dummyFactory.createDummyData('org', 'dummy', 1, { done: { count: 1 } });
-    const dummy2 = dummyFactory.createDummyData('org', 'dummy', 1, { testing: { count: 1 } });
+    const dummy1 = dummyFactory.createResourceData('org', 'dummy', 1, { done: { count: 1 } });
+    const dummy2 = dummyFactory.createResourceData('org', 'dummy', 1, { testing: { count: 1 } });
 
     const scope = nock(orgBaseUri);
     scope

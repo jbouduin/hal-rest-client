@@ -1,42 +1,13 @@
 import * as nock from 'nock';
 import { createClient, cache } from '..';
+import { DataFactory, IListData, ILinkCollection } from './data/data-factory';
+import { UriBuilder } from './data/uri-builder';
 import { CyclicalList } from './models';
 
 //#region setup/teardown ------------------------------------------------------
 beforeAll(() => {
   nock.cleanAll();
   cache.reset();
-
-  const cyclicals = {
-    _embedded: {
-      cyclicals: [
-        {
-          _links: {
-            self: 'http://test.fr/cyclicals/1',
-          },
-          property: 'name',
-        },
-      ],
-    },
-    _links: {
-      refresh: 'http://test.fr/cyclicals/refresh',
-      self: 'http://test.fr/cyclicals',
-    },
-  };
-
-  const scope = nock('http://test.fr/').persist();
-  scope
-    .get('/cyclicals')
-    .reply(200, cyclicals);
-
-  scope
-    .get('/cyclicals/refresh')
-    .reply(200, cyclicals);
-
-  scope
-    .get('/cyclicals/refresh')
-    .reply(200, cyclicals);
-
 });
 
 afterAll(() => nock.restore());
@@ -47,8 +18,38 @@ afterEach(() => {
 
 describe('Cyclical ojbects', () => {
   test('Cyclical property have the correct class type', () => {
+    const uriBuilder = new UriBuilder()
+    const dataFactory = new DataFactory(uriBuilder);
+    const cyclical1 = dataFactory.createResourceData('org', 'cyclicals', 1, { property: 'name'});
+    const listData: IListData = {
+      sort: 'id',
+      offset: 0,
+      listKey: 'cyclicals',
+      listData: [cyclical1.result]
+    };
 
-    const client = createClient('http://test.fr/');
+    const refresh = uriBuilder.resourceUri('org', true, 'cyclicals', undefined, 'refresh');
+    const links: ILinkCollection = {
+      refresh: { href: refresh }
+    }
+
+    const cyclicals = dataFactory.createResourceListData('org', 'cyclicals', listData, links);
+    console.log(JSON.stringify(cyclicals.result, null, 2))
+    const baseUri = uriBuilder.orgBaseURI;
+    const scope = nock(baseUri);
+    scope
+      .get(cyclicals.resourceUri)
+      .reply(200, cyclicals.result);
+
+    scope
+      .get(cyclicals.result._links.refresh.href)
+      .reply(200, cyclicals.result);
+
+    scope
+      .get(cyclicals.result._links.refresh.href)
+      .reply(200, cyclicals.result);
+
+    const client = createClient(baseUri);
     return client
       .fetch('/cyclicals', CyclicalList)
       .then((cyclicals: CyclicalList) => {
