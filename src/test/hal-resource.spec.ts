@@ -189,19 +189,6 @@ describe('hal-resource tests', () => {
       });
   });
 
-  test('use interceptor', () => {
-    const client = createClient('http://test.fr/');
-    client.interceptors.request.use((config) => {
-      config.url += '/1';
-      return config;
-    });
-    return client
-      .fetchResource('/projects')
-      .then((project: HalResource) => {
-        expect(project.prop('name')).toBe<string>('Project 1');
-      });
-  });
-
   test('construct hal-resource with URI', () => {
     const resource = createResource(createClient('http://test.fr'), HalResource);
     expect(resource).toBeDefined();
