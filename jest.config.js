@@ -17,6 +17,7 @@ module.exports = {
     "<rootDir>/models"
   ],
   "collectCoverageFrom": [
-    "!**/models/**"
+    "!**/models/**",
+    "!**/data/**",
   ]
 }

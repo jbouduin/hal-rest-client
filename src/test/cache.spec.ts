@@ -1,38 +1,301 @@
 import * as nock from 'nock';
-// import { Person } from './models';
 import { createClient, HalResource, cache } from '..';
+import { DummyFactory, IDummy, IScopeResult } from './data/dummy-factory';
+import { HostTld, UriBuilder } from './data/uri-builder';
+import { Person } from './models';
 
+const uriBuilder = new UriBuilder();
+const dummyFactory = new DummyFactory(uriBuilder);
 //#region setup/teardown ------------------------------------------------------
 beforeAll(() => {
   nock.cleanAll();
   cache.reset();
+});
 
-  const projectsList1 = [{
-    _embedded: {
-      Done: {
-        count: 1,
-      },
-    },
-    _links: {
-      self: {
-        href: 'http://test.fr/projects/1',
-      },
-    },
-  }];
+afterAll(() => nock.restore());
+afterEach(() => {
+  cache.reset();
+  nock.cleanAll();
 
-  const projectsList2 = [{
-    _embedded: {
-      Testing: {
-        count: 1,
-      },
-    },
-    _links: {
-      self: {
-        href: 'http://test.fr/projects/1',
-      },
-    },
-  }];
+});
+//#endregion
 
+describe('Basic cache functionality', () => {
+  const orgBaseUri = uriBuilder.orgBaseURI;
+
+  test('Fetched resource is cached', () => {
+    const client = createClient(orgBaseUri);
+    const dummy = dummyFactory.createDummyData('org', 'dummy', 1);
+    const scope = nock(orgBaseUri);
+    scope
+      .get(dummy.resourceUri)
+      .reply(200, dummy.result);
+    return client
+      .fetch(dummy.resourceUri, HalResource)
+      .then(() => {
+        expect(cache.getKeys('Resource')).toContain<string>(dummy.selfUri);
+      })
+  });
+
+  test('Client created with URI is cached', () => {
+    createClient(orgBaseUri);
+    expect(cache.getKeys('Client')).toHaveLength(1);
+    expect(cache.getKeys('Client')).toContain(orgBaseUri);
+  });
+
+  test('Client created without URI is not cached', () => {
+    createClient();
+    expect(cache.getKeys('Client')).toHaveLength(0);
+  });
+
+});
+
+describe('Reset cache', () => {
+  const orgBaseUri = uriBuilder.orgBaseURI;
+  const dummy = dummyFactory.createDummyData('org', 'dummy', 1);
+  let scope: nock.Scope;
+  beforeEach(() => {
+    scope = nock(orgBaseUri);
+    scope
+      .get(dummy.resourceUri)
+      .reply(200, dummy.result);
+  });
+
+  test('Reset cache without parameter empties both caches', () => {
+    const client = createClient(orgBaseUri);
+    return client
+      .fetch(dummy.resourceUri, HalResource)
+      .then(() => {
+        cache.reset();
+        expect(cache.getKeys('Client')).toHaveLength(0);
+        expect(cache.getKeys('Resource')).toHaveLength(0);
+        scope.done();
+      })
+  });
+
+  test('Reset cache with parameter \'Client\' empties only client cache', () => {
+    const client = createClient(orgBaseUri);
+    return client
+      .fetch(dummy.resourceUri, HalResource)
+      .then(() => {
+        cache.reset('Client');
+        expect(cache.getKeys('Client')).toHaveLength(0);
+        expect(cache.getKeys('Resource')).toHaveLength(1);
+      })
+  });
+
+  test('Reset cache with parameter \'Resource\' empties only client cache', () => {
+    const client = createClient(orgBaseUri);
+    return client
+      .fetch(dummy.resourceUri, HalResource)
+      .then(() => {
+        cache.reset('Resource');
+        expect(cache.getKeys('Client')).toHaveLength(1);
+        expect(cache.getKeys('Resource')).toHaveLength(0);
+      })
+  });
+
+  test('cached client is reused', () => {
+    const getClientSpy = jest.spyOn(cache, 'getClient')
+    const setClientSpy = jest.spyOn(cache, 'setClient')
+    createClient(orgBaseUri);
+    createClient(orgBaseUri);
+    expect(cache.getKeys('Client')).toHaveLength(1);
+
+    expect(getClientSpy).toHaveBeenCalledTimes(1);
+    expect(setClientSpy).toHaveBeenCalledTimes(1);
+    getClientSpy.mockReset();
+    getClientSpy.mockRestore();
+    setClientSpy.mockReset();
+    setClientSpy.mockRestore();
+  })
+
+});
+
+describe('clear client cache tests', () => {
+  const orgUri = uriBuilder.orgBaseURI;
+  const comUri = uriBuilder.comBaseURI;
+
+  beforeEach(() => {
+    for (let i = 1; i <= 5; i++) {
+      createClient(`${orgUri}/instance${i}`);
+    }
+    for (let i = 1; i <= 5; i++) {
+      createClient(`${comUri}/instance${i}`);
+    }
+  });
+
+  test('clear client cache using a string parameter', () => {
+    const cleared = cache.clear('Client', `${orgUri}/instance1`);
+    expect(cleared).toHaveLength(1);
+    expect(cleared[0]).toBe<string>(`${orgUri}/instance1`);
+    const remaining = cache.getKeys('Client');
+    expect(remaining).toHaveLength(9);
+    expect(remaining).not.toContain<string>(`${orgUri}/instance1`);
+  });
+
+  test('clear client cache using an array of strings parameter', () => {
+    const instance1 = `${orgUri}/instance1`;
+    const instance2 = `${orgUri}/instance2`;
+    const cleared = cache.clear('Client', [instance1, instance2]);
+    expect(cleared).toHaveLength(2);
+    expect(cleared).toContain<string>(instance1);
+    expect(cleared).toContain<string>(instance2);
+    const remaining = cache.getKeys('Client');
+    expect(remaining).toHaveLength(8);
+    expect(remaining).not.toContain<string>(instance1);
+    expect(remaining).not.toContain<string>(instance2);
+  });
+
+  test('clear client cache using an array of strings parameter with double entry', () => {
+    const instance1 = `${orgUri}/instance1`;
+    const cleared = cache.clear('Client', [instance1, instance1]);
+    expect(cleared).toHaveLength(1);
+    expect(cleared[0]).toBe<string>(instance1);
+    const remaining = cache.getKeys('Client');
+    expect(remaining).toHaveLength(9);
+    expect(remaining).not.toContain<string>(instance1);
+
+  });
+
+  test('clear client cache using a regular expression', () => {
+    const instance1 = `${orgUri}/instance1`;
+    const instance2 = `${orgUri}/instance2`;
+    const instance3 = `${orgUri}/instance3`;
+    const instance4 = `${orgUri}/instance4`;
+    const instance5 = `${orgUri}/instance5`;
+    const cleared = cache.clear('Client', new RegExp('http://[a-zA-z0-9-.]*.org/[a-zA-z0-9]*'));
+    expect(cleared).toHaveLength(5);
+    expect(cleared).toContain<string>(instance1);
+    expect(cleared).toContain<string>(instance2);
+    expect(cleared).toContain<string>(instance3);
+    expect(cleared).toContain<string>(instance4);
+    expect(cleared).toContain<string>(instance5);
+    const remaining = cache.getKeys('Client');
+    expect(remaining).toHaveLength(5);
+    expect(remaining).not.toContain<string>(instance1);
+    expect(remaining).not.toContain<string>(instance2);
+    expect(remaining).not.toContain<string>(instance3);
+    expect(remaining).not.toContain<string>(instance4);
+    expect(remaining).not.toContain<string>(instance5);
+  });
+});
+
+describe('clear resource cache tests', () => {
+  const dummyPath = 'dummy';
+  let dummies: Array<IScopeResult<IDummy>>;
+  let scope: nock.Scope;
+  beforeEach(() => {
+    const promises = new Array<Promise<HalResource>>();
+    dummies = new Array<IScopeResult<IDummy>>();
+    ['com', 'org']
+      .forEach((tld: HostTld) => {
+        const baseUri = uriBuilder.baseUri(tld);
+        const client = createClient(baseUri)
+        scope = nock(baseUri);
+        for (let i = 1; i <= 5; i++) {
+          const dummy = dummyFactory.createDummyData(tld, dummyPath, i);
+          dummies.push(dummy);
+          scope
+            .get(dummy.resourceUri)
+            .reply(200, dummy.result);
+          promises.push(client.fetch(dummy.resourceUri, HalResource));
+        }
+      });
+    return Promise.all(promises);
+  });
+
+  test('clear resource cache using a string parameter', () => {
+    expect(cache.getKeys('Resource')).toHaveLength(10);
+    const dummy = dummies[0].selfUri;
+    const cleared = cache.clear('Resource', dummy);
+    expect(cleared).toHaveLength(1);
+    expect(cleared[0]).toBe<string>(dummy);
+    const remaining = cache.getKeys('Resource');
+    expect(remaining).toHaveLength(9);
+    expect(remaining).not.toContain<string>(dummy);
+    scope.done();
+  });
+
+  test('clear resource cache using an array of strings parameter', () => {
+    expect(cache.getKeys('Resource')).toHaveLength(10);
+    const dummy0 = dummies[0].selfUri;
+    const dummy1 = dummies[1].selfUri;
+    const cleared = cache.clear('Resource', [dummy1, dummy0]);
+    expect(cleared).toHaveLength(2);
+    expect(cleared).toContain<string>(dummy0);
+    expect(cleared).toContain<string>(dummy1);
+    const remaining = cache.getKeys('Resource');
+    expect(remaining).toHaveLength(8);
+    expect(remaining).not.toContain<string>(dummy0);
+    expect(remaining).not.toContain<string>(dummy1);
+  });
+
+  test('clear resource cache using an array of strings parameter with double entry', () => {
+    expect(cache.getKeys('Resource')).toHaveLength(10);
+    const dummy = dummies[0].selfUri;
+    const cleared = cache.clear('Resource', [dummy, dummy]);
+    expect(cleared).toHaveLength(1);
+    expect(cleared[0]).toBe<string>(dummy);
+    const remaining = cache.getKeys('Resource');
+    expect(remaining).toHaveLength(9);
+    expect(remaining).not.toContain<string>(dummy);
+  });
+
+  test('clear resource cache using a regular expression', () => {
+    expect(cache.getKeys('Resource')).toHaveLength(10);
+    const cleared = cache.clear('Resource', new RegExp('http://[a-zA-z0-9-.]*.org/dummy/[a-zA-z0-9]*'));
+    expect(cleared).toHaveLength(5);
+    const expectedToBeRemoved = new Array<string>();
+    for (let i = 1; i <= 5; i++) {
+      expectedToBeRemoved.push(uriBuilder.resourceUri('org', false, 'dummy', i));
+    }
+    expect(cleared).toContain<string>(expectedToBeRemoved[0]);
+    expect(cleared).toContain<string>(expectedToBeRemoved[1]);
+    expect(cleared).toContain<string>(expectedToBeRemoved[2]);
+    expect(cleared).toContain<string>(expectedToBeRemoved[3]);
+    expect(cleared).toContain<string>(expectedToBeRemoved[4]);
+    const remaining = cache.getKeys('Resource');
+    expect(remaining).toHaveLength(5);
+    expect(remaining).not.toContain<string>(expectedToBeRemoved[0]);
+    expect(remaining).not.toContain<string>(expectedToBeRemoved[1]);
+    expect(remaining).not.toContain<string>(expectedToBeRemoved[2]);
+    expect(remaining).not.toContain<string>(expectedToBeRemoved[3]);
+    expect(remaining).not.toContain<string>(expectedToBeRemoved[4]);
+  });
+});
+
+describe('refreshing mechanism', () => {
+
+  test('Lists are refreshed when calling fetchArray', () => {
+    const orgBaseUri = uriBuilder.orgBaseURI;
+    const dummy1 = dummyFactory.createDummyData('org', 'dummy', 1, { done: { count: 1 } });
+    const dummy2 = dummyFactory.createDummyData('org', 'dummy', 1, { testing: { count: 1 } });
+
+    const scope = nock(orgBaseUri);
+    scope
+      .get(dummy1.resourceUri)
+      .reply(200, [dummy1.result]);
+    scope
+      .get(dummy1.resourceUri)
+      .reply(200, [dummy2.result]);
+
+    return createClient()
+      .fetchArray(dummy1.selfUri, HalResource)
+      .then((dummies: Array<HalResource>) => {
+        expect(dummies[0].prop('done').count).toBe<number>(1);
+        return createClient()
+          .fetchArray(dummy1.selfUri, HalResource)
+          .then((dummies2: Array<HalResource>) => {
+            expect(dummies2[0].prop('done')).toBeUndefined();
+            expect(dummies2[0].prop('testing').count).toBe<number>(1);
+          });
+      });
+  });
+});
+
+describe.skip('Still to do tests', () => {
+  beforeAll(() => {
   const person1 = {
     _embedded: {
       'best-friend': {
@@ -83,326 +346,69 @@ beforeAll(() => {
     name: 'Project 1',
   };
 
-  const dummy = {
-    _embedded: {
-      data: 'data'
-    },
-    _links: {
-      self: {
-        href: 'http://test.fr/dummy',
-      },
-    },
-  }
-  const scope = nock('http://test.fr/');
-
-  scope
-    .get('/projects')
-    .reply(200, projectsList1);
-
-  scope
-    .get('/projects')
-    .reply(200, projectsList2);
-
   const scope2 = nock('http://test.fr/').persist();
   scope2.get('/person/1')
     .reply(200, person1);
-  scope2
-    .get('/dummy')
-    .reply(200, dummy);
+
 });
 
-afterAll(() => nock.restore());
-afterEach(() => {
-  cache.reset();
-});
-//#endregion
-
-describe('Cache', () => {
-  test('Lists are refreshed when calling fetchArray', () => {
-    return createClient()
-      .fetchArray('http://test.fr/projects', HalResource)
-      .then((projects: Array<HalResource>) => {
-        expect(projects[0].prop('Done').count).toBe<number>(1);
-        return createClient()
-          .fetchArray('http://test.fr/projects', HalResource)
-          .then((projects2: Array<HalResource>) => {
-            expect(projects2[0].prop('Done')).toBeUndefined();
-            expect(projects2[0].prop('Testing').count).toBe<number>(1);
+  // TODO understand the caching mechanism before trying to solve the next two
+  test('refresh from cache reload from cached object', () => {
+    const client = createClient(uriBuilder.baseUri('org'));
+    return client
+      .fetch('/person/1', Person)
+      .then((person: Person) => {
+        expect(person.name).toBe<string>('Project 1');
+        person.name = 'test';
+        expect(person.name).toBe<string>('test');
+        return client
+          .fetch('/person/1', Person)
+          .then((fetched: Person) => {
+            expect(fetched.name).toBe<string>('Project 1');
           });
       });
   });
 
-  test('Fetched resource is cached', () => {
-    const client = createClient('http://test.fr/');
+  test('refresh from cache does not reload from cached object after resetCache', () => {
+
+    const client = createClient(uriBuilder.baseUri('org'));
     return client
-      .fetch('dummy', HalResource)
-      .then(() => {
-        expect(cache.getKeys('Resource')).toContain<string>('http://test.fr/dummy');
-      })
-  });
-
-  test('Client created with URI is cached', () => {
-    createClient('http://test.fr/');
-    expect(cache.getKeys('Client')).toContain('http://test.fr/');
-    expect(cache.getKeys('Client')).toHaveLength(1);
-  });
-
-  test('Client created without URI is cached', () => {
-    createClient();
-    expect(cache.getKeys('Client')).toHaveLength(0);
-  });
-
-  test('Reset cache without parameter empties both caches', () => {
-    const client = createClient('http://test.fr/');
-    return client
-      .fetch('/dummy', HalResource)
-      .then(() => {
+      .fetch('/person/1', Person)
+      .then((person: Person) => {
+        expect(person.name).toBe<string>('Project 1');
+        person.name = 'test';
+        expect(person.name).toBe<string>('test');
         cache.reset();
-        expect(cache.getKeys('Client')).toHaveLength(0);
-        expect(cache.getKeys('Resource')).toHaveLength(0);
-      })
+        return client
+          .fetch('/person/1', Person)
+          .then((fetched: Person) => {
+            expect(fetched.name).toBe<string>('Project 1');
+          });
+      });
   });
 
-  test('Reset cache with parameter \'Client\' empties only client cache', () => {
-    const client = createClient('http://test.fr/');
+  test('chached resource is reused', () => {
+    const getResourceSpy = jest.spyOn(cache, 'getResource')
+    const setResourceSpy = jest.spyOn(cache, 'setResource')
+    const client = createClient(uriBuilder.baseUri('org'));
     return client
       .fetch('/dummy', HalResource)
       .then(() => {
-        cache.reset('Client');
-        expect(cache.getKeys('Client')).toHaveLength(0);
-        expect(cache.getKeys('Resource')).toHaveLength(1);
-      })
+        return client
+          .fetch('/dummy', HalResource)
+          .then(() => {
+
+            expect(cache.getKeys('Resource')).toHaveLength(1);
+
+            expect(getResourceSpy).toHaveBeenCalledTimes(1);
+            expect(setResourceSpy).toHaveBeenCalledTimes(1);
+            getResourceSpy.mockReset();
+            getResourceSpy.mockRestore();
+            setResourceSpy.mockReset();
+            setResourceSpy.mockRestore();
+          });
+      });
   });
-
-  test('Reset cache with parameter \'Resource\' empties only client cache', () => {
-    const client = createClient('http://test.fr/');
-    return client
-      .fetch('/dummy', HalResource)
-      .then(() => {
-        cache.reset('Resource');
-        expect(cache.getKeys('Client')).toHaveLength(1);
-        expect(cache.getKeys('Resource')).toHaveLength(0);
-      })
-  });
-
-  test('cached client is reused', () => {
-    const getClientSpy = jest.spyOn(cache, 'getClient')
-    const setClientSpy = jest.spyOn(cache, 'setClient')
-    createClient('http://test.fr/');
-    createClient('http://test.fr/');
-    expect(cache.getKeys('Client')).toHaveLength(1);
-
-    expect(getClientSpy).toHaveBeenCalledTimes(1);
-    expect(setClientSpy).toHaveBeenCalledTimes(1);
-    getClientSpy.mockReset();
-    getClientSpy.mockRestore();
-    setClientSpy.mockReset();
-    setClientSpy.mockRestore();
-  })
-
-});
-
-describe('clear client cache tests', () => {
-  beforeEach(() => {
-    for (let i = 1; i <= 5; i++) {
-      createClient(`http://test${i}.fr`);
-    }
-    for (let i = 1; i <= 5; i++) {
-      createClient(`http://test${i}.de`);
-    }
-  });
-
-  test('clear client cache using a string parameter', () => {
-    const cleared = cache.clear('Client', 'http://test1.fr');
-    expect(cleared).toHaveLength(1);
-    expect(cleared[0]).toBe<string>('http://test1.fr');
-    const remaining = cache.getKeys('Client');
-    expect(remaining).toHaveLength(9);
-    expect(remaining).not.toContain<string>('http://test1.fr');
-  });
-
-  test('clear client cache using an array of strings parameter', () => {
-    const cleared = cache.clear('Client', ['http://test1.fr', 'http://test2.fr']);
-    expect(cleared).toHaveLength(2);
-    expect(cleared).toContain<string>('http://test1.fr');
-    expect(cleared).toContain<string>('http://test2.fr');
-    const remaining = cache.getKeys('Client');
-    expect(remaining).toHaveLength(8);
-    expect(remaining).not.toContain<string>('http://test1.fr');
-    expect(remaining).not.toContain<string>('http://test2.fr');
-  });
-
-  test('clear client cache using an array of strings parameter with double entry', () => {
-    const cleared = cache.clear('Client', ['http://test1.fr', 'http://test1.fr']);
-    expect(cleared).toHaveLength(1);
-    expect(cleared[0]).toBe<string>('http://test1.fr');
-    const remaining = cache.getKeys('Client');
-    expect(remaining).toHaveLength(9);
-    expect(remaining).not.toContain<string>('http://test1.fr');
-
-  });
-
-  test('clear client cache using a regular expression', () => {
-    const cleared = cache.clear('Client', new RegExp('http://[a-zA-z0-9]*.fr'));
-    expect(cleared).toHaveLength(5);
-    expect(cleared).toContain<string>('http://test1.fr');
-    expect(cleared).toContain<string>('http://test2.fr');
-    expect(cleared).toContain<string>('http://test3.fr');
-    expect(cleared).toContain<string>('http://test4.fr');
-    expect(cleared).toContain<string>('http://test5.fr');
-    const remaining = cache.getKeys('Client');
-    expect(remaining).toHaveLength(5);
-    expect(remaining).not.toContain<string>('http://test1.fr');
-    expect(remaining).not.toContain<string>('http://test2.fr');
-    expect(remaining).not.toContain<string>('http://test3.fr');
-    expect(remaining).not.toContain<string>('http://test4.fr');
-    expect(remaining).not.toContain<string>('http://test5.fr');
-  });
-
-});
-
-describe('clear resource cache tests', () => {
-
-  beforeEach(() => {
-    cache.reset();
-
-    const promises = new Array<Promise<HalResource>>();
-    ['fr', 'de'].forEach((host: string) => {
-      const client = createClient(`http://test.${host}/`)
-      const scope = nock(`http://test.${host}/`).persist();
-      for (let i = 1; i <= 5; i++) {
-        const resp = {
-          _links: {
-            _self: {
-              href: `http://test.${host}/personc/${i}`
-            }
-          },
-          _embedded: {
-            id: i
-          }
-        }
-        scope
-          .get(`/personc/${i}`)
-          .reply(200, resp);
-        promises.push(client.fetch(`/personc/${i}`, HalResource));
-      }
-    });
-    return Promise.all(promises);
-  });
-
-  test('clear resource cache using a string parameter', () => {
-    expect(cache.getKeys('Resource')).toHaveLength(10);
-    const cleared = cache.clear('Resource', 'http://test.fr/personc/1');
-    expect(cleared).toHaveLength(1);
-    expect(cleared[0]).toBe<string>('http://test.fr/personc/1');
-    const remaining = cache.getKeys('Resource');
-    expect(remaining).toHaveLength(9);
-    expect(remaining).not.toContain<string>('http://test.fr/personc/1');
-  });
-
-  test('clear resource cache using an array of strings parameter', () => {
-    expect(cache.getKeys('Resource')).toHaveLength(10);
-    const cleared = cache.clear('Resource', ['http://test.fr/personc/1', 'http://test.fr/personc/2']);
-    expect(cleared).toHaveLength(2);
-    expect(cleared).toContain<string>('http://test.fr/personc/1');
-    expect(cleared).toContain<string>('http://test.fr/personc/2');
-    const remaining = cache.getKeys('Resource');
-    expect(remaining).toHaveLength(8);
-    expect(remaining).not.toContain<string>('http://test.fr/personc/1');
-    expect(remaining).not.toContain<string>('http://test.fr/personc/2');
-  });
-
-  test('clear resource cache using an array of strings parameter with double entry', () => {
-    expect(cache.getKeys('Resource')).toHaveLength(10);
-    const cleared = cache.clear('Resource', ['http://test.fr/personc/1', 'http://test.fr/personc/1']);
-    expect(cleared).toHaveLength(1);
-    expect(cleared[0]).toBe<string>('http://test.fr/personc/1');
-    const remaining = cache.getKeys('Resource');
-    expect(remaining).toHaveLength(9);
-    expect(remaining).not.toContain<string>('http://test.fr/personc/1');
-  });
-
-  test('clear resource cache using a regular expression', () => {
-    expect(cache.getKeys('Resource')).toHaveLength(10);
-    const cleared = cache.clear('Resource', new RegExp('http://[a-zA-z0-9]*.fr/personc/[0-9]*'));
-    expect(cleared).toHaveLength(5);
-    expect(cleared).toContain<string>('http://test.fr/personc/1');
-    expect(cleared).toContain<string>('http://test.fr/personc/2');
-    expect(cleared).toContain<string>('http://test.fr/personc/3');
-    expect(cleared).toContain<string>('http://test.fr/personc/4');
-    expect(cleared).toContain<string>('http://test.fr/personc/5');
-    const remaining = cache.getKeys('Resource');
-    expect(remaining).toHaveLength(5);
-    expect(remaining).not.toContain<string>('http://test.fr/personc/1');
-    expect(remaining).not.toContain<string>('http://test.fr/personc/2');
-    expect(remaining).not.toContain<string>('http://test.fr/personc/3');
-    expect(remaining).not.toContain<string>('http://test.fr/personc/4');
-    expect(remaining).not.toContain<string>('http://test.fr/personc/5');
-  });
-});
-
-describe('Still to do tests', () => {
-
-  test.todo('refresh from cache reload from cached object')
-  // , () => {
-  //   const client = createClient('http://test.fr/');
-  //   return client
-  //     .fetch('/person/1', Person)
-  //     .then((person: Person) => {
-  //       expect(person.name).toBe<string>('Project 1');
-  //       person.name = 'test';
-  //       expect(person.name).toBe<string>('test');
-  //       return client
-  //         .fetch('/person/1', Person)
-  //         .then((fetched: Person) => {
-  //           expect(fetched.name).toBe<string>('Project 1');
-  //         });
-  //     });
-  // });
-
-  // TODO understand the caching mechanism before trying to solve these
-  test.todo('refresh from cache does not reload from cached object after resetCache')
-  //   , () => {
-
-  //     const client = createClient('http://test.fr/');
-  //     return client
-  //       .fetch('/person/1', Person)
-  //       .then((person: Person) => {
-  //         expect(person.name).toBe<string>('Project 1');
-  //         person.name = 'test';
-  //         expect(person.name).toBe<string>('test');
-  //         cache.reset();
-  //         return client
-  //           .fetch('/person/1', Person)
-  //           .then((fetched: Person) => {
-  //             expect(fetched.name).toBe<string>('Project 1');
-  //           });
-  //       });
-  //   });
-
-  test.todo('chached resource is reused')
-  // , () => {
-  //   const getResourceSpy = jest.spyOn(cache, 'getResource')
-  //   const setResourceSpy = jest.spyOn(cache, 'setResource')
-  //   const client = createClient('http://test.fr/');
-  //   return client
-  //     .fetch('/dummy', HalResource)
-  //     .then(() => {
-  //       return client
-  //         .fetch('/dummy', HalResource)
-  //         .then(() => {
-
-  //           expect(cache.getKeys('Resource')).toHaveLength(1);
-
-  //           expect(getResourceSpy).toHaveBeenCalledTimes(1);
-  //           expect(setResourceSpy).toHaveBeenCalledTimes(1);
-  //           getResourceSpy.mockReset();
-  //           getResourceSpy.mockRestore();
-  //           setResourceSpy.mockReset();
-  //           setResourceSpy.mockRestore();
-  //         });
-  //     });
-  // });
 
 
 });

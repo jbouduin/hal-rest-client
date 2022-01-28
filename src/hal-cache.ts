@@ -31,7 +31,7 @@ export interface IHalCache {
   hasClient(uri: string): boolean;
   setClient(uri: string, value: HalRestClient): void;
   getResource(uri: string): IHalResource;
-  hasResource(uri:string): boolean;
+  hasResource(uri: string): boolean;
   setResource(uri: string, value: IHalResource): void;
 }
 
@@ -64,21 +64,16 @@ export class HalCache implements IHalCache {
  */
   public getKeys(type: HalCacheType): Array<string> {
     let result: Array<string>;
-    switch (type) {
-      case 'Client':
-        result = Array.from(this.clientCache.keys());
-        break;
-      case 'Resource':
-        result = Array.from(this.resourceCache.keys());
-        break;
-      default:
-        break;
+    if (type === 'Client') {
+      result = Array.from(this.clientCache.keys());
+    } else {
+      result = Array.from(this.resourceCache.keys());
     }
     return result;
   }
 
   public clear(type: HalCacheType, key: string | RegExp): Array<string> {
-    const keysToClear= new Array<string>();
+    const keysToClear = new Array<string>();
     const cacheToClear = type === 'Client' ? this.clientCache : this.resourceCache;
 
     if (typeof key === 'string') {
@@ -90,7 +85,7 @@ export class HalCache implements IHalCache {
     }
     const result = new Array<string>();
     keysToClear.forEach((key: string) => {
-      if (cacheToClear.delete(key)){
+      if (cacheToClear.delete(key)) {
         result.push(key);
       }
     });

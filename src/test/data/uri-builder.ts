@@ -1,42 +1,68 @@
-export type TemplateParameter = 'sort' | 'count' | 'offset';
+export type HostTld = 'com' | 'org';
 
 export interface IUriTemplate {
   [key: string]: string | number;
 }
 
 export class UriBuilder {
-  private static readonly protocol = 'http'
-  private static readonly hostname = 'test.hal-rest-client.org';
+  //#region private properties ------------------------------------------------
+  private protocol: string;
+  private hosts: Map<HostTld, string>;
+  //#endregion
 
-  public static get baseURI(): string {
-    return this.buildUri(UriBuilder.hostname, undefined);
+  //#region Constructor & C° --------------------------------------------------
+  constructor() {
+    this.protocol = 'http://'
+    this.hosts = new Map<HostTld, string>();
+    this.hosts.set('org', 'test.hal-rest-client.org');
+    this.hosts.set('com','test.hal-rest-client.com');
+  }
+  //#endregion
+
+  //#region public getters ----------------------------------------------------
+  public get orgBaseURI(): string {
+    return this.buildUri('org', false, undefined);
   }
 
-  public static resourceUri(resource: string, id?: number, ...subResource: Array<string | number>): string {
-    return UriBuilder.buildUri(UriBuilder.hostname, undefined, resource, id, ...subResource);
+  public get comBaseURI(): string {
+    return this.buildUri('com', false, undefined);
+  }
+  //#endregion
+
+  //#region public methods ----------------------------------------------------
+  public baseUri(tld: HostTld): string {
+    return this.buildUri(tld, false, undefined);
   }
 
-  public static templatedResourceUri(resource: string, queryParameters: IUriTemplate): string {
+  public resourceUri(tld: HostTld, relative: boolean, resource: string, id?: number, ...subResource: Array<string | number>): string {
+    return this.buildUri(tld, relative, undefined, resource, id, ...subResource);
+  }
+
+  public templatedResourceUri(tld: HostTld, relative: boolean,resource: string, queryParameters: IUriTemplate): string {
     const queryString = `{?${Object.keys(queryParameters).join(',')}}`;
-    return UriBuilder.buildUri(UriBuilder.hostname, queryString, resource);
+    return this.buildUri(tld, relative, queryString, resource);
   }
 
-  public static filledTemplatedResourceUri(resource: string, queryParameters: IUriTemplate): string {
+  public filledTemplatedResourceUri(tld: HostTld, relative: boolean,resource: string, queryParameters: IUriTemplate): string {
     const queryString = '?' + Array.from(Object.keys(queryParameters)).map((key: string) => `${key}=${queryParameters[key]}`).join('&');
-    return UriBuilder.buildUri(UriBuilder.hostname, queryString, resource);
+    return this.buildUri(tld, relative, queryString, resource);
   }
+  //#endregion
 
-  private static buildUri(hostname: string, queryParameters: string | undefined, ...parts: Array<string | number>): string {
+  //#region private methods ---------------------------------------------------
+  private buildUri(tld: HostTld, relative: boolean, queryParameters: string | undefined, ...parts: Array<string | number>): string {
     const asArray = new Array<string>();
-    asArray.push(`${UriBuilder.protocol}:/`);
-    asArray.push(hostname);
+    if (!relative) {
+      // asArray.push(`${this.protocol}:/`);
+      asArray.push(this.hosts.get(tld));
+    }
     if (parts) {
       asArray.push(...parts
         .filter((part: string | number) => part ? true : false)
         .map((part: string | number) => (part && typeof part === 'string') ? part : part.toString())
       )
-    };
-    return `${asArray.join('/')}${queryParameters || ''}`;
-
+    }
+    return `${relative ? '/' : this.protocol}${asArray.join('/')}${queryParameters || ''}`;
   }
+  //#endregion
 }
