@@ -1,26 +1,43 @@
 
 import * as nock from 'nock';
 import { createClient, createResource, HalProperty, HalResource } from '..';
+import { DataFactory, IEmbeddedCollection } from './data/data-factory';
+import { UriBuilder } from './data/uri-builder';
 import { Cyclical } from './models';
 
+//#region local model definition ----------------------------------------------
 class TestModel extends HalResource {
+  @HalProperty()
+  public id: number;
+
   @HalProperty()
   public name: string;
 
-  @HalProperty({name: 'jsonProperty'})
+  @HalProperty({ name: 'jsonProperty' })
   public typeScriptProperty: string;
 }
+//#endregion
 
+//#region setup/teardown ------------------------------------------------------
 afterAll(() => nock.restore());
+//#endregion
 
 describe('@HalProperty', () => {
+  const uriBuilder = new UriBuilder;
+  const dataFactory = new DataFactory(uriBuilder);
+  const baseUri  = uriBuilder.orgBaseURI;
+
   test('Json/HAL property to Typescript property', () => {
-    const scope = nock('http://test.fr/');
+    const scope = nock(baseUri);
+    const data: IEmbeddedCollection = {
+      name: 'name', jsonProperty: 'value'
+    };
+    const test = dataFactory.createResourceData('org', 'test', 1, data)
     scope
-      .get('/test')
-      .reply(200, { _links: { self: '/test' }, name: 'name', jsonProperty: 'value' });
-    return createClient('http://test.fr')
-      .fetch('/test', TestModel)
+      .get(test.resourceUri)
+      .reply(200, test.result);
+    return createClient(baseUri)
+      .fetch(test.resourceUri, TestModel)
       .then((result: TestModel) => {
         expect(result.name).toBe<string>('name');
         expect(result.typeScriptProperty).toBe<string>('value');
@@ -29,16 +46,20 @@ describe('@HalProperty', () => {
   });
 
   test('Json/HAL property to Typescript property after update', () => {
-    const scope = nock('http://test.fr/');
+    const scope = nock(baseUri);
+    const data: IEmbeddedCollection = {
+      name: 'name', jsonProperty: 'value'
+    };
+    const test = dataFactory.createResourceData('org', 'test', 1, data)
     scope
-      .get('/test')
-      .reply(200, { _links: { self: '/test' }, name: 'name', jsonProperty: 'value' });
+      .get(test.resourceUri)
+      .reply(200, test.result);
     scope
-      .intercept('/test', 'PATCH', { name: 'noname', jsonProperty: 'novalue' })
+      .intercept(test.resourceUri, 'PATCH', { id: 1, name: 'noname', jsonProperty: 'novalue' })
       .reply(200);
-    const client = createClient('http://test.fr');
+    const client = createClient(baseUri);
     return client
-      .fetch('/test', TestModel)
+      .fetch(test.resourceUri, TestModel)
       .then((result: TestModel) => {
         result.name = 'noname';
         result.typeScriptProperty = 'novalue';
@@ -52,11 +73,12 @@ describe('@HalProperty', () => {
   });
 
   test('Typescript property to JSon/HAL property (assign model properties)', () => {
-    const scope = nock('http://test.fr/');
+    const scope = nock(baseUri);
+    const relativeUri = uriBuilder.resourceUri('org', true, 'test', 1);
     scope
-      .intercept('/test', 'POST', { name: 'name', jsonProperty: 'value' })
+      .intercept(relativeUri, 'POST', { name: 'name', jsonProperty: 'value' })
       .reply(200);
-    const resource = createResource(createClient('http://test.fr/'), TestModel, '/test');
+    const resource = createResource(createClient(baseUri), TestModel, relativeUri);
     resource.name = 'name';
     resource.typeScriptProperty = 'value';
     return resource.create()
@@ -67,11 +89,12 @@ describe('@HalProperty', () => {
   });
 
   test('Typescript property to JSon/HAL property (use "prop" function)', () => {
-    const scope = nock('http://test.fr/');
+    const scope = nock(baseUri);
+    const relativeUri = uriBuilder.resourceUri('org', true, 'test', 1);
     scope
-      .intercept('/test', 'POST', { name: 'name', jsonProperty: 'value' })
+      .intercept(relativeUri, 'POST', { name: 'name', jsonProperty: 'value' })
       .reply(200);
-    const resource = createResource(createClient('http://test.fr/'), TestModel, '/test');
+    const resource = createResource(createClient(baseUri), TestModel, relativeUri);
     resource.prop('name', 'name');
     resource.prop('typeScriptProperty', 'value');
     return resource.create()
