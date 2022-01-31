@@ -125,7 +125,7 @@ export class HalResource implements IHalResource {
    */
   public create(serializer?: IJSONSerializer): Promise<any> {
     const json = this.serialize(Object.keys(this.props), Object.keys(this.links), serializer);
-    return this.restClient.create(this.uri.fetchedURI, json, this.constructor as IHalResourceConstructor<this>);
+    return this.restClient.create(this.uri.resourceURI, json, this.constructor as IHalResourceConstructor<this>);
   }
 
   public reset() {

@@ -1,29 +1,54 @@
-import * as uriTemplates from "uri-templates";
+import * as uriTemplates from 'uri-templates';
 
 export class URI {
-    private uriTemplates;
-    constructor(public uri: string, public templated: boolean = false, public fetchedURI = "") {
-        if (templated) {
-            this.uriTemplates = uriTemplates(uri);
-        }
+  //#region private properties ------------------------------------------------
+  private fetchedURI: string;
+  private uriTemplates;
+  //#endregion
+
+  //#region public properties -------------------------------------------------
+  public readonly uri: string;
+  //#endregion
+
+  //#region public getter -----------------------------------------------------
+  /**
+   * Returns the fetched URI in case of a templated URI, the original URI otherwise
+   */
+  public get resourceURI(): string {
+    return this.templated ? this.fetchedURI : this.uri;
+  }
+  //#endregion
+
+  //#region Constructor & C° --------------------------------------------------
+  /**
+   * Creates a URI
+   * @param uri
+   * @param templated defaults to false
+   */
+  constructor(uri: string, public templated: boolean = false) {
+    this.uri = uri;
+    this.fetchedURI = '';
+    if (templated) {
+      this.uriTemplates = uriTemplates(uri);
+    }
+  }
+  //#endregion
+
+  //#region public methods ----------------------------------------------------
+  public setFetchedUri(fetchedUri: string): void {
+    if (!this.templated) {
+      throw new Error('You can not set the fetched URI of a non templated URI')
+    } else {
+      this.fetchedURI = fetchedUri;
     }
 
-    public get resourceURI(): string {
-        if (this.templated) {
-            if (this.fetchedURI != "") {
-                return this.fetchedURI
-            }
-            throw new Error("can not call delete on resource with templated link")
-        } else {
-            return this.uri
-        }
+  }
+  public fill(params: object = {}): string {
+    if (this.templated && this.uriTemplates) {
+      return this.uriTemplates.fill(params);
+    } else {
+      return this.uri;
     }
-
-    public fill(params: object = {}): string {
-        if (this.templated && this.uriTemplates) {
-            return this.uriTemplates.fill(params);
-        } else {
-            return this.uri;
-        }
-    }
+  }
+  //#endregion
 }

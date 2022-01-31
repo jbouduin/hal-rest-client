@@ -1,11 +1,11 @@
-import { AxiosRequestConfig } from "axios";
-import { HalResource } from "./hal-resource";
-import { IHalResource, IHalResourceConstructor } from "./hal-resource-interface";
-import { HalRestClient } from "./hal-rest-client";
-import { URI } from "./uri";
+import { AxiosRequestConfig } from 'axios';
+import { HalCache, IHalCache } from './hal-cache';
+import { HalResource } from './hal-resource';
+import { IHalResource, IHalResourceConstructor } from './hal-resource-interface';
+import { HalRestClient } from './hal-rest-client';
+import { URI } from './uri';
 
-const cachedClients = new Map<string, HalRestClient>();
-const cachedResources = new Map<string, IHalResource>();
+export const cache: IHalCache = new HalCache();
 
 /**
  * create hal rest client
@@ -16,18 +16,14 @@ export function createClient(basename?: string, options: AxiosRequestConfig = {}
   let result: HalRestClient;
   if (!basename) {
     result = new HalRestClient();
-  } else if (!cachedClients.has(basename)) {
+  } else if (!cache.hasClient(basename)) {
     result = new HalRestClient(basename, options);
-    cachedClients.set(basename, result);
+    cache.setClient(basename, result);
   } else {
-    result = cachedClients.get(basename);
+    result = cache.getClient(basename);
   }
   return result;
 }
-
-/**
- * create HalResource
- */
 
 /**
  * Create a HalResource of the given type. If no uri is specified, an 'empty' resource is created.
@@ -52,22 +48,15 @@ export function createResource<T extends IHalResource>(
   } else if (uri instanceof URI && uri.templated) {
     result = new c(client, uri);
   } else {
-    const objectURI = typeof uri === "string" ? new URI(uri, false, uri) : uri;
-    if (!cachedResources.has(objectURI.uri)) {
+    const objectURI = typeof uri === 'string' ? new URI(uri, false) : uri;
+    if (!cache.hasResource(objectURI.uri)) {
       result = new c(client, objectURI);
-      cachedResources.set(objectURI.uri, result);
+      cache.setResource(objectURI.uri, result);
     } else {
-      const cached = cachedResources.get(objectURI.uri) as any;
+      const cached = cache.getResource(objectURI.uri) as any;
       result = cached instanceof c ? cached : HalResource.createFromExisting(cached, c);
     }
   }
   return result;
 }
 
-/**
- * reset cache for client or resource
- */
-export function resetCache() {
-  cachedClients.clear();
-  cachedResources.clear();
-}

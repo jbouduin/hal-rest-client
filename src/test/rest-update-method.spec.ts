@@ -1,106 +1,46 @@
-import { createClient, HalResource, resetCache } from '..';
+import { createClient, HalResource, cache } from '..';
 import * as nock from 'nock';
-
-const basePath = 'http://test.fr/';
+import { UriBuilder } from './data/uri-builder';
+import { PersonFactory } from './data/person-factory';
 
 //#region setup/teardown ------------------------------------------------------
 beforeAll(() => {
-  resetCache();
+  cache.reset();
   nock.cleanAll();
-
-  const newBestFriend = {
-    _links: {
-      self: {
-        href: 'http://test.fr/person/12',
-      },
-    },
-    name: 'New bestfriend',
-  };
-
-  const person1 = {
-    _embedded: {
-      'best-friend': {
-        _links: {
-          self: {
-            href: 'http://test.fr/person/2',
-          },
-        },
-        name: 'My bestfriend',
-      },
-    },
-    _links: {
-      contacts: {
-        href: 'http://test.fr/person/2/contacts',
-      },
-      project: {
-        href: 'http://test.fr/project/4',
-      },
-      self: {
-        href: 'http://test.fr/person/1',
-      },
-    },
-    name: 'Person 1',
-    dummy: 'dummy'
-  };
-
-  const project5 = {
-    _links: {
-      self: {
-        href: 'http://test.fr/project/5',
-      },
-    },
-    name: 'Project 5',
-  };
-
-  const contacts = {
-    _links: {
-      self: {
-        href: 'http://test.fr/person/2/contacts',
-      },
-    },
-    phone: 'xxxxxxxxxx',
-  };
-
-  const testNock = nock(basePath).persist();
-
-  testNock
-    .get('/person/1')
-    .reply(200, person1);
-
-  testNock
-    .get('/person/12')
-    .reply(200, newBestFriend);
-
-  testNock
-    .get('/person/2/contacts')
-    .reply(200, contacts);
-
-  testNock
-    .get('/project/5')
-    .reply(200, project5);
 });
 
 afterAll(() => nock.restore());
 afterEach(() => {
-  resetCache();
+  cache.reset();
 });
 //#endregion
 
 describe('Rest update calls', () => {
-  test('can update person using HalResource', async () => {
+  const uriBuilder = new UriBuilder();
+  const personFactory = new PersonFactory('org', uriBuilder);
+
+  test('update person using HalResource', async () => {
+    const person1 = personFactory.createPerson(1);
+    const person2 = personFactory.createPerson(99);
     const client = createClient();
+
+    const scope = nock(uriBuilder.orgBaseURI);
+    scope
+      .get(person1.relativeUri)
+      .reply(200, person1.data)
+      .get(person2.relativeUri)
+      .reply(200, person2.data)
+      .intercept(person1.relativeUri, 'PATCH', { 'name': 'test', 'best-friend': person2.fullUri })
+      .reply(200);
 
     return Promise
       .all([
-        client.fetchResource('http://test.fr/person/1'),
-        client.fetchResource('http://test.fr/person/12')
+        client.fetchResource(person1.fullUri),
+        client.fetchResource(person2.fullUri)
       ])
       .then((resources: [HalResource, HalResource]) => {
         resources[0].prop('name', 'test');
         resources[0].prop('best-friend', resources[1]);
-        const scope = nock(basePath)
-          .intercept('/person/1', 'PATCH', { 'name': 'test', 'best-friend': 'http://test.fr/person/12' })
-          .reply(200);
         return resources[0]
           .update()
           .then((result: any) => {
@@ -111,23 +51,36 @@ describe('Rest update calls', () => {
   });
 
   test('can update link using HalResource', () => {
+    const person = personFactory.createPerson(1);
+    const newName = 'test';
+    const newPhone = '06XX1245XX';
+
+    const scope = nock(uriBuilder.orgBaseURI);
+    scope
+      .get(person.relativeUri)
+      .reply(200, person.data);
+    scope
+      .get(person.contacts.relativeUri)
+      .reply(200, person.contacts.data);
+    scope
+      .intercept(person.relativeUri, 'PATCH', { name: newName })
+      .reply(200);
+    scope
+      .intercept(person.contacts.relativeUri, 'PATCH', { phone: newPhone })
+      .reply(200);
+
     const client = createClient();
     return client
-      .fetchResource('http://test.fr/person/1')
+      .fetchResource(person.fullUri)
       .then((resource: HalResource) => {
         return resource.prop('contacts')
           .fetch()
           .then(() => resource);
       })
       .then((resource: HalResource) => {
-        resource.prop('name', 'test');
-        resource.prop('contacts').prop('phone', '06XX1245XX');
-        const scope = nock(basePath)
-          .intercept('/person/1', 'PATCH', { name: 'test' })
-          .reply(200);
-        scope
-          .intercept('/person/2/contacts', 'PATCH', { phone: '06XX1245XX' })
-          .reply(200);
+        resource.prop('name', newName);
+        resource.prop('contacts').prop('phone', newPhone);
+
         return Promise
           .all([
             resource.update(),
@@ -142,18 +95,30 @@ describe('Rest update calls', () => {
   });
 
   test('can update new link of a HalResource', () => {
-    const client = createClient('http://test.fr');
+    const person = personFactory.createPerson(1);
+    const newName = 'test';
+    delete person.data._links.contacts;
+
+    const scope = nock(uriBuilder.orgBaseURI);
+    scope
+      .get(person.relativeUri)
+      .reply(200, person.data);
+    scope
+      .get(person.contacts.relativeUri)
+      .reply(200, person.contacts.data);
+    scope
+      .intercept(person.relativeUri, 'PATCH',{ name: newName, contacts: person.contacts.fullUri } )
+      .reply(200);
+
+    const client = createClient(uriBuilder.orgBaseURI);
     return Promise
       .all([
-        client.fetchResource('/person/1'),
-        client.fetchResource('/project/5')
+        client.fetchResource(person.relativeUri),
+        client.fetchResource(person.contacts.relativeUri)
       ])
       .then((resources: [HalResource, HalResource]) => {
-        resources[0].prop('name', 'new name');
-        resources[0].prop('project', resources[1]);
-        const scope = nock(basePath)
-          .intercept('/person/1', 'PATCH', { name: 'new name', project: 'http://test.fr/project/5' })
-          .reply(200);
+        resources[0].prop('name', newName);
+        resources[0].prop('contacts', resources[1]);
         return resources[0].update()
           .then((result: any) => {
             expect(result.status).toBe<number>(200);
@@ -162,17 +127,22 @@ describe('Rest update calls', () => {
       });
   });
 
-  test('can update undefined prop and link', () => {
-    const client = createClient('http://test.fr');
+  test('update prop and link to undefined', () => {
+    const person = personFactory.createPerson(1);
+    const scope = nock(uriBuilder.orgBaseURI);
+    scope
+      .get(person.relativeUri)
+      .reply(200, person.data);
+    scope
+      .intercept(person.relativeUri, 'PATCH', { name: undefined, home: undefined })
+      .reply(200);
+
+    const client = createClient(uriBuilder.orgBaseURI);
     return client
-      .fetchResource('/person/1')
+      .fetchResource(person.relativeUri)
       .then((resource: HalResource) => {
         resource.prop('name', null);
-        resource.prop('project', null);
-
-        const scope = nock(basePath)
-          .intercept('/person/1', 'PATCH', { name: undefined, project: undefined })
-          .reply(200);
+        resource.prop('home', null);
         return resource.update()
           .then((result: any) => {
             expect(result.status).toBe<number>(200);
@@ -182,22 +152,34 @@ describe('Rest update calls', () => {
   });
 
   test('can update with custom serializer', () => {
-    const client = createClient('http://test.fr');
+    const person1 = personFactory.createPerson(1);
+    const person2 = personFactory.createPerson(99);
+    const prefix = 'ownSerializer.';
+    const newName = 'test';
+
+    const scope = nock(uriBuilder.orgBaseURI);
+    scope
+      .get(person1.relativeUri)
+      .reply(200, person1.data)
+      .get(person2.relativeUri)
+      .reply(200, person2.data)
+      .intercept(person1.relativeUri, 'PATCH', { 'name': `${prefix}${newName}`, 'best-friend': `${prefix}${person2.fullUri}` })
+      .reply(200);
+
+    const client = createClient(uriBuilder.orgBaseURI);
     return Promise
       .all([
-        client.fetchResource('/person/1'),
-        client.fetchResource('/project/5')
+        client.fetchResource(person1.relativeUri),
+        client.fetchResource(person2.relativeUri)
       ])
       .then((result: [HalResource, HalResource]) => {
-        result[0].prop('name', 'test');
-        result[0].prop('project', result[1]);
-        const scope = nock(basePath)
-          .intercept('/person/1', 'PATCH', { name: 'serializer.test', project: 'serializer2.http://test.fr/project/5' })
-          .reply(200);
+        result[0].prop('name', newName);
+        result[0].prop('best-friend', result[1]);
+
         return result[0]
           .update({
-            parseProp: (value: string) => 'serializer.' + value,
-            parseResource: (value: { uri: { uri: string; }; }) => 'serializer2.' + value.uri.uri,
+            parseProp: (value: string) => `${prefix}${value}`,
+            parseResource: (value: { uri: { uri: string; }; }) => `${prefix}${value.uri.uri}`,
           })
           .then((result2: any) => {
             expect(result2.status).toBe<number>(200);
@@ -206,54 +188,36 @@ describe('Rest update calls', () => {
       });
   });
 
-  test('can update and get resource updated', () => {
-    const client = createClient('http://test.fr');
-    return Promise
-      .all([
-        client.fetchResource('/person/1'),
-        client.fetchResource('/project/5')
-      ])
-      .then((resources: [HalResource, HalResource]) => {
-        resources[0].prop('name', 'test');
-        resources[0].prop('project', resources[1]);
+  test('can call update (PATCH) with hal-client', () => {
+    const client = createClient(uriBuilder.orgBaseURI);
+    const fullUri = uriBuilder.resourceUri('org', false, 'test', 1);
+    const relativeUri = uriBuilder.resourceUri('org', true, 'test', 1);
 
-        const scope = nock(basePath)
-          .intercept('/person/1', 'PATCH', { name: 'test', project: 'http://test.fr/project/5' })
-          .reply(200, { name: 'test', _links: { self: { url: 'http://test.fr/person/1' } } });
-
-        return resources[0]
-          .update()
-          .then((result: HalResource) => {
-            expect(result.prop('name')).toBe<string>('test');
-            scope.done();
-          });
-      });
-  });
-
-  test('can call update with hal-client', () => {
-    const client = createClient('http://test.fr');
-    const scope = nock(basePath)
-      .intercept('/person/1', 'PATCH', { name: 'test' })
-      .reply(200, { name: 'test', _links: { self: { url: 'http://test.fr/person/1' } } });
+    const scope = nock(uriBuilder.orgBaseURI)
+      .intercept(relativeUri, 'PATCH', { name: 'test' })
+      .reply(200);
 
     return client
-      .update('http://test.fr/person/1', { name: 'test' })
-      .then((result: HalResource) => {
-        expect(result.prop('name')).toBe<string>('test');
+      .update(fullUri, { name: 'test' })
+      .then((result: any) => {
+        expect(result.status).toBe<number>(200);
         scope.done();
       });
   });
 
-  test('can call put update with hal-client', () => {
-    const client = createClient('http://test.fr');
-    const scope = nock(basePath)
-      .intercept('/person/1', 'PUT', { name: 'test' })
-      .reply(200, { name: 'test', _links: { self: { url: 'http://test.fr/person/1' } } });
+  test('call full update (PUT) using hal-rest-client', () => {
+    const client = createClient(uriBuilder.orgBaseURI);
+    const fullUri = uriBuilder.resourceUri('org', false, 'test', 1);
+    const relativeUri = uriBuilder.resourceUri('org', true, 'test', 1);
+
+    const scope = nock(uriBuilder.orgBaseURI)
+      .intercept(relativeUri, 'PUT', { name: 'test' })
+      .reply(200);
 
     return client
-      .update('http://test.fr/person/1', { name: 'test' }, true)
-      .then((result: HalResource) => {
-        expect(result.prop('name')).toBe<string>('test');
+      .update(fullUri, { name: 'test' }, true)
+      .then((result: any) => {
+        expect(result.status).toBe<number>(200);
         scope.done();
       });
   });
