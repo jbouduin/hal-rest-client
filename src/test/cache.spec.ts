@@ -43,7 +43,7 @@ describe('Basic cache functionality', () => {
     const client = createClient(uriBuilder.orgBaseURI);
     const dummy = dummyFactory.createResourceData('org', 'dummy', 1);
     (dummy.data._links.self as ILink).href = dummy.relativeUri;
-    console.log(JSON.stringify(dummy.data, null, 2));
+
     const scope = nock(uriBuilder.orgBaseURI);
     scope
       .get(dummy.relativeUri)
