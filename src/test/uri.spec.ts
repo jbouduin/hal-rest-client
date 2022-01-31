@@ -49,6 +49,15 @@ describe('templated URI tests',() => {
     expect(filled).toBe<string>(uriBuilder.filledTemplatedResourceUri('org', false, 'projects', onlyMiddle));
   });
 
+  test('test \'fill\' with partially filled querystring', () => {
+    const partiallyFilled = { page: '{page}', size: 100, sort: 'id' }
+    const uriString = uriBuilder.filledTemplatedResourceUri('org', false, 'projects', partiallyFilled);
+    const uri = new URI(uriString, true);
+    const filled = uri.fill({ page: 100 });
+    const fullFill = { page: 100, size: 100, sort: 'id' }
+    expect(filled).toBe<string>(uriBuilder.filledTemplatedResourceUri('org', false, 'projects', fullFill));
+  });
+
   test('test \'fill\' with spread parameters', () => {
     const uriString = uriBuilder.templatedResourceUri('org', false, 'projects/{id}/workpackages', fill);
     const uri = new URI(uriString, true);

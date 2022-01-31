@@ -37,7 +37,7 @@ export class URI {
   //#region public methods ----------------------------------------------------
   public setFetchedUri(fetchedUri: string): void {
     if (!this.templated) {
-      throw new Error('You can not set the fetched URI of a templated URI')
+      throw new Error('You can not set the fetched URI of a non templated URI')
     } else {
       this.fetchedURI = fetchedUri;
     }

@@ -1,33 +1,38 @@
 import * as nock from 'nock';
 import { createClient, createResource, HalResource } from '..';
-
-const basePath = 'http://test.fr/';
+import { UriBuilder } from './data/uri-builder';
 
 describe('Test Rest create api', () => {
-  test('can create person using rest-client', () => {
+  const uriBuilder = new UriBuilder();
+  const nameSubmitted = 'FANNY';
+  const nameSaved = 'Fanny';
+  const endpoint = uriBuilder.resourceUri('org', false, 'persons');
+  const personUri = uriBuilder.resourceUri('org', false, 'persons', 1);
+
+  test('create person using rest-client', () => {
     const client = createClient();
 
-    const scope = nock(basePath)
-      .post('/persons', { name: 'ThoMas' })
-      .reply(200, { name: 'Thomas', _links: { self: { url: 'http://test.fr/persons/2' } } });
+    const scope = nock(uriBuilder.orgBaseURI)
+      .post('/persons', { name: nameSubmitted })
+      .reply(200, { name: nameSaved, _links: { self: { url: personUri } } });
 
-    return client.create('http://test.fr/persons', { name: 'ThoMas' })
+    return client.create(endpoint, { name: nameSubmitted })
       .then((resource: any) => {
-        expect(resource.prop('name')).toBe<string>('Thomas');
+        expect(resource.prop('name')).toBe<string>(nameSaved);
         scope.done();
       });
   });
 
   test('can create person using HalResource', () => {
     const client = createClient();
-    const resource = createResource(client, HalResource, 'http://test.fr/persons');
-    resource.prop('name', 'ThoMas');
-    const scope = nock(basePath)
-      .post('/persons', { name: 'ThoMas' })
-      .reply(200, { name: 'Thomas', _links: { self: { url: 'http://test.fr/persons/2' } } });
+    const resource = createResource(client, HalResource, endpoint);
+    resource.prop('name', nameSubmitted);
+    const scope = nock(uriBuilder.orgBaseURI)
+      .post('/persons', { name: nameSubmitted })
+      .reply(200, { name: nameSaved, _links: { self: { url: personUri } } });
 
     return resource.create().then((response: any) => {
-      expect(response.prop('name')).toBe<string>('Thomas');
+      expect(response.prop('name')).toBe<string>(nameSaved);
       scope.done();
     });
   });

@@ -1,8 +1,4 @@
-export type HostTld = 'com' | 'org';
-
-export interface IUriTemplate {
-  [key: string]: string | number;
-}
+import { HostTld, IQueryParameters } from "./common-definitions";
 
 export class UriBuilder {
   //#region private properties ------------------------------------------------
@@ -27,6 +23,10 @@ export class UriBuilder {
   public get comBaseURI(): string {
     return this.buildUri('com', false, undefined);
   }
+
+  public get allTld(): Array<HostTld> {
+    return Array.from(this.hosts.keys());
+  }
   //#endregion
 
   //#region public methods ----------------------------------------------------
@@ -38,12 +38,12 @@ export class UriBuilder {
     return this.buildUri(tld, relative, undefined, resource, id, ...subResource);
   }
 
-  public templatedResourceUri(tld: HostTld, relative: boolean,resource: string, queryParameters: IUriTemplate): string {
+  public templatedResourceUri(tld: HostTld, relative: boolean,resource: string, queryParameters: IQueryParameters): string {
     const queryString = `{?${Object.keys(queryParameters).join(',')}}`;
     return this.buildUri(tld, relative, queryString, resource);
   }
 
-  public filledTemplatedResourceUri(tld: HostTld, relative: boolean,resource: string, queryParameters: IUriTemplate): string {
+  public filledTemplatedResourceUri(tld: HostTld, relative: boolean,resource: string, queryParameters: IQueryParameters): string {
     const queryString = '?' + Array.from(Object.keys(queryParameters)).map((key: string) => `${key}=${queryParameters[key]}`).join('&');
     return this.buildUri(tld, relative, queryString, resource);
   }
@@ -53,7 +53,6 @@ export class UriBuilder {
   private buildUri(tld: HostTld, relative: boolean, queryParameters: string | undefined, ...parts: Array<string | number>): string {
     const asArray = new Array<string>();
     if (!relative) {
-      // asArray.push(`${this.protocol}:/`);
       asArray.push(this.hosts.get(tld));
     }
     if (parts) {

@@ -1,7 +1,8 @@
 
 import * as nock from 'nock';
 import { createClient, createResource, HalProperty, HalResource } from '..';
-import { DataFactory, IEmbeddedCollection } from './data/data-factory';
+import { IEmbeddedCollection } from './data/common-definitions';
+import { DataFactory } from './data/data-factory';
 import { UriBuilder } from './data/uri-builder';
 import { Cyclical } from './models';
 
@@ -34,10 +35,10 @@ describe('@HalProperty', () => {
     };
     const test = dataFactory.createResourceData('org', 'test', 1, data)
     scope
-      .get(test.resourceUri)
-      .reply(200, test.result);
+      .get(test.relativeUri)
+      .reply(200, test.data);
     return createClient(baseUri)
-      .fetch(test.resourceUri, TestModel)
+      .fetch(test.relativeUri, TestModel)
       .then((result: TestModel) => {
         expect(result.name).toBe<string>('name');
         expect(result.typeScriptProperty).toBe<string>('value');
@@ -52,14 +53,14 @@ describe('@HalProperty', () => {
     };
     const test = dataFactory.createResourceData('org', 'test', 1, data)
     scope
-      .get(test.resourceUri)
-      .reply(200, test.result);
+      .get(test.relativeUri)
+      .reply(200, test.data);
     scope
-      .intercept(test.resourceUri, 'PATCH', { id: 1, name: 'noname', jsonProperty: 'novalue' })
+      .intercept(test.relativeUri, 'PATCH', { id: 1, name: 'noname', jsonProperty: 'novalue' })
       .reply(200);
     const client = createClient(baseUri);
     return client
-      .fetch(test.resourceUri, TestModel)
+      .fetch(test.relativeUri, TestModel)
       .then((result: TestModel) => {
         result.name = 'noname';
         result.typeScriptProperty = 'novalue';

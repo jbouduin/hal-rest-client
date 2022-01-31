@@ -10,11 +10,11 @@ export class Person extends HalResource {
   @HalProperty({ name: 'my-friends', resourceType: Person })
   public myFriends: Array<Person>;
 
+  @HalProperty({ resourceType: Person })
   public mother: any;
-  @HalProperty({ resourceType: Person })
 
-  @HalProperty({ resourceType: Person })
-  public father: any;
+  @HalProperty()
+  public father: Person;
 
   @HalProperty()
   public contacts: Contacts;

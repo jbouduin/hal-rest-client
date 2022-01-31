@@ -1,6 +1,7 @@
 import * as nock from 'nock';
 import { createClient, cache } from '..';
-import { DataFactory, IListData, ILinkCollection } from './data/data-factory';
+import { IListData, ILinkCollection, ILink, IQueryParameters } from './data/common-definitions';
+import { DataFactory } from './data/data-factory';
 import { UriBuilder } from './data/uri-builder';
 import { CyclicalList } from './models';
 
@@ -11,9 +12,7 @@ beforeAll(() => {
 });
 
 afterAll(() => nock.restore());
-afterEach(() => {
-  cache.reset();
-});
+
 //#endregion
 
 describe('Cyclical ojbects', () => {
@@ -21,36 +20,34 @@ describe('Cyclical ojbects', () => {
     const uriBuilder = new UriBuilder()
     const dataFactory = new DataFactory(uriBuilder);
     const cyclical1 = dataFactory.createResourceData('org', 'cyclicals', 1, { property: 'name'});
-    const listData: IListData = {
+    const queryParameters: IQueryParameters = {
       sort: 'id',
       offset: 0,
+      pageSize: 20,
+    };
+    const listData: IListData = {
+      queryParameters,
       listKey: 'cyclicals',
-      listData: [cyclical1.result]
+      listData: [cyclical1.data]
     };
 
-    const refresh = uriBuilder.resourceUri('org', true, 'cyclicals', undefined, 'refresh');
-    const links: ILinkCollection = {
-      refresh: { href: refresh }
-    }
+    const refreshUri = uriBuilder.resourceUri('org', true, 'cyclicals', undefined, 'refresh');
+    const refreshLink: ILink = { href: refreshUri };
+    const links: ILinkCollection = { refresh: refreshLink };
 
     const cyclicals = dataFactory.createResourceListData('org', 'cyclicals', listData, links);
     const baseUri = uriBuilder.orgBaseURI;
     const scope = nock(baseUri);
     scope
-      .get(cyclicals.resourceUri)
-      .reply(200, cyclicals.result);
-
+      .get(cyclical1.relativeUri)
+      .reply(200, cyclicals.data);
     scope
-      .get(cyclicals.result._links.refresh.href)
-      .reply(200, cyclicals.result);
-
-    scope
-      .get(cyclicals.result._links.refresh.href)
-      .reply(200, cyclicals.result);
+      .get(refreshLink.href)
+      .reply(200, cyclicals.data);
 
     const client = createClient(baseUri);
     return client
-      .fetch('/cyclicals', CyclicalList)
+      .fetch(cyclical1.relativeUri, CyclicalList)
       .then((cyclicals: CyclicalList) => {
         expect(cyclicals).toBeInstanceOf(CyclicalList);
         expect(cyclicals.refresh).toBeInstanceOf(CyclicalList);
@@ -70,6 +67,7 @@ describe('Cyclical ojbects', () => {
                 expect(level3.refresh).toBeInstanceOf(CyclicalList);
                 expect(level3.cyclicals).toBeInstanceOf(Array);
                 expect(level3.cyclicals[0].property).toBe<string>('name');
+                scope.done();
               });
           });
       });

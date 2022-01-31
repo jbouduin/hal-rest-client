@@ -1,6 +1,5 @@
 # @jbouduin/hal-rest-client
 
-
 [![Travis (.com)](https://img.shields.io/travis/jbouduin/hal-rest-client)](https://travis-ci.com/github/jbouduin/hal-rest-client)
 [![Coverage Status](https://coveralls.io/repos/github/jbouduin/hal-rest-client/badge.svg?branch=master)](https://coveralls.io/github/jbouduin/hal-rest-client?branch=master)
 
@@ -10,16 +9,24 @@
 This is a friendly fork of the original [hal-rest-client](https://github.com/deblockt/hal-rest-client) repository.
 Reason for doing this: the original repository has been archived and is showing some severe vulnerabilities.
 
-What I did:
-* updated the dependencies
+## What I did:
+* updated the dependencies (the main reason I forked)
 * switched from tslint to eslint and linted the sources (causing a lot of work and I still had to throw a few eslint-disable's in)
 * switched the testing framework to jest.
-* Braking change: HalProperty has a different parameter signature, compared to the original library.
 
-What I intend to do (without the intention to invest lots of time):
+## Braking change(s) compared to the original library:
+* HalProperty has a different parameter signature, compared to the original library.
+
+## What I intend to do (without the intention to invest lots of time):
 * Do some clean-up where appropriate
 * Adapt and extend the library to my own needs
-* Correct bugs
+* Correct bugs (feel free to create issues if you find one)
+
+## Pull requests
+I am willing to merge any useful Pull Request (feel free to create them), if:
+  * the change is covered by new tests
+  * the implementation is compliant to the [Hal-Specification](https://datatracker.ietf.org/doc/html/draft-kelly-json-hal)
+  * no unecessary dependencies are introduced
 
 
 hal-rest-client library to help you work with Hypertext Application Language (HAL) on Typescript. It's work fine with browser or nodejs app.
@@ -34,7 +41,7 @@ Using npm :
 npm install @jbouduin/hal-rest-client
 ```
 
-## How to use (original documentation)
+## How to use (mostly original documentation)
 
 The library provide two access method :
 1. use generic object `HalResource` to map service return

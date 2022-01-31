@@ -27,14 +27,14 @@ describe('test request headers and interceptor', () => {
     }).persist();
 
     scope
-      .get(me.resourceUri)
-      .reply(200, me.result);
+      .get(me.relativeUri)
+      .reply(200, me.data);
 
   });
 
   test('pass header in constructor', () => {
     return createClient(baseUri, { headers: { authorization: 'Basic Auth' } })
-      .fetch(me.resourceUri, HalResource)
+      .fetch(me.relativeUri, HalResource)
       .then((project: HalResource) => {
         expect(project.prop('name')).toBe<string>('Johan');
       });
@@ -44,7 +44,7 @@ describe('test request headers and interceptor', () => {
     const client = createClient(baseUri);
     client.config.headers.common.authorization = 'Basic Auth';
     return client
-      .fetchResource(me.resourceUri)
+      .fetchResource(me.relativeUri)
       .then((project: HalResource) => {
         expect(project.prop('name')).toBe<string>('Johan');
       });
@@ -53,7 +53,7 @@ describe('test request headers and interceptor', () => {
   test('configure header using addHeader method', () => {
     return createClient(baseUri)
       .addHeader('authorization', 'Basic Auth')
-      .fetchResource(me.resourceUri)
+      .fetchResource(me.relativeUri)
       .then((project: HalResource) => {
         expect(project.prop('name')).toBe<string>('Johan');
       });

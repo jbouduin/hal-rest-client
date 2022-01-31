@@ -1,11 +1,10 @@
 import * as nock from 'nock';
 import { createClient, HalResource, cache } from '..';
-import { DataFactory, IData, IScopeResult } from './data/data-factory';
-import { HostTld, UriBuilder } from './data/uri-builder';
+import { IFactoryResult, IData, HostTld, ILink } from './data/common-definitions';
+import { DataFactory } from './data/data-factory';
+import { UriBuilder } from './data/uri-builder';
 import { Person } from './models';
 
-const uriBuilder = new UriBuilder();
-const dummyFactory = new DataFactory(uriBuilder);
 //#region setup/teardown ------------------------------------------------------
 beforeAll(() => {
   nock.cleanAll();
@@ -21,26 +20,46 @@ afterEach(() => {
 //#endregion
 
 describe('Basic cache functionality', () => {
-  const orgBaseUri = uriBuilder.orgBaseURI;
+  const uriBuilder = new UriBuilder();
+  const dummyFactory = new DataFactory(uriBuilder);
 
-  test('Fetched resource is cached', () => {
-    const client = createClient(orgBaseUri);
+  test('Fetched resource is cached with its full URI test 1', () => {
+    const client = createClient(uriBuilder.orgBaseURI);
     const dummy = dummyFactory.createResourceData('org', 'dummy', 1);
-    const scope = nock(orgBaseUri);
+    const scope = nock(uriBuilder.orgBaseURI);
     scope
-      .get(dummy.resourceUri)
-      .reply(200, dummy.result);
+      .get(dummy.relativeUri)
+      .reply(200, dummy.data);
     return client
-      .fetch(dummy.resourceUri, HalResource)
+      .fetch(dummy.relativeUri, HalResource)
       .then(() => {
-        expect(cache.getKeys('Resource')).toContain<string>(dummy.selfUri);
+        expect(cache.getKeys('Resource')).toContain<string>(dummy.fullUri);
+        scope.done();
+      });
+  });
+
+  // TODO this one fails
+  test.skip('Fetched resource is cached with its full URI even if self is returned relative', () => {
+    const client = createClient(uriBuilder.orgBaseURI);
+    const dummy = dummyFactory.createResourceData('org', 'dummy', 1);
+    (dummy.data._links.self as ILink).href = dummy.relativeUri;
+    console.log(JSON.stringify(dummy.data, null, 2));
+    const scope = nock(uriBuilder.orgBaseURI);
+    scope
+      .get(dummy.relativeUri)
+      .reply(200, dummy.data);
+    return client
+      .fetch(dummy.relativeUri, HalResource)
+      .then(() => {
+        expect(cache.getKeys('Resource')).toContain<string>(dummy.fullUri);
+        scope.done();
       })
   });
 
   test('Client created with URI is cached', () => {
-    createClient(orgBaseUri);
+    createClient(uriBuilder.orgBaseURI);
     expect(cache.getKeys('Client')).toHaveLength(1);
-    expect(cache.getKeys('Client')).toContain(orgBaseUri);
+    expect(cache.getKeys('Client')).toContain(uriBuilder.orgBaseURI);
   });
 
   test('Client created without URI is not cached', () => {
@@ -51,20 +70,21 @@ describe('Basic cache functionality', () => {
 });
 
 describe('Reset cache', () => {
-  const orgBaseUri = uriBuilder.orgBaseURI;
+  const uriBuilder = new UriBuilder();
+  const dummyFactory = new DataFactory(uriBuilder);
   const dummy = dummyFactory.createResourceData('org', 'dummy', 1);
   let scope: nock.Scope;
   beforeEach(() => {
-    scope = nock(orgBaseUri);
+    scope = nock(uriBuilder.orgBaseURI);
     scope
-      .get(dummy.resourceUri)
-      .reply(200, dummy.result);
+      .get(dummy.relativeUri)
+      .reply(200, dummy.data);
   });
 
   test('Reset cache without parameter empties both caches', () => {
-    const client = createClient(orgBaseUri);
+    const client = createClient(uriBuilder.orgBaseURI);
     return client
-      .fetch(dummy.resourceUri, HalResource)
+      .fetch(dummy.relativeUri, HalResource)
       .then(() => {
         cache.reset();
         expect(cache.getKeys('Client')).toHaveLength(0);
@@ -74,34 +94,35 @@ describe('Reset cache', () => {
   });
 
   test('Reset cache with parameter \'Client\' empties only client cache', () => {
-    const client = createClient(orgBaseUri);
+    const client = createClient(uriBuilder.orgBaseURI);
     return client
-      .fetch(dummy.resourceUri, HalResource)
+      .fetch(dummy.relativeUri, HalResource)
       .then(() => {
         cache.reset('Client');
         expect(cache.getKeys('Client')).toHaveLength(0);
         expect(cache.getKeys('Resource')).toHaveLength(1);
+        scope.done();
       })
   });
 
   test('Reset cache with parameter \'Resource\' empties only client cache', () => {
-    const client = createClient(orgBaseUri);
+    const client = createClient(uriBuilder.orgBaseURI);
     return client
-      .fetch(dummy.resourceUri, HalResource)
+      .fetch(dummy.relativeUri, HalResource)
       .then(() => {
         cache.reset('Resource');
         expect(cache.getKeys('Client')).toHaveLength(1);
         expect(cache.getKeys('Resource')).toHaveLength(0);
+        scope.done();
       })
   });
 
   test('cached client is reused', () => {
-    const getClientSpy = jest.spyOn(cache, 'getClient')
-    const setClientSpy = jest.spyOn(cache, 'setClient')
-    createClient(orgBaseUri);
-    createClient(orgBaseUri);
+    const getClientSpy = jest.spyOn(cache, 'getClient');
+    const setClientSpy = jest.spyOn(cache, 'setClient');
+    createClient(uriBuilder.orgBaseURI);
+    createClient(uriBuilder.orgBaseURI);
     expect(cache.getKeys('Client')).toHaveLength(1);
-
     expect(getClientSpy).toHaveBeenCalledTimes(1);
     expect(setClientSpy).toHaveBeenCalledTimes(1);
     getClientSpy.mockReset();
@@ -113,6 +134,7 @@ describe('Reset cache', () => {
 });
 
 describe('clear client cache tests', () => {
+  const uriBuilder = new UriBuilder();
   const orgUri = uriBuilder.orgBaseURI;
   const comUri = uriBuilder.comBaseURI;
 
@@ -182,13 +204,15 @@ describe('clear client cache tests', () => {
 });
 
 describe('clear resource cache tests', () => {
+  const uriBuilder = new UriBuilder();
+  const dummyFactory = new DataFactory(uriBuilder);
   const dummyPath = 'dummy';
-  let dummies: Array<IScopeResult<IData>>;
+  let dummies: Array<IFactoryResult<IData>>;
   let scope: nock.Scope;
   beforeEach(() => {
     const promises = new Array<Promise<HalResource>>();
-    dummies = new Array<IScopeResult<IData>>();
-    ['com', 'org']
+    dummies = new Array<IFactoryResult<IData>>();
+    uriBuilder.allTld
       .forEach((tld: HostTld) => {
         const baseUri = uriBuilder.baseUri(tld);
         const client = createClient(baseUri)
@@ -197,9 +221,9 @@ describe('clear resource cache tests', () => {
           const dummy = dummyFactory.createResourceData(tld, dummyPath, i);
           dummies.push(dummy);
           scope
-            .get(dummy.resourceUri)
-            .reply(200, dummy.result);
-          promises.push(client.fetch(dummy.resourceUri, HalResource));
+            .get(dummy.relativeUri)
+            .reply(200, dummy.data);
+          promises.push(client.fetch(dummy.relativeUri, HalResource));
         }
       });
     return Promise.all(promises);
@@ -207,7 +231,7 @@ describe('clear resource cache tests', () => {
 
   test('clear resource cache using a string parameter', () => {
     expect(cache.getKeys('Resource')).toHaveLength(10);
-    const dummy = dummies[0].selfUri;
+    const dummy = dummies[0].fullUri;
     const cleared = cache.clear('Resource', dummy);
     expect(cleared).toHaveLength(1);
     expect(cleared[0]).toBe<string>(dummy);
@@ -219,8 +243,8 @@ describe('clear resource cache tests', () => {
 
   test('clear resource cache using an array of strings parameter', () => {
     expect(cache.getKeys('Resource')).toHaveLength(10);
-    const dummy0 = dummies[0].selfUri;
-    const dummy1 = dummies[1].selfUri;
+    const dummy0 = dummies[0].fullUri;
+    const dummy1 = dummies[1].fullUri;
     const cleared = cache.clear('Resource', [dummy1, dummy0]);
     expect(cleared).toHaveLength(2);
     expect(cleared).toContain<string>(dummy0);
@@ -229,17 +253,19 @@ describe('clear resource cache tests', () => {
     expect(remaining).toHaveLength(8);
     expect(remaining).not.toContain<string>(dummy0);
     expect(remaining).not.toContain<string>(dummy1);
+    scope.done();
   });
 
   test('clear resource cache using an array of strings parameter with double entry', () => {
     expect(cache.getKeys('Resource')).toHaveLength(10);
-    const dummy = dummies[0].selfUri;
+    const dummy = dummies[0].fullUri;
     const cleared = cache.clear('Resource', [dummy, dummy]);
     expect(cleared).toHaveLength(1);
     expect(cleared[0]).toBe<string>(dummy);
     const remaining = cache.getKeys('Resource');
     expect(remaining).toHaveLength(9);
     expect(remaining).not.toContain<string>(dummy);
+    scope.done();
   });
 
   test('clear resource cache using a regular expression', () => {
@@ -262,33 +288,36 @@ describe('clear resource cache tests', () => {
     expect(remaining).not.toContain<string>(expectedToBeRemoved[2]);
     expect(remaining).not.toContain<string>(expectedToBeRemoved[3]);
     expect(remaining).not.toContain<string>(expectedToBeRemoved[4]);
+    scope.done();
   });
 });
 
 describe('refreshing mechanism', () => {
-
+  const uriBuilder = new UriBuilder();
+  const dummyFactory = new DataFactory(uriBuilder);
   test('Lists are refreshed when calling fetchArray', () => {
-    const orgBaseUri = uriBuilder.orgBaseURI;
+
     const dummy1 = dummyFactory.createResourceData('org', 'dummy', 1, { done: { count: 1 } });
     const dummy2 = dummyFactory.createResourceData('org', 'dummy', 1, { testing: { count: 1 } });
 
-    const scope = nock(orgBaseUri);
+    const scope = nock(uriBuilder.orgBaseURI);
     scope
-      .get(dummy1.resourceUri)
-      .reply(200, [dummy1.result]);
+      .get(dummy1.relativeUri)
+      .reply(200, [dummy1.data]);
     scope
-      .get(dummy1.resourceUri)
-      .reply(200, [dummy2.result]);
+      .get(dummy1.relativeUri)
+      .reply(200, [dummy2.data]);
 
     return createClient()
-      .fetchArray(dummy1.selfUri, HalResource)
+      .fetchArray(dummy1.fullUri, HalResource)
       .then((dummies: Array<HalResource>) => {
         expect(dummies[0].prop('done').count).toBe<number>(1);
         return createClient()
-          .fetchArray(dummy1.selfUri, HalResource)
+          .fetchArray(dummy1.fullUri, HalResource)
           .then((dummies2: Array<HalResource>) => {
             expect(dummies2[0].prop('done')).toBeUndefined();
             expect(dummies2[0].prop('testing').count).toBe<number>(1);
+            scope.done();
           });
       });
   });
@@ -296,63 +325,64 @@ describe('refreshing mechanism', () => {
 
 describe.skip('Still to do tests', () => {
   beforeAll(() => {
-  const person1 = {
-    _embedded: {
-      'best-friend': {
-        _links: {
-          self: {
-            href: 'http://test.fr/person/2',
+    const person1 = {
+      _embedded: {
+        'best-friend': {
+          _links: {
+            self: {
+              href: 'http://test.fr/person/2',
+            },
           },
+          name: 'My bestfriend',
         },
-        name: 'My bestfriend',
-      },
-      'father': {
-        _links: {
-          self: {
-            href: 'http://test.fr/person/12',
+        'father': {
+          _links: {
+            self: {
+              href: 'http://test.fr/person/12',
+            },
           },
+          name: 'My father',
         },
-        name: 'My father',
-      },
-      'mother': {
-        _links: {
-          self: {
-            href: 'http://test.fr/person/12',
+        'mother': {
+          _links: {
+            self: {
+              href: 'http://test.fr/person/12',
+            },
           },
+          name: 'My mother',
         },
-        name: 'My mother',
+        'my-friends': [
+          {
+            _links: { self: { href: 'http://test.fr/person/5' } },
+            name: 'Thomas',
+          },
+        ],
       },
-      'my-friends': [
-        {
-          _links: { self: { href: 'http://test.fr/person/5' } },
-          name: 'Thomas',
+      _links: {
+        contacts: {
+          href: 'http://test.fr/person/2/contacts',
         },
-      ],
-    },
-    _links: {
-      contacts: {
-        href: 'http://test.fr/person/2/contacts',
+        'home': {
+          href: 'http://test.fr/person/1/location/home',
+        },
+        'place-of-employment': {
+          href: 'http://test.fr/person/1/location/work',
+        },
+        self: {
+          href: 'http://test.fr/person/1',
+        },
       },
-      'home': {
-        href: 'http://test.fr/person/1/location/home',
-      },
-      'place-of-employment': {
-        href: 'http://test.fr/person/1/location/work',
-      },
-      self: {
-        href: 'http://test.fr/person/1',
-      },
-    },
-    name: 'Project 1',
-  };
+      name: 'Project 1',
+    };
 
-  const scope2 = nock('http://test.fr/').persist();
-  scope2.get('/person/1')
-    .reply(200, person1);
+    const scope2 = nock('http://test.fr/').persist();
+    scope2.get('/person/1')
+      .reply(200, person1);
 
-});
+  });
 
-  // TODO understand the caching mechanism before trying to solve the next two
+  const uriBuilder = new UriBuilder();
+  // TODO understand or redefine the caching mechanism before trying to solve the next two
   test('refresh from cache reload from cached object', () => {
     const client = createClient(uriBuilder.baseUri('org'));
     return client
