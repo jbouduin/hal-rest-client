@@ -1,5 +1,5 @@
 import * as nock from 'nock';
-import { createClient, cache } from '..';
+import { createClient, cache, JSONParserException, HalResource } from '..';
 import { UriBuilder } from './data/uri-builder';
 import { HalNotification } from './models';
 
@@ -13,23 +13,24 @@ afterEach(() => {
 describe('Handling non-hal data', () => {
   const uriBuilder = new UriBuilder();
 
-  test('fetch non hal object throw exception', () => {
-    expect.assertions(1);
+  test('fetch non hal object throws exception', () => {
+    expect.assertions(2);
     const scope = nock(uriBuilder.orgBaseURI);
     const uri = uriBuilder.resourceUri('org', true, 'non-hal');
     scope
       .get(uri)
-      .reply(200, { 'non-hal': true });
+      .reply(200, [{ 'non-hal': true }]);
 
     return createClient(uriBuilder.orgBaseURI)
-      .fetchResource(uri)
+      .fetchResource(uri, HalResource)
       .catch ( e => {
-        expect(e.message).toContain('object is not hal resource');
+        expect(e).toBeInstanceOf(JSONParserException);
+        expect((e as JSONParserException).json).toStrictEqual([{ 'non-hal': true }]);
         scope.done()
       });
   });
 
-  test('can fetch array of non hal resource', () => {
+  test('fetch a resource with a property which is an array of non hal resource', () => {
     const config = {
       _links: {
         self: {

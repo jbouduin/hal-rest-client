@@ -19,7 +19,7 @@ function getHalClientDecorator(transconame: string, target: any): object {
 
 export function HalProperty<T extends HalResource>(
   // eslint-disable-next-line @typescript-eslint/ban-types
-  { name, resourceType }: { name?: string; resourceType?: IHalResourceConstructor<T> | Function; } = {}):
+  { name, resourceType, isHalResource }: { name?: string; resourceType?: IHalResourceConstructor<T> | Function; isHalResource?: boolean } =  { }):
   (target: any, key: string) => void {
 
   return (target: any, key: string) => {
@@ -30,11 +30,16 @@ export function HalProperty<T extends HalResource>(
       throw new Error(`${target.constructor.name}.${key} for Array you need to specify a resource type on @HalProperty.`);
     }
 
+    if (isHalResource == undefined) {
+      isHalResource = true;
+    }
     const halToTs = getHalClientDecorator("halToTs", target);
     const tsToHal = getHalClientDecorator("tsToHal", target);
-    halToTs[name || key] = key;
-    tsToHal[key] = name || key;
+    const isHal = getHalClientDecorator("isHal", target);
 
+    halToTs[name || key] = key;
+    isHal[name || key] = isHalResource;
+    tsToHal[key] = name || key;
     const type = resourceType || baseType;
     // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
     Reflect.defineMetadata("halClient:specificType", type, target, key);

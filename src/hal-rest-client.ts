@@ -1,10 +1,7 @@
+import "reflect-metadata";
 import Axios from "axios";
 import { AxiosInstance, AxiosRequestConfig, AxiosResponse } from "axios";
-
-import "reflect-metadata";
-
 import { IJSONParser, JSONParser } from "./hal-json-parser";
-import { HalResource } from "./hal-resource";
 import { IHalResource, IHalResourceConstructor } from "./hal-resource-interface";
 
 /**
@@ -40,17 +37,18 @@ export class HalRestClient {
    *
    * @param resourceURI : The uri to fetch
    */
-  public fetchResource(resourceURI: string): Promise<HalResource> {
-    return this.fetch(resourceURI, HalResource);
+  public fetchResource<T extends IHalResource>(resourceURI: string, c: IHalResourceConstructor<T>): Promise<T> {
+    return this.fetch(resourceURI, c);
   }
 
   /**
    * fetch an array by URI. Rest result can be a simple array of hal resources, or a hal resource whos first
    * property of _embedded is an array of hal resources
-   *
+   * @deprecated The method is not HAL compliant and will be removed in future versions
    * @param resourceURI : the uri of resource to fetch
    * @param c : model class to map result (array items). if you don't write your model, use HalResource class
    */
+  // TODO 1660 Remove non compliant feature of retrieving an array of HAL-resources
   public fetchArray<T extends IHalResource>(resourceURI: string, c: IHalResourceConstructor<T>): Promise<Array<T>> {
     return new Promise((resolve, reject) => {
       this.axios.get(resourceURI).then((value) => {
@@ -86,10 +84,13 @@ export class HalRestClient {
    * @param c : the class to use to fetch. If you don't want to write you model, use HalResource or @{see fetchResource}
    * @param resource : don't use. internal only
    */
+  // TODO 1665 hal-rest-client has a parameter marked for internal use => split method
   public fetch<T extends IHalResource>(resourceURI: string, c: IHalResourceConstructor<T>, resource?: T): Promise<T> {
+    // TODO 1661 if resourceURI and baseUri point to different origin we have an issue
     return new Promise((resolve, reject) => {
-      this.axios.get(resourceURI).then((value) => {
-        resolve(this.jsonParser.jsonToResource(value.data, c, resource, value.config.url));
+      this.axios.get(resourceURI).then((response: AxiosResponse<any, any>) => {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+        resolve(this.jsonParser.jsonToResource(response.data, c, resource, response.config.url));
       }).catch(reject);
     });
   }
@@ -104,20 +105,23 @@ export class HalRestClient {
    *
    * @param resource : The resource to delete
    */
-  public delete(resource: IHalResource | string): Promise<any> {
+  public delete<T extends IHalResource>(resource: IHalResource | string, c?: IHalResourceConstructor<T>): Promise<T | Record<string, any>> {
     let uri: string;
-    let type;
     if (typeof resource === "string") {
       uri = resource;
-      type = HalResource;
     } else {
       uri = resource.uri.resourceURI;
-      type = resource.constructor;
     }
 
     return new Promise((resolve, reject) => {
-      this.axios.delete(uri).then((value) => {
-        this.resolveUnknowTypeReturn(resolve, value, type); // eslint-disable-line
+      this.axios.delete(uri).then((response: AxiosResponse<any, any>) => {
+        if (c) {
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+          resolve(this.jsonParser.jsonToResource(response.data, c));
+        } else {
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+          resolve(response.data ? response.data : response);
+        }
       }).catch(reject);
     });
   }
@@ -129,16 +133,22 @@ export class HalRestClient {
    * @param full : true or false. true send put, false send patch. Default patch
    * @param type: if hal service return entity, type can be used to map return to an entity model
    */
-  public update(
+  public update<T extends IHalResource>(
     url: string,
     data: object,
     full = false,
-    type: IHalResourceConstructor<any> = HalResource,
-  ): Promise<any> {
+    type?: IHalResourceConstructor<T>,
+  ): Promise<T | Record<string, string>> {
     const method = full ? "put" : "patch";
     return new Promise((resolve, reject) => {
-      this.axios.request({ data, method, url }).then((value) => {
-        this.resolveUnknowTypeReturn(resolve, value, type, url);
+      this.axios.request({ data, method, url }).then((response: AxiosResponse<any, any>) => {
+        if (type) {
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+          resolve(this.jsonParser.jsonToResource(response.data, type, undefined, response.config.url));
+        } else {
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+          resolve(response.data ? response.data : response);
+        }
       }).catch(reject);
     });
   }
@@ -150,10 +160,16 @@ export class HalRestClient {
    * @param type {IHalResourceConstructor} if hal service return entity, type can be used to map return
    *                                        to an entity model
    */
-  public create(uri: string, json: object, type: IHalResourceConstructor<any> = HalResource): Promise<any> {
+  public create<T extends IHalResource>(uri: string, json: object, type?: IHalResourceConstructor<T>): Promise<T | Record<string, string>> {
     return new Promise((resolve, reject) => {
-      this.axios.post(uri, json).then((value) => {
-        this.resolveUnknowTypeReturn(resolve, value, type, uri);
+      this.axios.post(uri, json).then((response: AxiosResponse<any, any>) => {
+        if (type) {
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+          resolve(this.jsonParser.jsonToResource(response.data, type, undefined, response.config.url));
+        } else {
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+          resolve(response.data ? response.data : response);
+        }
       }).catch(reject);
     });
   }
@@ -193,28 +209,5 @@ export class HalRestClient {
    */
   public setJsonParser(parser: IJSONParser) {
     this.jsonParser = parser;
-  }
-
-  /**
-   * resolve a service return (delete/patch/put/post)
-   *
-   * @param resolve : callback function
-   * @param value : the returned value
-   */
-  private resolveUnknowTypeReturn(
-    resolve: (data: unknown) => void,
-    value: AxiosResponse,
-    type?: IHalResourceConstructor<any>,
-    fetchedURI?: string,
-  ) {
-    if (value.data) {
-      if (typeof value.data === "object" && "_links" in value.data) {
-        resolve(this.jsonParser.jsonToResource(value.data, type, undefined, fetchedURI));
-      } else {
-        resolve(value.data);
-      }
-    } else {
-      resolve(value);
-    }
   }
 }

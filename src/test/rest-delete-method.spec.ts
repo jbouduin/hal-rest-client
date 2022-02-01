@@ -29,7 +29,7 @@ describe('Rest Delete calls', () => {
 
     return createClient()
       .delete(person.fullUri)
-      .then((result: any) => {
+      .then((result: Record<string, string>) => {
         expect(result.status).toBe<number>(204);
         scope.done();
       });
@@ -45,7 +45,7 @@ describe('Rest Delete calls', () => {
 
     return client
       .delete(resource)
-      .then((result: any) => {
+      .then((result: Record<string, string>) => {
         expect(result.status).toBe<number>(204);
         scope.done();
       });
@@ -61,7 +61,7 @@ describe('Rest Delete calls', () => {
 
     return client
       .delete(resource)
-      .then((result: any) => {
+      .then((result: Record<string, string>) => {
         expect(result.success).toBe<string>('ok');
         scope.done();
       });
@@ -77,8 +77,8 @@ describe('Rest Delete calls', () => {
       .reply(200, contact.data);
 
     return client
-      .delete(resource)
-      .then((result: any) => {
+      .delete(resource, HalResource)
+      .then((result: HalResource) => {
         expect(result.prop('phone')).toBe<string>('1234567890');
         expect(result.uri.uri).toBe<string>(contact.fullUri);
         scope.done();
@@ -95,8 +95,8 @@ describe('Rest Delete calls', () => {
       .reply(200, contact.data);
 
     return resource
-      .delete()
-      .then((result: any) => {
+      .delete(Contacts)
+      .then((result: Contacts) => {
         expect(result).toBeInstanceOf(Contacts);
         expect(result.prop('phone')).toBe<string>('1234567890');
         expect(result.uri.uri).toBe<string>(contact.fullUri);

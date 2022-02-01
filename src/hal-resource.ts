@@ -53,6 +53,7 @@ export class HalResource implements IHalResource {
   /**
    * to clear value use null not undefined
    */
+  // TODO 1663 refactor prop(name: string, value?: any) and link(name: string, value?: any)
   public prop(name: string, value?: any): any {
     if (value !== void 0) {
       if (this.links[name]) {
@@ -83,6 +84,8 @@ export class HalResource implements IHalResource {
   /**
    * to clear value use null not undefined
    */
+  // TODO 1663 also: can we replace any by HalResource ?
+  // TODO 1663 refactor prop(name: string, value?: any) and link(name: string, value?: any)
   public link(name: string, value?: any): any {
     if (value !== void 0) {
       this.links[name] = value;
@@ -102,8 +105,8 @@ export class HalResource implements IHalResource {
    *   - an halResource returned by server
    *   - a json object return by server
    */
-  public delete(): Promise<any> {
-    return this.restClient.delete(this);
+  public delete<T extends IHalResource>(c?: IHalResourceConstructor<T>): Promise<T | Record<string, any>> {
+    return this.restClient.delete(this, c);
   }
 
   public onInitEnded() {
@@ -115,17 +118,17 @@ export class HalResource implements IHalResource {
    *
    * @param serializer : object used to serialize the prop and link value
    */
-  public update(serializer?: IJSONSerializer): Promise<any> {
+  public update<T extends IHalResource>(c?: IHalResourceConstructor<T>, serializer?: IJSONSerializer): Promise<T | Record<string, any>> {
     const json = this.serialize(this.settedProps, this.settedLinks, serializer);
-    return this.restClient.update(this.uri.resourceURI, json, false, this.constructor as IHalResourceConstructor<this>);
+    return this.restClient.update(this.uri.resourceURI, json, false, c);
   }
 
   /**
    * save the resource
    */
-  public create(serializer?: IJSONSerializer): Promise<any> {
+  public create<T extends IHalResource>(c?: IHalResourceConstructor<T>, serializer?: IJSONSerializer): Promise<T | Record<string, any>>{
     const json = this.serialize(Object.keys(this.props), Object.keys(this.links), serializer);
-    return this.restClient.create(this.uri.resourceURI, json, this.constructor as IHalResourceConstructor<this>);
+    return this.restClient.create(this.uri.resourceURI, json, c);
   }
 
   public reset() {

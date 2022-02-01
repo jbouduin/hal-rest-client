@@ -45,7 +45,7 @@ export class ProjectFactory extends DataFactory {
     const result = this.createProjectList(0);
     result.relativeUri = this.uriBuilder.resourceUri(this.tld, true, this.projectsPath);
     result.fullUri = this.uriBuilder.resourceUri(this.tld, false, this.projectsPath);
-    result.data._links['self'] = this.uriBuilder.resourceUri(this.tld, false, this.projectsPath);
+    result.data._links['self'] = result.fullUri;
     return result;
   }
 

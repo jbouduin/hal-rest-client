@@ -35,15 +35,15 @@ describe('Rest update calls', () => {
 
     return Promise
       .all([
-        client.fetchResource(person1.fullUri),
-        client.fetchResource(person2.fullUri)
+        client.fetchResource(person1.fullUri, HalResource),
+        client.fetchResource(person2.fullUri, HalResource)
       ])
       .then((resources: [HalResource, HalResource]) => {
         resources[0].prop('name', 'test');
         resources[0].prop('best-friend', resources[1]);
         return resources[0]
           .update()
-          .then((result: any) => {
+          .then((result: Record<string, any>) => {
             expect(result.status).toBe<number>(200);
             scope.done();
           });
@@ -71,7 +71,7 @@ describe('Rest update calls', () => {
 
     const client = createClient();
     return client
-      .fetchResource(person.fullUri)
+      .fetchResource(person.fullUri, HalResource)
       .then((resource: HalResource) => {
         return resource.prop('contacts')
           .fetch()
@@ -86,7 +86,7 @@ describe('Rest update calls', () => {
             resource.update(),
             resource.prop('contacts').update()
           ])
-          .then((result: [any, any]) => {
+          .then((result: [Record<string, any>, Record<string, any>]) => {
             expect(result[0].status).toBe<number>(200);
             expect(result[1].status).toBe<number>(200);
             scope.done();
@@ -113,14 +113,14 @@ describe('Rest update calls', () => {
     const client = createClient(uriBuilder.orgBaseURI);
     return Promise
       .all([
-        client.fetchResource(person.relativeUri),
-        client.fetchResource(person.contacts.relativeUri)
+        client.fetchResource(person.relativeUri, HalResource),
+        client.fetchResource(person.contacts.relativeUri, HalResource)
       ])
       .then((resources: [HalResource, HalResource]) => {
         resources[0].prop('name', newName);
         resources[0].prop('contacts', resources[1]);
         return resources[0].update()
-          .then((result: any) => {
+          .then((result: Record<string, any>) => {
             expect(result.status).toBe<number>(200);
             scope.done();
           });
@@ -139,12 +139,12 @@ describe('Rest update calls', () => {
 
     const client = createClient(uriBuilder.orgBaseURI);
     return client
-      .fetchResource(person.relativeUri)
+      .fetchResource(person.relativeUri, HalResource)
       .then((resource: HalResource) => {
         resource.prop('name', null);
         resource.prop('home', null);
         return resource.update()
-          .then((result: any) => {
+          .then((result: Record<string, any>) => {
             expect(result.status).toBe<number>(200);
             scope.done();
           });
@@ -169,19 +169,19 @@ describe('Rest update calls', () => {
     const client = createClient(uriBuilder.orgBaseURI);
     return Promise
       .all([
-        client.fetchResource(person1.relativeUri),
-        client.fetchResource(person2.relativeUri)
+        client.fetchResource(person1.relativeUri, HalResource),
+        client.fetchResource(person2.relativeUri, HalResource)
       ])
       .then((result: [HalResource, HalResource]) => {
         result[0].prop('name', newName);
         result[0].prop('best-friend', result[1]);
 
         return result[0]
-          .update({
+          .update(undefined, {
             parseProp: (value: string) => `${prefix}${value}`,
             parseResource: (value: { uri: { uri: string; }; }) => `${prefix}${value.uri.uri}`,
           })
-          .then((result2: any) => {
+          .then((result2: Record<string, any>) => {
             expect(result2.status).toBe<number>(200);
             scope.done();
           });
@@ -199,7 +199,7 @@ describe('Rest update calls', () => {
 
     return client
       .update(fullUri, { name: 'test' })
-      .then((result: any) => {
+      .then((result: Record<string, any>) => {
         expect(result.status).toBe<number>(200);
         scope.done();
       });
@@ -216,7 +216,7 @@ describe('Rest update calls', () => {
 
     return client
       .update(fullUri, { name: 'test' }, true)
-      .then((result: any) => {
+      .then((result: Record<string, any>) => {
         expect(result.status).toBe<number>(200);
         scope.done();
       });

@@ -44,7 +44,7 @@ describe('test request headers and interceptor', () => {
     const client = createClient(baseUri);
     client.config.headers.common.authorization = 'Basic Auth';
     return client
-      .fetchResource(me.relativeUri)
+      .fetchResource(me.relativeUri, HalResource)
       .then((project: HalResource) => {
         expect(project.prop('name')).toBe<string>('Johan');
       });
@@ -53,7 +53,7 @@ describe('test request headers and interceptor', () => {
   test('configure header using addHeader method', () => {
     return createClient(baseUri)
       .addHeader('authorization', 'Basic Auth')
-      .fetchResource(me.relativeUri)
+      .fetchResource(me.relativeUri, HalResource)
       .then((project: HalResource) => {
         expect(project.prop('name')).toBe<string>('Johan');
       });
@@ -68,7 +68,7 @@ describe('test request headers and interceptor', () => {
     });
     const uri = uriBuilder.resourceUri('org', true, 'profiles');
     return client
-      .fetchResource(uri)
+      .fetchResource(uri, HalResource)
       .then((project: HalResource) => {
         expect(project.prop('name')).toBe<string>('Johan');
       });

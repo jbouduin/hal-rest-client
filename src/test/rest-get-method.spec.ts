@@ -71,7 +71,8 @@ describe('fetch resources', () => {
       });
   });
 
-  // TODO current result is not ok: it retrieves from com
+  // TODO 1661 if resourceURI and baseUri point to different origin we have an issue
+  // current result is not ok: it retrieves from com
   // but both cache-key and uri of the fetched resource are org
   test.skip('create client on org and fetch a resource from com', () => {
     const client = createClient(uriBuilder.orgBaseURI);

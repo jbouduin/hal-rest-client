@@ -14,26 +14,34 @@ describe('Test Rest create api', () => {
 
     const scope = nock(uriBuilder.orgBaseURI)
       .post('/persons', { name: nameSubmitted })
-      .reply(200, { name: nameSaved, _links: { self: { url: personUri } } });
+      .reply(200, { name: nameSaved, _links: { self: { href: personUri } } });
 
-    return client.create(endpoint, { name: nameSubmitted })
-      .then((resource: any) => {
+    return client.create(endpoint, { name: nameSubmitted }, HalResource)
+      .then((resource: HalResource) => {
         expect(resource.prop('name')).toBe<string>(nameSaved);
         scope.done();
       });
   });
 
-  test('can create person using HalResource', () => {
+  test('create person using HalResource', () => {
     const client = createClient();
     const resource = createResource(client, HalResource, endpoint);
     resource.prop('name', nameSubmitted);
     const scope = nock(uriBuilder.orgBaseURI)
       .post('/persons', { name: nameSubmitted })
-      .reply(200, { name: nameSaved, _links: { self: { url: personUri } } });
+      .reply(200, { name: nameSaved, _links: { self: { href: personUri } } });
 
-    return resource.create().then((response: any) => {
+    return resource.create(HalResource).then((response: any) => {
       expect(response.prop('name')).toBe<string>(nameSaved);
       scope.done();
     });
   });
+
+  test.todo('create person using Halresource and receive personmodel back');
+  test.todo('create person using Halrestclient and receive personmodel back');
+  test.todo('create person using Halresource and receive json back');
+  test.todo('create person using Halrestclient and receive json back');
+  test.todo('create person using Halresource and receive status back');
+  test.todo('create person using Halrestclient and receive status back');
+
 });

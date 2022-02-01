@@ -38,7 +38,8 @@ describe('Basic cache functionality', () => {
       });
   });
 
-  // TODO this one fails
+  // TODO 1667 Redefine and refactor the use of fetchedURI
+  // this one fails: check what axios is returning e.g.
   test.skip('Fetched resource is cached with its full URI even if self is returned relative', () => {
     const client = createClient(uriBuilder.orgBaseURI);
     const dummy = dummyFactory.createResourceData('org', 'dummy', 1);
@@ -295,7 +296,8 @@ describe('clear resource cache tests', () => {
 describe('refreshing mechanism', () => {
   const uriBuilder = new UriBuilder();
   const dummyFactory = new DataFactory(uriBuilder);
-  test('Lists are refreshed when calling fetchArray', () => {
+  // TODO 1660 Remove non compliant feature of retrieving an array of HAL-resources
+  test.skip('Lists are refreshed when calling fetchArray', () => {
 
     const dummy1 = dummyFactory.createResourceData('org', 'dummy', 1, { done: { count: 1 } });
     const dummy2 = dummyFactory.createResourceData('org', 'dummy', 1, { testing: { count: 1 } });
@@ -323,6 +325,7 @@ describe('refreshing mechanism', () => {
   });
 });
 
+// TODO 1666 Redefine and refactor caching (what to cache and how)
 describe.skip('Still to do tests', () => {
   beforeAll(() => {
     const person1 = {
@@ -382,7 +385,8 @@ describe.skip('Still to do tests', () => {
   });
 
   const uriBuilder = new UriBuilder();
-  // TODO understand or redefine the caching mechanism before trying to solve the next two
+
+  // understand or redefine the caching mechanism before trying to solve the next two
   test('refresh from cache reload from cached object', () => {
     const client = createClient(uriBuilder.baseUri('org'));
     return client
@@ -439,6 +443,4 @@ describe.skip('Still to do tests', () => {
           });
       });
   });
-
-
 });

@@ -5,6 +5,6 @@ export class HalNotification extends HalResource {
   @HalProperty()
   public cellphoneSet: boolean;
 
-  @HalProperty({ resourceType: NotificationConfig})
+  @HalProperty({ resourceType: NotificationConfig, isHalResource: false})
   public notificationConfigs: Array<NotificationConfig>;
 }
