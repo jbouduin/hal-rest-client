@@ -41,7 +41,7 @@ describe('hal-resource fetching', () => {
           .toBe<string>(uriBuilder.resourceUri('org', false, projectFactory.projectsPath, 0));
         expect(value.prop('results')[1].prop('name')).toBe<string>('Project 10');
         expect(typeof value.prop('results')[0].fetch).toBe<string>('function');
-        expect(value.prop('results')[0].uri.uri)
+        expect(value.prop('results')[1].uri.uri)
           .toBe<string>(uriBuilder.resourceUri('org', false, projectFactory.projectsPath, 10));
       });
   });

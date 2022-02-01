@@ -5,8 +5,8 @@ export class JSONParserException extends Error {
   //#endregion
 
   //#region Constructor & C° --------------------------------------------------
-  public constructor(json: any) {
-    super('Provided data is not a HAL-resource');
+  public constructor(json: any, message?: string) {
+    super(message || 'Provided data is not a HAL-resource');
     Object.setPrototypeOf(this, JSONParserException.prototype)
     this.json = json;
   }

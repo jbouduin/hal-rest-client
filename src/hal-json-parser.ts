@@ -20,6 +20,7 @@ interface IHalLink {
   type?: string;
   name?: string;
   title?: string;
+  [key: string]: any;
 }
 
 export class JSONParser implements IJSONParser {
@@ -145,15 +146,20 @@ export class JSONParser implements IJSONParser {
     return result;
   }
 
-  private tryConvertLink(value: any): IHalLink {
+  private tryConvertLink(value: string | Record<string, any>): IHalLink {
     let result: IHalLink;
     if (typeof value === 'string') {
       result = { href: value };
     } else {
-      if (!value.href) {
-        throw new Error('Link must contain at least the href property')
+      const keys = Object.keys(value);
+      if (keys.indexOf('href') < 0) {
+        throw new JSONParserException(value, 'Link should contain href property');
+      } else {
+        result = { href: value.href };
+        Object.keys(value)
+          .filter((key: string) => key !== 'href')
+          .forEach((key: string) => result[key] = value[key]);
       }
-      result = value;
     }
     return result;
   }

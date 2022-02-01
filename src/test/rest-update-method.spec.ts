@@ -50,7 +50,7 @@ describe('Rest update calls', () => {
       });
   });
 
-  test('can update link using HalResource', () => {
+  test('update link using HalResource', () => {
     const person = personFactory.createPerson(1);
     const newName = 'test';
     const newPhone = '06XX1245XX';
@@ -94,7 +94,7 @@ describe('Rest update calls', () => {
       });
   });
 
-  test('can update new link of a HalResource', () => {
+  test('update new link of a HalResource', () => {
     const person = personFactory.createPerson(1);
     const newName = 'test';
     delete person.data._links.contacts;
@@ -151,7 +151,7 @@ describe('Rest update calls', () => {
       });
   });
 
-  test('can update with custom serializer', () => {
+  test('update with custom serializer', () => {
     const person1 = personFactory.createPerson(1);
     const person2 = personFactory.createPerson(99);
     const prefix = 'ownSerializer.';
@@ -188,7 +188,7 @@ describe('Rest update calls', () => {
       });
   });
 
-  test('can call update (PATCH) with hal-client', () => {
+  test('call update (PATCH) with hal-client', () => {
     const client = createClient(uriBuilder.orgBaseURI);
     const fullUri = uriBuilder.resourceUri('org', false, 'test', 1);
     const relativeUri = uriBuilder.resourceUri('org', true, 'test', 1);
@@ -221,4 +221,8 @@ describe('Rest update calls', () => {
         scope.done();
       });
   });
+
+  test.todo('call update and receive a JSON back');
+  test.todo('call update and receive a model back');
+  test.todo('call update an receive a HalResource back');
 });
