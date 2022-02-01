@@ -46,7 +46,6 @@ export class JSONParser implements IJSONParser {
         uri = typeof json._links.self === "string" ? json._links.self : json._links.self.href;
       }
       resource = createResource(this.halRestClient, c, uri);
-
       if (resource instanceof HalResource) {
         resource.reset();
       }
@@ -93,7 +92,7 @@ export class JSONParser implements IJSONParser {
     return resource;
   }
 
-  private processLink<T extends IHalResource>(link: string | { href?: string, templated?: boolean }, type: IHalResourceConstructor<T>): T {
+  private processLink<T extends IHalResource>(link: string | IHalLink, type: IHalResourceConstructor<T>): T {
     const href = this.extractURI(link);
     const linkResource = createResource(this.halRestClient, type, href);
     for (const propKey of Object.keys(link)) {
