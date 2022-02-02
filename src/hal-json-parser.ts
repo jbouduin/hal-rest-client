@@ -43,7 +43,11 @@ export class JSONParser implements IJSONParser {
     if (!resource) {
       let uri: string;
       if (json._links?.self) {
-        uri = typeof json._links.self === "string" ? json._links.self : json._links.self.href;
+        if (typeof json._links.self === "string") {
+          uri = json._links.self;
+        } else if (!json._links.self.templated) {
+          uri = json._links.self.href
+        }
       }
       resource = createResource(this.halRestClient, c, uri);
       if (resource instanceof HalResource) {

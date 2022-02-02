@@ -38,8 +38,9 @@ describe('Basic cache functionality', () => {
       });
   });
 
-  // TODO 1667 Redefine and refactor the use of fetchedURI
-  // this one fails: check what axios is returning e.g.
+  // TODO 1666 Redefine and refactor caching (what to cache and how)
+  // this one fails: axios returns the relative path if the request was made using a relative path
+  // jparser caches using self link
   test.skip('Fetched resource is cached with its full URI even if self is returned relative', () => {
     const client = createClient(uriBuilder.orgBaseURI);
     const dummy = dummyFactory.createResourceData('org', 'dummy', 1);

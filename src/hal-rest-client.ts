@@ -86,7 +86,6 @@ export class HalRestClient {
    */
   // TODO 1665 hal-rest-client has a parameter marked for internal use => split method
   public fetch<T extends IHalResource>(resourceURI: string, c: IHalResourceConstructor<T>, resource?: T): Promise<T> {
-    // TODO 1661 if resourceURI and baseUri point to different origin we have an issue
     return new Promise((resolve, reject) => {
       this.axios.get(resourceURI).then((response: AxiosResponse<any, any>) => {
         // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
@@ -137,8 +136,7 @@ export class HalRestClient {
     url: string,
     data: object,
     full = false,
-    type?: IHalResourceConstructor<T>,
-  ): Promise<T | Record<string, string>> {
+    type?: IHalResourceConstructor<T>): Promise<T | Record<string, string>> {
     const method = full ? "put" : "patch";
     return new Promise((resolve, reject) => {
       this.axios.request({ data, method, url }).then((response: AxiosResponse<any, any>) => {

@@ -282,9 +282,7 @@ describe('Templated links', () => {
   const contextTld = 'org';
   const projectFactory = new ProjectFactory(contextTld, uriBuilder);
 
-  // is this HAL compliant anyway ?
-  // TODO 1658 Check spec's on templated self links and implement changes
-  test('fetch resource with templated self link', () => {
+  test('resource with templated self link may not be cached', () => {
     const projectList = projectFactory.createProjectList(0);
     const templated = projectList.data._links['templated'];
     const templatedUriString = (templated as ILink).href;
@@ -294,19 +292,15 @@ describe('Templated links', () => {
       .get(projectList.relativeUri)
       .reply(200, projectList.data);
 
-    return createClient(uriBuilder.orgBaseURI)
-      .fetchResource(projectList.relativeUri, HalResource)
-      .then((resource: HalResource) => {
-        expect(resource.uri.uri).toBe<string>(templatedUriString);
-        // next one fails as it returns /projects?offset=0&sort=LastModified&pageSize=20
-        // TODO 1658 check what we are supposed to store as fetchedURI and do not cache
-        // expect(resource.uri.resourceURI).toBe<string>(templatedUriString);
-        expect(resource.prop('results')).toHaveLength(2);
+    return createClient()
+      .fetchResource(projectList.fullUri, HalResource)
+      .then(() => {
+        expect(cache.getKeys('Resource')).not.toContain(templatedUriString);
         scope.done();
       });
   });
 
-  test('can fetch resource with self templated link', () => {
+  test('fetch resource with self templated link', () => {
     const projectList = projectFactory.createProjectList(0);
     const templated = projectList.data._links['templated'];
     const templatedUriString = (templated as ILink).href;
@@ -320,14 +314,13 @@ describe('Templated links', () => {
       .fetchResource(projectList.fullUri, HalResource)
       .then((resource: HalResource) => {
         expect(resource.uri.uri).toBe<string>(templatedUriString);
-        // next one fails as it returns /projects?offset=0&sort=LastModified&pageSize=20
-        // TODO check what we are supposed to store as fetchedURI
-        // expect(resource.uri.resourceURI).toBe<string>(templatedUriString);
+        expect(resource.uri.templated).toBe<boolean>(true);
         expect(resource.prop('results')).toHaveLength(2);
-        scope.done();
-        // expect(resource.uri.uri).toBe<string>('http://test.fr/data{?page,size,sort}');
-        // expect(resource.uri.resourceURI).toBe<string>('http://test.fr/data{?page,size,sort}');
+        // TODO 1667 check what we are supposed to store as fetchedURI
+        // next one fails as it returns /projects?offset=0&sort=LastModified&pageSize=20
+        // expect(resource.uri.resourceURI).toBe<string>(templatedUriString);
         // expect(resource.prop('data')).toHaveLength(1);
+        scope.done();
       });
   });
 
