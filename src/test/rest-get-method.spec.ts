@@ -207,15 +207,16 @@ describe('fetch arrays', () => {
       });
   });
 
-  // TODO 1660 this is definitely not compliant to the HAL specification
+  // TODO 1660 Remove non compliant feature of retrieving an array of HAL-resources
   test('fetch Array of Hal-Resources', () => {
     const person = personFactory.createPerson(1);
     const persons = new Array<IData>();
+    const endpoint = uriBuilder.resourceUri(contextTld, true, 'persons');
     persons.push(person.data);
 
     const scope = nock(uriBuilder.orgBaseURI);
     scope
-      .get('/persons')
+      .get(endpoint)
       .reply(200, [
         person.data,
         {
@@ -229,7 +230,7 @@ describe('fetch arrays', () => {
       );
 
     return createClient(uriBuilder.orgBaseURI)
-      .fetchArray('/persons', Person)
+      .fetchArray(endpoint, Person)
       .then((persons: Array<Person>) => {
         expect(persons).toHaveLength(2);
         expect(persons[0]).toBeInstanceOf(Person);

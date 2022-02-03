@@ -317,10 +317,13 @@ describe('Templated links', () => {
         expect(resource.uri.uri).toBe<string>(templatedUriString);
         expect(resource.uri.templated).toBe<boolean>(true);
         expect(resource.prop('results')).toHaveLength(2);
-        // TODO 1667 check what we are supposed to store as fetchedURI
-        // next one fails as it returns /projects?offset=0&sort=LastModified&pageSize=20
-        // expect(resource.uri.resourceURI).toBe<string>(templatedUriString);
-        // expect(resource.prop('data')).toHaveLength(1);
+        const resourceUri = resource.uri.resourceURI;
+        const fill = {
+          offset:0,
+          sort: 'LastModified',
+          pageSize:20
+        };
+        expect(resource.uri.fill(fill)).toBe<string>(resourceUri);
         scope.done();
       });
   });

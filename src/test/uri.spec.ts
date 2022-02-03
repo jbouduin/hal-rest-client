@@ -64,7 +64,10 @@ describe('templated URI tests',() => {
     const filled = uri.fill({ page: 1, size: 100, sort: 'id', id: 12 });
     expect(filled).toBe<string>(uriBuilder.filledTemplatedResourceUri('org', false,  'projects/12/workpackages', fill));
   });
+});
 
+describe('usage of fetchedUri', () => {
+  const fill = { page: 1, size: 100, sort: 'id' };
   test('resource URI returns fetched URI', () => {
     const uriString = uriBuilder.templatedResourceUri('org', false, 'projects/{id}/workpackages', fill);
     const uri = new URI(uriString, true);
