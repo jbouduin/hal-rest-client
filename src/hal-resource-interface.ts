@@ -45,4 +45,8 @@ export interface IHalResourceConstructor<T extends IHalResource> {
   new (restClient: HalRestClient, uri ?: URI): T;
 }
 
+export interface INewable {
+  new(): object;
+}
+
 

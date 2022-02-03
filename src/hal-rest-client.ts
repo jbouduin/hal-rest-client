@@ -79,7 +79,7 @@ export class HalRestClient {
   // TODO 1660 Remove non compliant feature of retrieving an array of HAL-resources
   public fetchArray<T extends IHalResource>(resourceURI: string, c: IHalResourceConstructor<T>): Promise<Array<T>> {
     return new Promise((resolve, reject) => {
-      this.axios.get(resourceURI).then((value) => {
+      this.axios.get(resourceURI).then((value: AxiosResponse<any, any>) => {
         let array: Array<unknown>;
         if (!Array.isArray(value.data)) {
           if ("_embedded" in value.data) {
@@ -100,7 +100,7 @@ export class HalRestClient {
         } else {
           array = value.data;
         }
-        resolve(array.map((item: unknown) => this.jsonParser.jsonToResource(item, resourceURI, c)));
+        resolve(array.map((item: unknown) => this.jsonParser.objectToHalResource(item, resourceURI, c)));
       }).catch(reject);
     });
   }
@@ -137,7 +137,7 @@ export class HalRestClient {
       this.axios.delete(uri).then((response: AxiosResponse<any, any>) => {
         if (c) {
           // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-          resolve(this.jsonParser.jsonToResource(response.data, uri, c));
+          resolve(this.jsonParser.objectToHalResource(response.data, uri, c));
         } else {
           // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
           resolve(response.data ? response.data : response);
@@ -163,7 +163,7 @@ export class HalRestClient {
       this.axios.request({ data, method, url }).then((response: AxiosResponse<any, any>) => {
         if (type) {
           // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-          resolve(this.jsonParser.jsonToResource(response.data, url, type, undefined, response.config.url));
+          resolve(this.jsonParser.objectToHalResource(response.data, url, type, undefined, response.config.url));
         } else {
           // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
           resolve(response.data ? response.data : response);
@@ -184,7 +184,7 @@ export class HalRestClient {
       this.axios.post(uri, json).then((response: AxiosResponse<any, any>) => {
         if (type) {
           // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-          resolve(this.jsonParser.jsonToResource(response.data, uri, type, undefined, response.config.url));
+          resolve(this.jsonParser.objectToHalResource(response.data, uri, type, undefined, response.config.url));
         } else {
           // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
           resolve(response.data ? response.data : response);
@@ -226,7 +226,7 @@ export class HalRestClient {
     return new Promise((resolve, reject) => {
       this.axios.get(resourceURI).then((response: AxiosResponse<any, any>) => {
         // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-        resolve(this.jsonParser.jsonToResource(response.data, resourceURI, c, resource, response.config.url));
+        resolve(this.jsonParser.objectToHalResource(response.data, resourceURI, c, resource, response.config.url));
       }).catch(reject);
     });
   }

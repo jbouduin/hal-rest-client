@@ -14,7 +14,7 @@ export interface IJSONParser {
    * @param resource : the existing resource if we merge an existing one with new data
    * @param fetchedURI : the uri fetched from the server, this one is not passed through when recursing
    */
-  jsonToResource<T extends IHalResource>(
+  objectToHalResource<T extends IHalResource>(
     json: Record<string, any>,
     requestedURI: string,
     c: IHalResourceConstructor<T>,
@@ -34,10 +34,18 @@ interface IHalLink {
 
 export class JSONParser implements IJSONParser {
 
-  constructor(private halRestClient: HalRestClient) { }
+  //#region private properties ------------------------------------------------
+  private readonly halRestClient: HalRestClient;
+  //#endregion
 
+  //#region Constructor & C° --------------------------------------------------
+  constructor(halRestClient: HalRestClient) {
+    this.halRestClient = halRestClient;
+  }
+  //#endregion
 
-  public jsonToResource<T extends IHalResource>(
+  //#region IJsonParser interface method --------------------------------------
+  public objectToHalResource<T extends IHalResource>(
     json: Record<string, any>,
     requestedURI: string,
     c: IHalResourceConstructor<T>,
@@ -109,15 +117,17 @@ export class JSONParser implements IJSONParser {
         if (links.self) {
           resource.uri = this.extractURI(this.tryConvertLink(links.self), fetchedURI);
         }
-      } else if ("_embedded" === key) {
+      } else if (key === "_embedded") {
         const embedded: Record<string, unknown> = json._embedded;
         for (const prop of Object.keys(embedded)) {
           const propKey = halToTs[prop] || prop;
-          resource.prop(propKey, this.parseJson(embedded[prop], requestedURI, c, propKey));
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+          resource.prop(propKey, this.parseJson(embedded[prop], true, requestedURI, c.prototype, propKey));
         }
       } else {
         const propKey = halToTs[key] || key;
-        resource.prop(propKey, this.parseJson(json[key], requestedURI, c, propKey));
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+        resource.prop(propKey, this.parseJson(json[key], false, requestedURI, c.prototype, propKey));
       }
     }
 
@@ -125,7 +135,9 @@ export class JSONParser implements IJSONParser {
     resource.onInitEnded();
     return resource;
   }
+  //#endregion
 
+  //#region private methods ---------------------------------------------------
   private processLink<T extends IHalResource>(link: string | IHalLink, type: IHalResourceConstructor<T>): T {
     const href = this.extractURI(link);
     const linkResource = createResource(this.halRestClient, type, href);
@@ -135,30 +147,33 @@ export class JSONParser implements IJSONParser {
     return linkResource;
   }
 
-  /**
-   * parse a json to object
-   */
-  private parseJson(json, requestedUri: string, clazz?: { prototype: any }, key?: string): any {
+  private parseJson(json,
+    isEmbedded: boolean,
+    requestedUri: string,
+    classPrototype: object,
+    key: string): any {
 
     if (json === null) {
       return null;
     } else if (Array.isArray(json)) {
-      return json.map((item) => this.parseJson(item, requestedUri, clazz, key));
+      return json.map((item) => this.parseJson(item, isEmbedded, requestedUri, classPrototype, key));
     } else if (typeof json === "object") {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-      const type = Reflect.getMetadata("halClient:specificType", clazz.prototype, key);
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-      const isHal: Record<string, string> = Reflect.getMetadata("halClient:isHal", clazz.prototype) || {};
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-      const tsToHal: Record<string, string> = Reflect.getMetadata("halClient:tsToHal", clazz.prototype) || {};
-      const name = tsToHal[key]
-      if (type == undefined || (isHal && isHal[name || key])) {
+      const targetType = Reflect.getMetadata("halClient:specificType", classPrototype, key);
+      const isHal: Record<string, string> = Reflect.getMetadata("halClient:isHal", classPrototype) || {};
+      const tsToHal: Record<string, string> = Reflect.getMetadata("halClient:tsToHal", classPrototype) || {};
+      const name = tsToHal[key];
+      if ((targetType == undefined && isEmbedded) || (isHal && isHal[name || key])) {
         // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-        return this.jsonToResource(json, requestedUri, type || HalResource);
+        return this.objectToHalResource(json, requestedUri, targetType || HalResource);
+      } else if (targetType) {
+        const result = new targetType();
+        for (const subkey in json) {
+          result[subkey] = this.parseJson(json[subkey], false, requestedUri, classPrototype, subkey);
+        }
+        return result;
       } else {
         return json;
       }
-
     } else {
       return json;
     }
@@ -196,4 +211,5 @@ export class JSONParser implements IJSONParser {
     }
     return result;
   }
+  //#endregion
 }

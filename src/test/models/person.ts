@@ -7,10 +7,10 @@ export class Person extends HalResource {
   @HalProperty()
   public name;
 
-  @HalProperty({ name: 'my-friends', resourceType: Person })
+  @HalProperty({ name: 'my-friends', targetType: Person })
   public myFriends: Array<Person>;
 
-  @HalProperty({ resourceType: Person })
+  @HalProperty({ targetType: Person })
   public mother: any;
 
   @HalProperty()
@@ -22,9 +22,9 @@ export class Person extends HalResource {
   @HalProperty({ name: 'best-friend' })
   public bestFriend: Person;
 
-  @HalProperty({ resourceType: Location })
+  @HalProperty({ targetType: Location })
   public home: Location;
 
-  @HalProperty({ name: 'place-of-employment', resourceType: Location })
+  @HalProperty({ name: 'place-of-employment', targetType: Location })
   public work: Location;
 }

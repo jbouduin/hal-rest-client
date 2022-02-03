@@ -57,6 +57,7 @@
     "prepublishOnly": "npm test && npm run lint",
     "version": "npm run build",
     "postversion": "git push && git push --tags",
-    "coveralls": "jest --coverage && coveralls < coverage/lcov.info"
+    "coveralls": "jest --coverage && coveralls < coverage/lcov.info",
+    "precommit": "npm run test && npm run lint"
   }
 }

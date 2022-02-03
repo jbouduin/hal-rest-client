@@ -128,4 +128,6 @@ describe('@HalProperty', () => {
       }
     }).toThrowError(/Test\.test for Array you need to specify a resource type on @HalProperty/)
   });
+
+
 });
