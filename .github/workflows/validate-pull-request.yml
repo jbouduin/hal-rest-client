@@ -22,5 +22,5 @@ jobs: # list of things to do
       - uses: actions/checkout@v2
       - run: npm ci
       - run: npm run lint
-      - run: npm build
-      - run: npm test
+      - run: npm run build
+      - run: npm run test
