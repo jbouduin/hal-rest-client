@@ -6,8 +6,17 @@ import { HalRestClient } from "./hal-rest-client";
 import { URI } from "./uri";
 
 export interface IJSONParser {
+  /**
+   *
+   * @param json the object to convert to a resrouce
+   * @param requestedUri the requested URI that returned the 'root' resource. This value should be passed through when recursing
+   * @param c the type of HalResource to be created
+   * @param resource : the existing resource if we merge an existing one with new data
+   * @param fetchedURI : the uri fetched from the server, this one is not passed through when recursing
+   */
   jsonToResource<T extends IHalResource>(
     json: Record<string, any>,
+    requestedURI: string,
     c: IHalResourceConstructor<T>,
     resource?: T,
     fetchedURI?: string,
@@ -27,11 +36,10 @@ export class JSONParser implements IJSONParser {
 
   constructor(private halRestClient: HalRestClient) { }
 
-  /**
-   * convert a json to an halResource
-   */
+
   public jsonToResource<T extends IHalResource>(
     json: Record<string, any>,
+    requestedURI: string,
     c: IHalResourceConstructor<T>,
     resource?: T,
     fetchedURI?: string): T {
@@ -41,15 +49,37 @@ export class JSONParser implements IJSONParser {
     }
 
     if (!resource) {
-      let uri: string;
+      let cacheKey: string;
+      // calculate the cache key:
+      // if no self-link => No caching
+      // if self-link is templated => no caching
+      // self-link is absolute => cache using self-link as key
+      // rest client has no base URI and self-link is relative => no caching
+      // rest client has a base URI and resource was retrieve from a different base URI => no cache
+      // rest client has a base URI and self-link is relative => cache using combined base URI and self-link
+      // rest client has a base URI and self-link is absolute and starts with the baseURL of the rest client => use self-link as cache key
+      // rest client has a base URI and self-link is absolute but does not start with the baseURL of the rest client => no caching
       if (json._links?.self) {
         if (typeof json._links.self === "string") {
-          uri = json._links.self;
+          cacheKey = json._links.self;
         } else if (!json._links.self.templated) {
-          uri = json._links.self.href
+          cacheKey = json._links.self.href;
         }
       }
-      resource = createResource(this.halRestClient, c, uri);
+      if (cacheKey) {
+        if (!cacheKey.toLowerCase().startsWith('http')) {
+          if (!this.halRestClient.config.baseURL) {
+            cacheKey = undefined;
+          } else {
+            if (requestedURI.toLowerCase().startsWith('http') && !requestedURI.startsWith(this.halRestClient.config.baseURL)) {
+              cacheKey = undefined
+            } else {
+              cacheKey = `${this.halRestClient.config.baseURL}${cacheKey}`
+            }
+          }
+        }
+      }
+      resource = createResource(this.halRestClient, c, cacheKey);
       if (resource instanceof HalResource) {
         resource.reset();
       }
@@ -83,11 +113,11 @@ export class JSONParser implements IJSONParser {
         const embedded: Record<string, unknown> = json._embedded;
         for (const prop of Object.keys(embedded)) {
           const propKey = halToTs[prop] || prop;
-          resource.prop(propKey, this.parseJson(embedded[prop], c, propKey));
+          resource.prop(propKey, this.parseJson(embedded[prop], requestedURI, c, propKey));
         }
       } else {
         const propKey = halToTs[key] || key;
-        resource.prop(propKey, this.parseJson(json[key], c, propKey));
+        resource.prop(propKey, this.parseJson(json[key], requestedURI, c, propKey));
       }
     }
 
@@ -108,12 +138,12 @@ export class JSONParser implements IJSONParser {
   /**
    * parse a json to object
    */
-  private parseJson(json, clazz?: { prototype: any }, key?: string): any {
+  private parseJson(json, requestedUri: string, clazz?: { prototype: any }, key?: string): any {
 
     if (json === null) {
       return null;
     } else if (Array.isArray(json)) {
-      return json.map((item) => this.parseJson(item, clazz, key));
+      return json.map((item) => this.parseJson(item, requestedUri, clazz, key));
     } else if (typeof json === "object") {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       const type = Reflect.getMetadata("halClient:specificType", clazz.prototype, key);
@@ -124,7 +154,7 @@ export class JSONParser implements IJSONParser {
       const name = tsToHal[key]
       if (type == undefined || (isHal && isHal[name || key])) {
         // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-        return this.jsonToResource(json, type || HalResource);
+        return this.jsonToResource(json, requestedUri, type || HalResource);
       } else {
         return json;
       }

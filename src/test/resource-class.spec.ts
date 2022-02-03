@@ -46,7 +46,7 @@ describe('hal-resource fetching', () => {
       });
   });
 
-  test('resource fetch don\'t reload if already fetched', () => {
+  test('resource fetch does not reload if already fetched', () => {
     const project = projectFactory.createProject(1);
     const scope = nock(uriBuilder.orgBaseURI);
     scope
@@ -56,17 +56,19 @@ describe('hal-resource fetching', () => {
 
     return createClient()
       .fetch(project.fullUri, HalResource)
-      .then((value: HalResource) => {
-        return value
+      .then((fetched: HalResource) => {
+        fetched.prop('name', 'modified');
+        expect(fetched.prop('name')).toBe<string>('modified');
+        return fetched
           .fetch()
-          .then(() => {
-            //expect(project.prop('prop2')).toBeUndefined();
+          .then((refetched) => {
+            expect(refetched.prop('name')).toBe<string>('modified');
             scope.done();
           });
       });
   });
 
-  test('resource fetch can be forced', () => {
+  test('force resource fetch although already loaded', () => {
     const project = projectFactory.createProject(1);
     const scope = nock(uriBuilder.orgBaseURI);
     scope
@@ -76,16 +78,41 @@ describe('hal-resource fetching', () => {
 
     return createClient()
       .fetch(project.fullUri, HalResource)
-      .then((value: HalResource) => {
-        return value
+      .then((fetched: HalResource) => {
+        fetched.prop('name', 'modified');
+        expect(fetched.prop('name')).toBe<string>('modified');
+        return fetched
           .fetch(true)
-          .then(() => {
-            //expect(project.prop('prop2')).toBeUndefined();
+          .then((refetched: HalResource) => {
+            expect(refetched.prop('name')).toBe<string>('Project 1');
             scope.done();
           });
       });
   });
 
+  test('reload using client overwrites changes', () => {
+    const project = projectFactory.createProject(1);
+    const client = createClient();
+    const scope = nock(uriBuilder.orgBaseURI);
+    scope
+      .get(project.relativeUri)
+      .twice()
+      .reply(200, project.data);
+
+    return client
+      .fetch(project.fullUri, HalResource)
+      .then((fetched: HalResource) => {
+        fetched.prop('name', 'modified');
+        expect(fetched.prop('name')).toBe<string>('modified');
+        return client
+          .fetch(project.fullUri, HalResource)
+          .then((refetched) => {
+            expect(refetched.prop('name')).toBe<string>('Project 1');
+            expect(fetched.prop('name')).toBe<string>('Project 1');
+            scope.done();
+          });
+      });
+  })
   test('create Resource by URL and fetch it', () => {
     const project = projectFactory.createProject(1);
     const resource = new HalResource(createClient(), new URI(project.fullUri));

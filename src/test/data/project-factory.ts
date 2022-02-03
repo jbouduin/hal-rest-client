@@ -1,5 +1,5 @@
 import { HostTld, IData, IFactoryResult, ILink, ILinkCollection, IListData, IQueryParameters } from "./common-definitions";
-import { DataFactory } from "./data-factory";
+import { DataFactory, SelfOption } from "./data-factory";
 import { UriBuilder } from "./uri-builder";
 
 export class ProjectFactory extends DataFactory {
@@ -20,15 +20,15 @@ export class ProjectFactory extends DataFactory {
   //#endregion
 
   //#region public methods ----------------------------------------------------
-  public createProject(id: number): IFactoryResult<IData> {
+  public createProject(id: number, relativeLinks = false): IFactoryResult<IData> {
     const children = new Array<ILink>();
     for (let i = id + 1; i <= id + 3; i++) {
-        children.push({ href: this.uriBuilder.resourceUri(this.tld, false, this.projectsPath, i) });
+        children.push({ href: this.uriBuilder.resourceUri(this.tld, relativeLinks, this.projectsPath, i) });
     }
     const links: ILinkCollection = {
       children: children,
-      parent: { href: this.uriBuilder.resourceUri(this.tld, false, this.projectsPath, id + 4) },
-      versions: this.uriBuilder.resourceUri(this.tld, false, this.projectsPath, id, 'versions')
+      parent: { href: this.uriBuilder.resourceUri(this.tld, relativeLinks, this.projectsPath, id + 4) },
+      versions: this.uriBuilder.resourceUri(this.tld, relativeLinks, this.projectsPath, id, 'versions')
     };
 
     const result = this.createResourceData(
@@ -36,7 +36,8 @@ export class ProjectFactory extends DataFactory {
       this.projectsPath,
       id,
       undefined,
-      links);
+      links,
+      relativeLinks ? SelfOption.RelativeLink : SelfOption.AbsoluteLink);
     result.data['name'] = `Project ${id}`;
     return result;
   }
@@ -49,7 +50,7 @@ export class ProjectFactory extends DataFactory {
     return result;
   }
 
-  public createProjectList(offset: number): IFactoryResult<IData> {
+  public createProjectList(offset: number, relativeLinks = false): IFactoryResult<IData> {
     const queryParameters: IQueryParameters = {
       offset: offset,
       sort: 'LastModified',
@@ -58,7 +59,7 @@ export class ProjectFactory extends DataFactory {
 
     const changeSizeLink = this.uriBuilder.filledTemplatedResourceUri(
       this.tld,
-      false,
+      relativeLinks,
       this.projectsPath,
       {
         offset: offset,
@@ -69,7 +70,7 @@ export class ProjectFactory extends DataFactory {
 
     const jumpToLink = this.uriBuilder.filledTemplatedResourceUri(
       this.tld,
-      false,
+      relativeLinks,
       this.projectsPath,
       {
         offset: '{jumpTo}',
@@ -80,7 +81,7 @@ export class ProjectFactory extends DataFactory {
 
     const templatedLink = this.uriBuilder.templatedResourceUri(
       this.tld,
-      false,
+      relativeLinks,
       this.projectsPath,
       {
         offset: '{jumpTo}',
@@ -92,8 +93,8 @@ export class ProjectFactory extends DataFactory {
     const listData: IListData = {
       listKey: 'results',
       listData: [
-        this.createProject(offset * 10).data,
-        this.createProject((offset * 10) + 10).data
+        this.createProject(offset * 10, relativeLinks).data,
+        this.createProject((offset * 10) + 10, relativeLinks).data
       ],
       queryParameters: queryParameters
     };
@@ -113,7 +114,7 @@ export class ProjectFactory extends DataFactory {
       }
     };
 
-    const result = this.createResourceListData(this.tld, this.projectsPath, listData, links);
+    const result = this.createResourceListData(this.tld, this.projectsPath, listData, links, relativeLinks ? SelfOption.RelativeLink : SelfOption.AbsoluteLink);
     return result;
   }
   //#endregion

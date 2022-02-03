@@ -16,11 +16,16 @@ export function createClient(basename?: string, options: AxiosRequestConfig = {}
   let result: HalRestClient;
   if (!basename) {
     result = new HalRestClient();
-  } else if (!cache.hasClient(basename)) {
-    result = new HalRestClient(basename, options);
-    cache.setClient(basename, result);
   } else {
-    result = cache.getClient(basename);
+    while (basename.endsWith('/')) {
+      basename = basename.slice(0, -1);
+    }
+    if (!cache.hasClient(basename)) {
+      result = new HalRestClient(basename, options);
+      cache.setClient(basename, result);
+    } else {
+      result = cache.getClient(basename);
+    }
   }
   return result;
 }
@@ -49,14 +54,17 @@ export function createResource<T extends IHalResource>(
     result = new c(client, uri);
   } else {
     const objectURI = typeof uri === 'string' ? new URI(uri, false) : uri;
-    if (!cache.hasResource(objectURI.uri)) {
+    const cacheKey = objectURI.uri?.toLowerCase().startsWith('http') ?
+      objectURI.uri :
+      `${client.config.baseURL}${objectURI.uri}`;
+    // console.log(`key ${cacheKey} ${cache.hasResource(cacheKey) ? 'is' : 'is not'} in cache`)
+    if (!cache.hasResource(cacheKey)) {
       result = new c(client, objectURI);
-      cache.setResource(objectURI.uri, result);
+      cache.setResource(cacheKey, result);
     } else {
-      const cached = cache.getResource(objectURI.uri) as any;
+      const cached = cache.getResource(cacheKey) as any;
       result = cached instanceof c ? cached : HalResource.createFromExisting(cached, c);
     }
   }
   return result;
 }
-

@@ -11,7 +11,7 @@ describe('Generic JSON Parser', () => {
     const json = {
       name: 'name'
     };
-    const resource = parser.jsonToResource(json, HalResource);
+    const resource = parser.jsonToResource(json, '', HalResource);
     expect(resource).toBeInstanceOf(HalResource);
     expect(resource.prop('name')).toBe<string>('name');
   });
@@ -20,14 +20,14 @@ describe('Generic JSON Parser', () => {
     const json = {
       name: 'name'
     };
-    const resource = parser.jsonToResource(json, HalResource);
+    const resource = parser.jsonToResource(json, '', HalResource);
     expect(resource).toBeInstanceOf(HalResource);
     expect(resource.prop('name')).toBe<string>('name');
   });
 
   test('create HalResource using empty JSON', () => {
     const json = {}
-    const resource = parser.jsonToResource(json, HalResource);
+    const resource = parser.jsonToResource(json, '', HalResource);
     expect(resource).toBeInstanceOf(HalResource);
     expect(Object.keys(resource.props)).toHaveLength(0);
   });
@@ -36,7 +36,7 @@ describe('Generic JSON Parser', () => {
     const json = {
       name: 'name'
     };
-    const resource = parser.jsonToResource(json, ToHalResourceModel);
+    const resource = parser.jsonToResource(json, '', ToHalResourceModel);
     expect(resource).toBeInstanceOf(ToHalResourceModel);
   });
 
@@ -44,14 +44,14 @@ describe('Generic JSON Parser', () => {
     const json = {
       name: 'name'
     };
-    const resource = parser.jsonToResource(json, ToHalResourceModel);
+    const resource = parser.jsonToResource(json, '', ToHalResourceModel);
     expect(resource).toBeInstanceOf(ToHalResourceModel);
     expect(resource.prop('name')).toBe<string>('name');
   });
 
   test('create HalModel using empty JSON', () => {
     const json = {}
-    const resource = parser.jsonToResource(json, ToHalResourceModel);
+    const resource = parser.jsonToResource(json, '', ToHalResourceModel);
     expect(resource).toBeInstanceOf(ToHalResourceModel);
     expect(Object.keys(resource.props)).toHaveLength(0);
   });
@@ -126,7 +126,7 @@ describe('JSON Parser: links', () => {
         ]
       }
     };
-    const resource = parser.jsonToResource(toParse, HalResource);
+    const resource = parser.jsonToResource(toParse, '', HalResource);
     testHalResource(resource);
   });
 
@@ -140,7 +140,7 @@ describe('JSON Parser: links', () => {
         ]
       }
     };
-    const resource = parser.jsonToResource(toParse, HalResource);
+    const resource = parser.jsonToResource(toParse, '', HalResource);
     testHalResource(resource);
   });
 
@@ -155,7 +155,7 @@ describe('JSON Parser: links', () => {
         link3: '/link3'
       }
     };
-    const resource = parser.jsonToResource(toParse, HalResource);
+    const resource = parser.jsonToResource(toParse, '', HalResource);
     testHalResource(resource);
     expect(resource.link('link3')).toBeInstanceOf(HalResource)
     expect(resource.link('link3').prop('href')).toBe<string>('/link3');
@@ -172,7 +172,7 @@ describe('JSON Parser: links', () => {
         ]
       }
     };
-    const model = parser.jsonToResource(toParse, ToHalResourceModel);
+    const model = parser.jsonToResource(toParse, '', ToHalResourceModel);
     testToHalResourceModel(model);
   });
 
@@ -186,7 +186,7 @@ describe('JSON Parser: links', () => {
         ]
       }
     };
-    const model = parser.jsonToResource(toParse, ToHalResourceModel);
+    const model = parser.jsonToResource(toParse, '', ToHalResourceModel);
     testToHalResourceModel(model);
   });
 
@@ -201,7 +201,7 @@ describe('JSON Parser: links', () => {
         link3: '/link3'
       }
     };
-    const model = parser.jsonToResource(toParse, ToHalResourceModel);
+    const model = parser.jsonToResource(toParse, '', ToHalResourceModel);
     testToHalResourceModel(model);
     expect(model.link('link3')).toBeInstanceOf(HalResource)
     expect(model.link('link3').prop('href')).toBe<string>('/link3');
@@ -222,7 +222,7 @@ describe('JSON Parser: links', () => {
         ]
       }
     };
-    const model = parser.jsonToResource(toParse, ToModelModel);
+    const model = parser.jsonToResource(toParse, '', ToModelModel);
     testToModelModel(model);
   });
 
@@ -236,7 +236,7 @@ describe('JSON Parser: links', () => {
         ]
       }
     };
-    const model = parser.jsonToResource(toParse, ToModelModel);
+    const model = parser.jsonToResource(toParse, '', ToModelModel);
     testToModelModel(model);
   });
 
@@ -251,7 +251,7 @@ describe('JSON Parser: links', () => {
         link3: '/link3'
       }
     };
-    const model = parser.jsonToResource(toParse, ToModelModel);
+    const model = parser.jsonToResource(toParse, '', ToModelModel);
     testToHalResourceModel(model);
     expect(model.link('link3')).toBeInstanceOf(ToModelModel)
     expect(model.link('link3').prop('href')).toBe<string>('/link3');
@@ -283,7 +283,7 @@ describe('JSON Parser: links', () => {
         }
       }
     };
-    const resource = parser.jsonToResource(json, HalResource);
+    const resource = parser.jsonToResource(json, '', HalResource);
     const link1 = resource.link('link1');
     expect(link1).toBeInstanceOf(HalResource);
     expect(link1.prop('href')).toBe<string>('/link1');
@@ -327,7 +327,7 @@ describe('JSON Parser: links', () => {
       }
     };
     try {
-      parser.jsonToResource(json, HalResource);
+      parser.jsonToResource(json, '', HalResource);
     } catch (error) {
       expect(error).toBeInstanceOf(JSONParserException)
     }
@@ -341,7 +341,7 @@ describe('JSON Parser: links', () => {
         }
       }
     };
-    const resource = parser.jsonToResource(json, HalResource);
+    const resource = parser.jsonToResource(json, '', HalResource);
     expect(resource.link('link1').uri.uri).toBeNull();
     expect(resource.link('link1').href).toBeUndefined();
     expect(resource.prop('link1').href).toBeUndefined();
