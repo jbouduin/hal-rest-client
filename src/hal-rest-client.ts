@@ -4,6 +4,10 @@ import { AxiosInstance, AxiosRequestConfig, AxiosResponse } from "axios";
 import { IJSONParser, JSONParser } from "./hal-json-parser";
 import { IHalResource, IHalResourceConstructor } from "./hal-resource-interface";
 
+// TODO 1659 Appropriate Encapsulation
+// create IHalRestClient Interface
+// hide that internal method
+
 /**
  * base to rest client
  *
@@ -22,16 +26,40 @@ import { IHalResource, IHalResourceConstructor } from "./hal-resource-interface"
  * ```
  */
 export class HalRestClient {
+  //#region private properties ------------------------------------------------
   private axios: AxiosInstance;
   private jsonParser: IJSONParser;
+  //#endregion
 
+  //#region public getters ----------------------------------------------------
+  /**
+   * Get axios config for customization
+   *
+   * @return {AxiosRequestConfig}
+   */
+  public get config() {
+    return this.axios.defaults;
+  }
+
+  /**
+   * get axions config interceptor
+   * @return {AxiosInterceptorManager}
+   */
+  public get interceptors() {
+    return this.axios.interceptors;
+  }
+  //#endregion
+
+  //#region Constructor & C° --------------------------------------------------
   constructor(baseURL?: string, options: AxiosRequestConfig = {}) {
     const config = options;
     config.baseURL = baseURL;
     this.axios = Axios.create(config);
     this.setJsonParser(new JSONParser(this));
   }
+  //#endregion
 
+  //#region public methods ----------------------------------------------------
   /**
    * fetch an URI on HalResource
    *
@@ -81,17 +109,10 @@ export class HalRestClient {
    * call an URI to fetch a resource
    *
    * @param resourceURI : the uri of resource to fetch
-   * @param c : the class to use to fetch. If you don't want to write you model, use HalResource or @{see fetchResource}
-   * @param resource : don't use. internal only
+   * @param c : the class to use to fetch. If you don't want to write you model, use HalResource
    */
-  // TODO 1665 hal-rest-client has a parameter marked for internal use => split method
-  public fetch<T extends IHalResource>(resourceURI: string, c: IHalResourceConstructor<T>, resource?: T): Promise<T> {
-    return new Promise((resolve, reject) => {
-      this.axios.get(resourceURI).then((response: AxiosResponse<any, any>) => {
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-        resolve(this.jsonParser.jsonToResource(response.data, resourceURI, c, resource, response.config.url));
-      }).catch(reject);
-    });
+  public fetch<T extends IHalResource>(resourceURI: string, c: IHalResourceConstructor<T>): Promise<T> {
+    return this.fetchInternal(resourceURI, c);
   }
 
   /**
@@ -185,27 +206,29 @@ export class HalRestClient {
   }
 
   /**
-   * Get axios config for customization
-   *
-   * @return {AxiosRequestConfig}
-   */
-  public get config() {
-    return this.axios.defaults;
-  }
-
-  /**
-   * get axions config interceptor
-   * @return {AxiosInterceptorManager}
-   */
-  public get interceptors() {
-    return this.axios.interceptors;
-  }
-
-  /**
    * set the json parser
    * @param {JSONParser} the new json parser
    */
   public setJsonParser(parser: IJSONParser) {
     this.jsonParser = parser;
   }
+  //#endregion
+
+  //#region methods for internal use in the library ---------------------------
+  /**
+  * call an URI to fetch a resource
+  *
+  * @param resourceURI : the uri of resource to fetch
+  * @param c : the class to use to fetch. If you don't want to write you model, use HalResource or @{see fetchResource}
+  * @param resource : don't use. internal only
+  */
+  public fetchInternal<T extends IHalResource>(resourceURI: string, c: IHalResourceConstructor<T>, resource?: T): Promise<T> {
+    return new Promise((resolve, reject) => {
+      this.axios.get(resourceURI).then((response: AxiosResponse<any, any>) => {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+        resolve(this.jsonParser.jsonToResource(response.data, resourceURI, c, resource, response.config.url));
+      }).catch(reject);
+    });
+  }
+  //#endregion
 }

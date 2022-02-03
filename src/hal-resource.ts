@@ -42,7 +42,7 @@ export class HalResource implements IHalResource {
     if ((this.isLoaded && !forceOrParams) || this.uri === undefined) {
       return new Promise((resolve) => resolve(this));
     } else {
-      return this.restClient.fetch(
+      return this.restClient.fetchInternal(
         this.uri.fill(forceOrParams as object),
         this.constructor as IHalResourceConstructor<this>,
         this,
