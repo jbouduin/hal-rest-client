@@ -15,6 +15,7 @@ afterEach(() => {
 });
 //#endregion
 
+// TODO 1670 Add missing tests to rest-update-method.spec.ts
 describe('Rest update calls', () => {
   const uriBuilder = new UriBuilder();
   const personFactory = new PersonFactory('org', uriBuilder);

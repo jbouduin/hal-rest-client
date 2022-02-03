@@ -117,6 +117,7 @@ describe('fetch resources', () => {
   });
 });
 
+// TODO 1660 Remove non compliant feature of retrieving an array of HAL-resources
 describe('fetch arrays', () => {
   let uriBuilder: UriBuilder;
   let personFactory: PersonFactory;
@@ -207,7 +208,6 @@ describe('fetch arrays', () => {
       });
   });
 
-  // TODO 1660 Remove non compliant feature of retrieving an array of HAL-resources
   test('fetch Array of Hal-Resources', () => {
     const person = personFactory.createPerson(1);
     const persons = new Array<IData>();

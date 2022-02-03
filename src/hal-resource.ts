@@ -3,6 +3,7 @@ import { IHalResource, IHalResourceConstructor } from "./hal-resource-interface"
 import { HalRestClient } from "./hal-rest-client";
 import { URI } from "./uri";
 
+// TODO 1663 refactor HalResource :add a getter: hasChanges();
 export class HalResource implements IHalResource {
   protected _links: Record<string, any>;
   protected _props: Record<string, any>;
@@ -11,6 +12,7 @@ export class HalResource implements IHalResource {
   public get links(): Record<string, any> { return this._links; }
   public get props(): Record<string, any> { return this._props; }
 
+  // TODO 1663 refactor HalResource: should be a public get private/internal set (it is only set by the JSON Parser)
   public isLoaded = false;
 
   protected restClient: HalRestClient;
@@ -53,7 +55,7 @@ export class HalResource implements IHalResource {
   /**
    * to clear value use null not undefined
    */
-  // TODO 1663 refactor prop(name: string, value?: any) and link(name: string, value?: any)
+  // TODO 1663 refactor HalResource prop(name: string, value?: any)
   public prop(name: string, value?: any): any {
     if (value !== void 0) {
       if (this.links[name]) {
@@ -84,8 +86,8 @@ export class HalResource implements IHalResource {
   /**
    * to clear value use null not undefined
    */
-  // TODO 1663 also: can we replace any by HalResource ?
-  // TODO 1663 refactor prop(name: string, value?: any) and link(name: string, value?: any)
+  // TODO 1663 refactor HalResource : can we replace any by HalResource ?
+  // TODO 1663 refactor HalResource prop(name: string, value?: any)
   public link(name: string, value?: any): any {
     if (value !== void 0) {
       this.links[name] = value;
