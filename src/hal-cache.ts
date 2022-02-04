@@ -1,6 +1,6 @@
 
 import { IHalResource } from "./hal-resource-interface";
-import { HalRestClient } from "./hal-rest-client";
+import { IHalRestClient } from "./hal-rest-client";
 
 export type HalCacheType = 'Client' | 'Resource';
 
@@ -27,20 +27,20 @@ export interface IHalCache {
   getKeys(type: HalCacheType): Array<string>;
 
 
-  getClient(uri: string): HalRestClient;
+  getClient(uri: string): IHalRestClient;
   hasClient(uri: string): boolean;
-  setClient(uri: string, value: HalRestClient): void;
+  setClient(uri: string, value: IHalRestClient): void;
   getResource(uri: string): IHalResource;
   hasResource(uri: string): boolean;
   setResource(uri: string, value: IHalResource): void;
 }
 
 export class HalCache implements IHalCache {
-  private clientCache: Map<string, HalRestClient>;
+  private clientCache: Map<string, IHalRestClient>;
   private resourceCache: Map<string, IHalResource>;
 
   constructor() {
-    this.clientCache = new Map<string, HalRestClient>();
+    this.clientCache = new Map<string, IHalRestClient>();
     this.resourceCache = new Map<string, IHalResource>();
   }
 
@@ -92,7 +92,7 @@ export class HalCache implements IHalCache {
     return result;
   }
 
-  public getClient(uri: string): HalRestClient {
+  public getClient(uri: string): IHalRestClient {
     return this.clientCache.get(uri);
   }
 
@@ -100,7 +100,7 @@ export class HalCache implements IHalCache {
     return this.clientCache.has(uri);
   }
 
-  public setClient(uri: string, value: HalRestClient): void {
+  public setClient(uri: string, value: IHalRestClient): void {
     this.clientCache.set(uri, value);
   }
 

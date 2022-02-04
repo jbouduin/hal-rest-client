@@ -21,13 +21,13 @@ function getOrCreateMetaData(metaDataKey: string, target: object): object {
 
 export function HalProperty<T extends HalResource>(
 
-  { name: halPropertyName, targetType, isHalResource }: { name?: string; targetType?: IHalResourceConstructor<T> | INewable; isHalResource?: boolean } =  { }):
+  { name, resourceType, isHalResource }: { name?: string; resourceType?: IHalResourceConstructor<T> | INewable; isHalResource?: boolean } =  { }):
   (targetHalResource: object, propertyName: string) => void {
 
   return (targetHalResource: object, propertyName: string) => {
     const baseType = Reflect.getMetadata('design:type', targetHalResource, propertyName);
 
-    if (baseType === Array && targetType === undefined) {
+    if (baseType === Array && resourceType === undefined) {
       throw new Error(`${targetHalResource.constructor.name}.${propertyName} for Array you need to specify a resource type on @HalProperty.`);
     }
 
@@ -38,13 +38,13 @@ export function HalProperty<T extends HalResource>(
     const tsToHal = getOrCreateMetaData('halClient:tsToHal', targetHalResource);
     const isHal = getOrCreateMetaData('halClient:isHal', targetHalResource);
 
-    halToTs[halPropertyName || propertyName] = propertyName;
-    isHal[halPropertyName || propertyName] = isHalResource;
-    tsToHal[propertyName] = halPropertyName || propertyName;
-    const type = targetType || baseType;
+    halToTs[name || propertyName] = propertyName;
+    isHal[name || propertyName] = isHalResource;
+    tsToHal[propertyName] = name || propertyName;
+    const type = resourceType || baseType;
     Reflect.defineMetadata('halClient:specificType', type, targetHalResource, propertyName);
-    if (halPropertyName && targetType) {
-      Reflect.defineMetadata('halClient:specificType', type, targetHalResource, halPropertyName);
+    if (name && resourceType) {
+      Reflect.defineMetadata('halClient:specificType', type, targetHalResource, name);
     }
 
     // Delete property.

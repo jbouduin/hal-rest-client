@@ -55,7 +55,7 @@ describe('Handling non-hal data in the root of the resource', () => {
       .reply(200, [{ 'non-hal': true }]);
 
     return createClient(uriBuilder.orgBaseURI)
-      .fetchResource(uri, HalResource)
+      .fetch(uri, HalResource)
       .catch(e => {
         expect(e).toBeInstanceOf(JSONParserException);
         expect((e as JSONParserException).json).toStrictEqual([{ 'non-hal': true }]);

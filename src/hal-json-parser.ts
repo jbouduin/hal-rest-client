@@ -2,7 +2,7 @@ import { createResource } from "./hal-factory";
 import { JSONParserException } from "./hal-json-parser-exception";
 import { HalResource } from "./hal-resource";
 import { IHalResource, IHalResourceConstructor } from "./hal-resource-interface";
-import { HalRestClient } from "./hal-rest-client";
+import { IHalRestClient } from "./hal-rest-client";
 import { URI } from "./uri";
 
 export interface IJSONParser {
@@ -35,11 +35,11 @@ interface IHalLink {
 export class JSONParser implements IJSONParser {
 
   //#region private properties ------------------------------------------------
-  private readonly halRestClient: HalRestClient;
+  private readonly halRestClient: IHalRestClient;
   //#endregion
 
   //#region Constructor & C° --------------------------------------------------
-  constructor(halRestClient: HalRestClient) {
+  constructor(halRestClient: IHalRestClient) {
     this.halRestClient = halRestClient;
   }
   //#endregion

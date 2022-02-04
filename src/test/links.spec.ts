@@ -157,7 +157,7 @@ describe('additional properties on links', () => {
       .reply(200, data.data);
 
     return createClient(uriBuilder.orgBaseURI)
-      .fetchResource(data.relativeUri, HalResource)
+      .fetch(data.relativeUri, HalResource)
       .then((resource: HalResource) => {
         expect(resource.link('other').prop('type')).toBe<string>('application/json');
         scope.done();
@@ -174,7 +174,7 @@ describe('additional properties on links', () => {
       .reply(200, linkedData.data);
 
     return createClient(uriBuilder.orgBaseURI)
-      .fetchResource(data.relativeUri, HalResource)
+      .fetch(data.relativeUri, HalResource)
       .then((resource: HalResource) => {
         return resource.link('other')
           .fetch()
@@ -213,7 +213,7 @@ describe('Resources with no \'self\'', () => {
       .reply(200, resourceWithoutSelf.data);
 
     return createClient(uriBuilder.orgBaseURI)
-      .fetchResource(resourceWithoutSelf.relativeUri, HalResource)
+      .fetch(resourceWithoutSelf.relativeUri, HalResource)
       .then((resource: HalResource) => {
         expect(resource.uri).toBeUndefined();
         expect(resource.prop('id')).toBe<number>(1);
@@ -232,7 +232,7 @@ describe('Resources with no \'self\'', () => {
       .reply(200, resourceWithoutSelf.data);
 
     return createClient(uriBuilder.orgBaseURI)
-      .fetchResource(resourceWithoutSelf.relativeUri, HalResource)
+      .fetch(resourceWithoutSelf.relativeUri, HalResource)
       .then((resource: HalResource) => {
         return resource
           .fetch(true)
@@ -265,7 +265,7 @@ describe('Resources with no \'self\'', () => {
       .reply(200, resourceWithSubResourceWithoutSelf.data);
 
     return createClient(uriBuilder.orgBaseURI)
-      .fetchResource(resourceWithSubResourceWithoutSelf.relativeUri, HalResource)
+      .fetch(resourceWithSubResourceWithoutSelf.relativeUri, HalResource)
       .then((resource: HalResource) => {
         const subResourceWithoutSelf = resource.prop('child');
         expect(subResourceWithoutSelf.uri).toBeUndefined();
@@ -294,7 +294,7 @@ describe('Templated links', () => {
       .reply(200, projectList.data);
 
     return createClient()
-      .fetchResource(projectList.fullUri, HalResource)
+      .fetch(projectList.fullUri, HalResource)
       .then(() => {
         expect(cache.getKeys('Resource')).not.toContain(templatedUriString);
         scope.done();
@@ -312,7 +312,7 @@ describe('Templated links', () => {
       .reply(200, projectList.data);
 
     return createClient()
-      .fetchResource(projectList.fullUri, HalResource)
+      .fetch(projectList.fullUri, HalResource)
       .then((resource: HalResource) => {
         expect(resource.uri.uri).toBe<string>(templatedUriString);
         expect(resource.uri.templated).toBe<boolean>(true);
@@ -339,7 +339,7 @@ describe('Templated links', () => {
       .get(projectList1.relativeUri)
       .reply(200, projectList1.data)
     return createClient(uriBuilder.orgBaseURI)
-      .fetchResource(projectList0.fullUri, HalResource)
+      .fetch(projectList0.fullUri, HalResource)
       .then((resource: HalResource) => {
         const findLink = resource.link('jumpTo');
         expect(findLink.uri.templated).toBe<boolean>(true);
@@ -367,7 +367,7 @@ describe('Templated links', () => {
       .reply(200, rootProjectList.data);
 
     return createClient(uriBuilder.orgBaseURI)
-      .fetchResource(projectList.relativeUri, HalResource)
+      .fetch(projectList.relativeUri, HalResource)
       .then((resource: HalResource) => {
         const findLink = resource.link('templated');
         return findLink
@@ -392,7 +392,7 @@ describe('Templated links', () => {
       .get(projectList1.relativeUri)
       .reply(200, projectList1.data)
     return createClient(uriBuilder.orgBaseURI)
-      .fetchResource(projectList0.fullUri, HalResource)
+      .fetch(projectList0.fullUri, HalResource)
       .then((resource: HalResource) => {
         return resource
           .link('jumpTo')

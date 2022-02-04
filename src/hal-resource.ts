@@ -1,6 +1,6 @@
 import { DefaultSerializer, IJSONSerializer } from "./hal-json-serializer";
 import { IHalResource, IHalResourceConstructor } from "./hal-resource-interface";
-import { HalRestClient } from "./hal-rest-client";
+import { HalRestClient, IHalRestClient } from "./hal-rest-client";
 import { URI } from "./uri";
 
 // TODO 1663 refactor HalResource :add a getter: hasChanges();
@@ -15,14 +15,14 @@ export class HalResource implements IHalResource {
   // TODO 1663 refactor HalResource: should be a public get private/internal set (it is only set by the JSON Parser)
   public isLoaded = false;
 
-  protected restClient: HalRestClient;
+  protected restClient: IHalRestClient;
 
   private readonly settedProps: Array<string>;
   private readonly settedLinks: Array<string>;
   private initEnded = false;
 
 
-  constructor(restClient: HalRestClient, uri?: URI) {
+  constructor(restClient: IHalRestClient, uri?: URI) {
     this.restClient = restClient;
     this._uri = uri;
     this._links = {};
@@ -44,7 +44,7 @@ export class HalResource implements IHalResource {
     if ((this.isLoaded && !forceOrParams) || this.uri === undefined) {
       return new Promise((resolve) => resolve(this));
     } else {
-      return this.restClient.fetchInternal(
+      return (this.restClient as HalRestClient).fetchInternal(
         this.uri.fill(forceOrParams as object),
         this.constructor as IHalResourceConstructor<this>,
         this,
@@ -133,7 +133,7 @@ export class HalResource implements IHalResource {
     return this.restClient.create(this.uri.resourceURI, json, c);
   }
 
-  public reset() {
+  public reset(): void {
     Object.keys(this.props).forEach((prop) => {
       delete this.props[prop];
     });

@@ -1,4 +1,4 @@
-import { HalRestClient } from "./hal-rest-client";
+import { IHalRestClient } from "./hal-rest-client";
 import { URI } from "./uri";
 export interface IHalResource {
   isLoaded: boolean;
@@ -11,14 +11,14 @@ export interface IHalResource {
    *                        in this case fetch is already done
    *                       if uri is non a template link you can use true to force fetch to be done (refersh resource)
    */
-  fetch(forceOrParams: boolean | object): Promise<this>;
+  fetch(forceOrParams?: boolean | object): Promise<this>;
 
   /**
    * reset the object
    * must clean all props and all links for this object
    * this is used when the cached object will be refreshed
    */
-  reset();
+  reset(): void;
 
   /**
    * get or set a prop or a link.
@@ -42,7 +42,7 @@ export interface IHalResource {
 }
 
 export interface IHalResourceConstructor<T extends IHalResource> {
-  new (restClient: HalRestClient, uri ?: URI): T;
+  new (restClient: IHalRestClient, uri ?: URI): T;
 }
 
 export interface INewable {

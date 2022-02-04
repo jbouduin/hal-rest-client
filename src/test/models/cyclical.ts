@@ -6,7 +6,7 @@ export class Cyclical extends HalResource {
 }
 
 export class CyclicalList extends HalResource {
-  @HalProperty({ targetType: Cyclical })
+  @HalProperty({ resourceType: Cyclical })
   public cyclicals: Array<Cyclical>;
 
   @HalProperty()

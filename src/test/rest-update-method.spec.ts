@@ -36,8 +36,8 @@ describe('Rest update calls', () => {
 
     return Promise
       .all([
-        client.fetchResource(person1.fullUri, HalResource),
-        client.fetchResource(person2.fullUri, HalResource)
+        client.fetch(person1.fullUri, HalResource),
+        client.fetch(person2.fullUri, HalResource)
       ])
       .then((resources: [HalResource, HalResource]) => {
         resources[0].prop('name', 'test');
@@ -72,7 +72,7 @@ describe('Rest update calls', () => {
 
     const client = createClient();
     return client
-      .fetchResource(person.fullUri, HalResource)
+      .fetch(person.fullUri, HalResource)
       .then((resource: HalResource) => {
         return resource.prop('contacts')
           .fetch()
@@ -114,8 +114,8 @@ describe('Rest update calls', () => {
     const client = createClient(uriBuilder.orgBaseURI);
     return Promise
       .all([
-        client.fetchResource(person.relativeUri, HalResource),
-        client.fetchResource(person.contacts.relativeUri, HalResource)
+        client.fetch(person.relativeUri, HalResource),
+        client.fetch(person.contacts.relativeUri, HalResource)
       ])
       .then((resources: [HalResource, HalResource]) => {
         resources[0].prop('name', newName);
@@ -140,7 +140,7 @@ describe('Rest update calls', () => {
 
     const client = createClient(uriBuilder.orgBaseURI);
     return client
-      .fetchResource(person.relativeUri, HalResource)
+      .fetch(person.relativeUri, HalResource)
       .then((resource: HalResource) => {
         resource.prop('name', null);
         resource.prop('home', null);
@@ -170,8 +170,8 @@ describe('Rest update calls', () => {
     const client = createClient(uriBuilder.orgBaseURI);
     return Promise
       .all([
-        client.fetchResource(person1.relativeUri, HalResource),
-        client.fetchResource(person2.relativeUri, HalResource)
+        client.fetch(person1.relativeUri, HalResource),
+        client.fetch(person2.relativeUri, HalResource)
       ])
       .then((result: [HalResource, HalResource]) => {
         result[0].prop('name', newName);

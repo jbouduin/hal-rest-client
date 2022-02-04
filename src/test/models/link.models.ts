@@ -4,7 +4,7 @@ export class ToHalResourceModel extends HalResource {
   @HalProperty()
   public link1: HalResource;
 
-  @HalProperty({ targetType: HalResource})
+  @HalProperty({ resourceType: HalResource})
   public link2: Array<HalResource>;
 
   @HalProperty()
@@ -15,7 +15,7 @@ export class ToModelModel extends HalResource {
   @HalProperty()
   public link1: ToModelModel;
 
-  @HalProperty({ targetType: ToModelModel })
+  @HalProperty({ resourceType: ToModelModel })
   public link2: Array<ToModelModel>;
 
   @HalProperty()
