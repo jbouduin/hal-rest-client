@@ -15,6 +15,7 @@ export interface IJSONParser {
    * @param fetchedURI : the uri fetched from the server, this one is not passed through when recursing
    */
   objectToHalResource<T extends IHalResource>(
+    halRestClient: IHalRestClient,
     json: Record<string, any>,
     requestedURI: string,
     c: IHalResourceConstructor<T>,
@@ -34,18 +35,9 @@ interface IHalLink {
 
 export class JSONParser implements IJSONParser {
 
-  //#region private properties ------------------------------------------------
-  private readonly halRestClient: IHalRestClient;
-  //#endregion
-
-  //#region Constructor & C° --------------------------------------------------
-  constructor(halRestClient: IHalRestClient) {
-    this.halRestClient = halRestClient;
-  }
-  //#endregion
-
   //#region IJsonParser interface method --------------------------------------
   public objectToHalResource<T extends IHalResource>(
+    halRestClient: IHalRestClient,
     json: Record<string, any>,
     requestedURI: string,
     c: IHalResourceConstructor<T>,
@@ -76,18 +68,18 @@ export class JSONParser implements IJSONParser {
       }
       if (cacheKey) {
         if (!cacheKey.toLowerCase().startsWith('http')) {
-          if (!this.halRestClient.config.baseURL) {
+          if (!halRestClient.config.baseURL) {
             cacheKey = undefined;
           } else {
-            if (requestedURI.toLowerCase().startsWith('http') && !requestedURI.startsWith(this.halRestClient.config.baseURL)) {
+            if (requestedURI.toLowerCase().startsWith('http') && !requestedURI.startsWith(halRestClient.config.baseURL)) {
               cacheKey = undefined
             } else {
-              cacheKey = `${this.halRestClient.config.baseURL}${cacheKey}`
+              cacheKey = `${halRestClient.config.baseURL}${cacheKey}`
             }
           }
         }
       }
-      resource = createResource(this.halRestClient, c, cacheKey);
+      resource = createResource(halRestClient, c, cacheKey);
       if (resource instanceof HalResource) {
         resource.reset();
       }
@@ -106,10 +98,10 @@ export class JSONParser implements IJSONParser {
             const propKey = halToTs[linkKey] || linkKey;
             let result: any;
             if (Array.isArray(links[linkKey])) {
-              result = (links[linkKey] as Array<any>).map((item) => this.processLink(this.tryConvertLink(item), type)) // eslint-disable-line
+              result = (links[linkKey] as Array<any>).map((item) => this.processLink(halRestClient, this.tryConvertLink(item), type)) // eslint-disable-line
             } else {
               const link = this.tryConvertLink(links[linkKey]);
-              result = this.processLink(link, type); // eslint-disable-line
+              result = this.processLink(halRestClient, link, type); // eslint-disable-line
             }
             resource.link(propKey, result);
           }
@@ -122,12 +114,12 @@ export class JSONParser implements IJSONParser {
         for (const prop of Object.keys(embedded)) {
           const propKey = halToTs[prop] || prop;
           // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-          resource.prop(propKey, this.parseJson(embedded[prop], true, requestedURI, c.prototype, propKey));
+          resource.prop(propKey, this.parseJson(halRestClient, embedded[prop], true, requestedURI, c.prototype, propKey));
         }
       } else {
         const propKey = halToTs[key] || key;
         // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-        resource.prop(propKey, this.parseJson(json[key], false, requestedURI, c.prototype, propKey));
+        resource.prop(propKey, this.parseJson(halRestClient, json[key], false, requestedURI, c.prototype, propKey));
       }
     }
 
@@ -138,16 +130,18 @@ export class JSONParser implements IJSONParser {
   //#endregion
 
   //#region private methods ---------------------------------------------------
-  private processLink<T extends IHalResource>(link: string | IHalLink, type: IHalResourceConstructor<T>): T {
+  private processLink<T extends IHalResource>(halRestClient: IHalRestClient, link: string | IHalLink, type: IHalResourceConstructor<T>): T {
     const href = this.extractURI(link);
-    const linkResource = createResource(this.halRestClient, type, href);
+    const linkResource = createResource(halRestClient, type, href);
     for (const propKey of Object.keys(link)) {
       linkResource.prop(propKey, link[propKey]);
     }
     return linkResource;
   }
 
-  private parseJson(json,
+  private parseJson(
+    halRestClient: IHalRestClient,
+    json,
     isEmbedded: boolean,
     requestedUri: string,
     classPrototype: object,
@@ -156,7 +150,7 @@ export class JSONParser implements IJSONParser {
     if (json === null) {
       return null;
     } else if (Array.isArray(json)) {
-      return json.map((item) => this.parseJson(item, isEmbedded, requestedUri, classPrototype, key));
+      return json.map((item) => this.parseJson(halRestClient, item, isEmbedded, requestedUri, classPrototype, key));
     } else if (typeof json === "object") {
       const targetType = Reflect.getMetadata("halClient:specificType", classPrototype, key);
       const isHal: Record<string, string> = Reflect.getMetadata("halClient:isHal", classPrototype) || {};
@@ -164,11 +158,11 @@ export class JSONParser implements IJSONParser {
       const name = tsToHal[key];
       if ((targetType == undefined && isEmbedded) || (isHal && isHal[name || key])) {
         // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-        return this.objectToHalResource(json, requestedUri, targetType || HalResource);
+        return this.objectToHalResource(halRestClient, json, requestedUri, targetType || HalResource);
       } else if (targetType) {
         const result = new targetType();
         for (const subkey in json) {
-          result[subkey] = this.parseJson(json[subkey], false, requestedUri, classPrototype, subkey);
+          result[subkey] = this.parseJson(halRestClient, json[subkey], false, requestedUri, classPrototype, subkey);
         }
         return result;
       } else {
