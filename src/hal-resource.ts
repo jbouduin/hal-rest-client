@@ -55,7 +55,7 @@ export class HalResource implements IHalResource {
   /**
    * to clear value use null not undefined
    */
-  // TODO 1663 refactor HalResource prop(name: string, value?: any)
+  // TODO 1663 refactor HalResource prop(name: string, value?: any) / consider generic method also
   public prop(name: string, value?: any): any {
     if (value !== void 0) {
       if (this.links[name]) {

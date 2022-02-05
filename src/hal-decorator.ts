@@ -21,7 +21,7 @@ function getOrCreateMetaData(metaDataKey: string, target: object): object {
 
 export function HalProperty<T extends HalResource>(
 
-  { name, resourceType, isHalResource }: { name?: string; resourceType?: IHalResourceConstructor<T> | INewable; isHalResource?: boolean } =  { }):
+  { name, resourceType }: { name?: string; resourceType?: IHalResourceConstructor<T> | INewable } =  { }):
   (targetHalResource: object, propertyName: string) => void {
 
   return (targetHalResource: object, propertyName: string) => {
@@ -31,9 +31,17 @@ export function HalProperty<T extends HalResource>(
       throw new Error(`${targetHalResource.constructor.name}.${propertyName} for Array you need to specify a resource type on @HalProperty.`);
     }
 
-    if (isHalResource == undefined) {
-      isHalResource = true;
+    const workwith = resourceType || baseType;
+    let isHalResource = false;
+    if (workwith) {
+      const proto = workwith.prototype;
+      let proto2 = Object.getPrototypeOf(proto);
+      while (proto2 && !isHalResource) {
+        isHalResource = proto2.constructor.name === 'HalResource';
+        proto2 = Object.getPrototypeOf(proto2);
+      }
     }
+
     const halToTs = getOrCreateMetaData('halClient:halToTs', targetHalResource);
     const tsToHal = getOrCreateMetaData('halClient:tsToHal', targetHalResource);
     const isHal = getOrCreateMetaData('halClient:isHal', targetHalResource);

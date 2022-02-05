@@ -5,9 +5,16 @@ export class HalNotification extends HalResource {
   @HalProperty()
   public cellphoneSet: boolean;
 
-  @HalProperty({ resourceType: NotificationConfig, isHalResource: false })
-  public notificationConfigs: Array<NotificationConfig>;
+  @HalProperty({ resourceType: NotificationConfig })
+  public nonEmbeddedArray: Array<NotificationConfig>;
 
-  @HalProperty({ resourceType: NotificationConfig, isHalResource: false })
-  public lastNotificationConfig: NotificationConfig;
+  @HalProperty({ resourceType: NotificationConfig })
+  public nonEmbeddedObject: NotificationConfig;
+
+  @HalProperty()
+  public embeddedObject: NotificationConfig;
+
+  @HalProperty({ resourceType: NotificationConfig })
+  public embeddedArray: Array<NotificationConfig>;
+
 }
