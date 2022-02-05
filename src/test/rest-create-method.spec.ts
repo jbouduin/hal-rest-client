@@ -1,18 +1,9 @@
 import * as nock from 'nock';
-import { createClient, createResource, HalProperty, HalResource } from '..';
+import { createClient, createResource, HalResource } from '..';
 import { HostTld } from './data/common-definitions';
 import { UriBuilder } from './data/uri-builder';
+import { SimpleModel } from './models';
 
-//#region local model -----------------------------------------------
-class SimpleModel extends HalResource {
-  @HalProperty()
-  public id: number;
-
-  @HalProperty()
-  public name: string;
-}
-
-//#endregion
 describe('Test Rest create api', () => {
   const contextTld: HostTld = 'org';
   const uriBuilder = new UriBuilder();

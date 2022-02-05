@@ -2,6 +2,8 @@ import { createClient, HalResource, cache } from '..';
 import * as nock from 'nock';
 import { UriBuilder } from './data/uri-builder';
 import { PersonFactory } from './data/person-factory';
+import { HostTld } from './data/common-definitions';
+import { SimpleModel } from './models';
 
 //#region setup/teardown ------------------------------------------------------
 beforeAll(() => {
@@ -222,8 +224,89 @@ describe('Rest update calls', () => {
         scope.done();
       });
   });
+});
 
-  test.todo('call update and receive a JSON back');
-  test.todo('call update and receive a model back');
-  test.todo('call update an receive a HalResource back');
+describe('Different return values of calling update', () => {
+  const contextTld: HostTld = 'org';
+  const uriBuilder = new UriBuilder();
+  const newName = 'Fanny';
+  const id = 69;
+  const personUri = uriBuilder.resourceUri(contextTld, false, 'persons', id);
+  const updateRequest = { name: newName }
+  const resourceResponse = {
+    id: id,
+    name: newName,
+    _links: {
+      self: { href: personUri }
+    }
+  };
+  const jsonResponse = { status: 'OK' };
+
+  test('call update and receive status back', () => {
+    const client = createClient(uriBuilder.orgBaseURI);
+    const fullUri = uriBuilder.resourceUri('org', false, 'test', 1);
+    const relativeUri = uriBuilder.resourceUri('org', true, 'test', 1);
+
+    const scope = nock(uriBuilder.orgBaseURI)
+      .intercept(relativeUri, 'PUT', updateRequest)
+      .reply(200);
+
+    return client
+      .update(fullUri, updateRequest, true)
+      .then((result: Record<string, any>) => {
+        expect(result.status).toBe<number>(200);
+        scope.done();
+      });
+  });
+
+  test('call update and receive a JSON back', () => {
+    const client = createClient(uriBuilder.orgBaseURI);
+    const fullUri = uriBuilder.resourceUri('org', false, 'test', 1);
+    const relativeUri = uriBuilder.resourceUri('org', true, 'test', 1);
+
+    const scope = nock(uriBuilder.orgBaseURI)
+      .intercept(relativeUri, 'PUT', updateRequest)
+      .reply(200, jsonResponse);
+
+    return client
+      .update(fullUri, updateRequest, true)
+      .then((result: Record<string, any>) => {
+        expect(result.status).toBe<string>('OK');
+        scope.done();
+      });
+  });
+
+  test('call update and receive a model back', () => {
+    const client = createClient(uriBuilder.orgBaseURI);
+    const fullUri = uriBuilder.resourceUri('org', false, 'test', 1);
+    const relativeUri = uriBuilder.resourceUri('org', true, 'test', 1);
+
+    const scope = nock(uriBuilder.orgBaseURI)
+      .intercept(relativeUri, 'PUT', updateRequest)
+      .reply(200, resourceResponse);
+
+    return client
+      .update(fullUri, updateRequest, true, SimpleModel)
+      .then((result: SimpleModel) => {
+        expect(result.name).toBe<string>(newName);
+        scope.done();
+      });
+  });
+
+  test('call update an receive a HalResource back', () => {
+    const client = createClient(uriBuilder.orgBaseURI);
+    const fullUri = uriBuilder.resourceUri('org', false, 'test', 1);
+    const relativeUri = uriBuilder.resourceUri('org', true, 'test', 1);
+
+    const scope = nock(uriBuilder.orgBaseURI)
+      .intercept(relativeUri, 'PUT', updateRequest)
+      .reply(200, resourceResponse);
+
+    return client
+      .update(fullUri, updateRequest, true, HalResource)
+      .then((result: HalResource) => {
+        expect(result.prop('name')).toBe<string>(newName);
+        scope.done();
+      });
+  });
 });
