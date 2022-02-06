@@ -1,7 +1,8 @@
 import * as nock from 'nock';
-import { createClient, cache } from '..';
+import { createClient, cache, JSONParserException, HalResource } from '..';
+import { lookFor, NotificationFactory } from './data/notification-factory';
 import { UriBuilder } from './data/uri-builder';
-import { HalNotification } from './models';
+import { HalNotification, NotificationConfig } from './models';
 
 //#region setup/teardown ------------------------------------------------------
 afterAll(() => nock.restore());
@@ -12,62 +13,215 @@ afterEach(() => {
 
 describe('Handling non-hal data', () => {
   const uriBuilder = new UriBuilder();
+  const notificationFactory = new NotificationFactory('org', uriBuilder, 'notifcation-config');
 
-  test('fetch non hal object throw exception', () => {
-    expect.assertions(1);
+  const checkModel = (config: NotificationConfig, which: lookFor) => {
+    expect(config.category).toBe<string>(notificationFactory.categoryValues[which]);
+    expect(config.email.enabled).toBe<boolean>(notificationFactory.emailEnabledValues[which]);
+    expect(config.email.id).toBe<number>(notificationFactory.emailIdValues[which]);
+    expect(config.subcategory).toBe<string>(notificationFactory.subCategoryValues[which]);
+    expect(config.notificationDescription).toBe<string>(notificationFactory.descriptionValues[which]);
+  }
+
+  const checkHalresource = (config: HalResource, which: lookFor) => {
+    expect(config.prop('category')).toBe<string>(notificationFactory.categoryValues[which]);
+    expect(config.prop('subcategory')).toBe<string>(notificationFactory.subCategoryValues[which]);
+    expect(config.prop('notificationDescription')).toBe<string>(notificationFactory.descriptionValues[which]);
+    const email = config.prop('email');
+    expect(email).not.toBeInstanceOf(HalResource);
+    expect(email.enabled).toBe<boolean>(notificationFactory.emailEnabledValues[which]);
+    expect(email.id).toBe<number>(notificationFactory.emailIdValues[which]);
+  }
+
+  const checkObject = (config: any, which: lookFor) => {
+    expect(config.category).toBe<string>(notificationFactory.categoryValues[which]);
+    expect(config.subcategory).toBe<string>(notificationFactory.subCategoryValues[which]);
+    expect(config.notificationDescription).toBe<string>(notificationFactory.descriptionValues[which]);
+    const email = config.email;
+    expect(email).not.toBeInstanceOf(HalResource);
+    expect(email.enabled).toBe<boolean>(notificationFactory.emailEnabledValues[which]);
+    expect(email.id).toBe<number>(notificationFactory.emailIdValues[which]);
+  }
+
+  test('fetch non hal object throws exception', () => {
+    expect.assertions(2);
     const scope = nock(uriBuilder.orgBaseURI);
     const uri = uriBuilder.resourceUri('org', true, 'non-hal');
     scope
       .get(uri)
-      .reply(200, { 'non-hal': true });
+      .reply(200, [{ 'non-hal': true }]);
 
     return createClient(uriBuilder.orgBaseURI)
-      .fetchResource(uri)
-      .catch ( e => {
-        expect(e.message).toContain('object is not hal resource');
+      .fetch(uri, HalResource)
+      .catch(e => {
+        expect(e).toBeInstanceOf(JSONParserException);
+        expect((e as JSONParserException).json).toStrictEqual([{ 'non-hal': true }]);
         scope.done()
       });
   });
 
-  test('can fetch array of non hal resource', () => {
-    const config = {
-      _links: {
-        self: {
-          href: 'http://test.fr/notificationConfig',
-          type: 'application/hal+json',
-        },
-        updateNotificationConfigs: {
-          href: 'http://test.fr/notificationConfig/update',
-          type: 'application/hal+json',
-        },
-      },
-      cellphoneSet: false,
-      notificationConfigs: [
-        {
-          category: 'Login',
-          email: {
-            enabled: true,
-            id: 3,
-          },
-          notificationDescription: 'Your password has been reset',
-          subcategory: 'Reset_Password',
-        },
-      ],
-    };
-
-    const uri = uriBuilder.resourceUri('org', true, 'notification');
+  test('fetch as model: non-embedded non-hal object is instance of his class', () => {
+    const notification = notificationFactory.createNotification();
+    const client = createClient(uriBuilder.orgBaseURI);
+    // console.log(JSON.stringify(notification, null, 2));
     const scope = nock(uriBuilder.orgBaseURI);
     scope
-      .get(uri)
-      .reply(200, config);
+      .get(notification.relativeUri)
+      .reply(200, notification.data);
 
-    return createClient(uriBuilder.orgBaseURI)
-      .fetch(uri, HalNotification)
-      .then((fetched: HalNotification) => {
-        expect(fetched.cellphoneSet).toBe<boolean>(false);
-        expect(fetched.notificationConfigs).toHaveLength(1);
-        expect(fetched.notificationConfigs[0].subcategory).toBe<string>('Reset_Password');
-        expect(fetched.notificationConfigs[0].email.id).toBe<number>(3);
-      })
+    return client
+      .fetch(notification.relativeUri, HalNotification)
+      .then((result: HalNotification) => {
+        expect(result.cellphoneSet).toBe<boolean>(false);
+        const toCheck = result.nonEmbeddedObject;
+        expect(toCheck).toBeInstanceOf(NotificationConfig);
+        checkModel(toCheck, 'nonEmbeddedObject');
+      });
   });
+
+  test('fetch as model: embedded non-hal is instance of his class', () => {
+    const notification = notificationFactory.createNotification();
+    const client = createClient(uriBuilder.orgBaseURI);
+    // console.log(JSON.stringify(notification, null, 2));
+    const scope = nock(uriBuilder.orgBaseURI);
+    scope
+      .get(notification.relativeUri)
+      .reply(200, notification.data);
+
+    return client
+      .fetch(notification.relativeUri, HalNotification)
+      .then((result: HalNotification) => {
+        expect(result.cellphoneSet).toBe<boolean>(false);
+        const toCheck = result.embeddedObject;
+        checkModel(toCheck, 'embeddedObject');
+        expect(toCheck).toBeInstanceOf(NotificationConfig);
+      });
+  });
+
+  test('fetch as model: non-embedded array of non-hal objects contains instance of the class', () => {
+    const notification = notificationFactory.createNotification();
+    const client = createClient(uriBuilder.orgBaseURI);
+    // console.log(JSON.stringify(notification, null, 2));
+    const scope = nock(uriBuilder.orgBaseURI);
+    scope
+      .get(notification.relativeUri)
+      .reply(200, notification.data);
+
+    return client
+      .fetch(notification.relativeUri, HalNotification)
+      .then((result: HalNotification) => {
+        expect(result.cellphoneSet).toBe<boolean>(false);
+        const array = result.nonEmbeddedArray;
+        expect(array).toHaveLength(1);
+        const toCheck = array[0];
+        expect(toCheck).toBeInstanceOf(NotificationConfig);
+        checkModel(toCheck, 'nonEmbeddedArray');
+      });
+  });
+
+  test('fetch as model: embedded array of non-hal objects contains instance of the class', () => {
+    const notification = notificationFactory.createNotification();
+    const client = createClient(uriBuilder.orgBaseURI);
+    // console.log(JSON.stringify(notification, null, 2));
+    const scope = nock(uriBuilder.orgBaseURI);
+    scope
+      .get(notification.relativeUri)
+      .reply(200, notification.data);
+
+    return client
+      .fetch(notification.relativeUri, HalNotification)
+      .then((result: HalNotification) => {
+        expect(result.cellphoneSet).toBe<boolean>(false);
+        const array = result.embeddedArray;
+        expect(array).toHaveLength(1);
+        const toCheck = array[0];
+        expect(toCheck).toBeInstanceOf(NotificationConfig);
+        checkModel(toCheck, 'embeddedArray');
+      });
+  });
+
+  test('fetch as hal-resource: non-embedded non-hal object is NOT a hal-resource', () => {
+    const notification = notificationFactory.createNotification();
+    const client = createClient(uriBuilder.orgBaseURI);
+
+    const scope = nock(uriBuilder.orgBaseURI);
+    scope
+      .get(notification.relativeUri)
+      .reply(200, notification.data);
+
+    return client
+      .fetch(notification.relativeUri, HalResource)
+      .then((result: HalResource) => {
+        const toCheck = result.prop(notificationFactory.nonEmbeddedObject);
+        expect(toCheck).not.toBeInstanceOf(HalResource);
+        checkObject(toCheck, 'nonEmbeddedObject');
+      });
+
+  });
+
+  test('fetch as hal-resource: embedded non-hal is instance of hal-resource', () => {
+    const notification = notificationFactory.createNotification();
+    const client = createClient(uriBuilder.orgBaseURI);
+
+    const scope = nock(uriBuilder.orgBaseURI);
+    scope
+      .get(notification.relativeUri)
+      .reply(200, notification.data);
+
+    return client
+      .fetch(notification.relativeUri, HalResource)
+      .then((result: HalResource) => {
+        const toCheck = result.prop(notificationFactory.embeddedObject);
+        expect(toCheck).toBeInstanceOf(HalResource);
+        if (toCheck instanceof HalResource) {
+          checkHalresource(toCheck, 'embeddedObject');
+        }
+      });
+
+  });
+
+  test('fetch as hal-resource: non-embedded array of non-hal objects contains no hal-resource instances', () => {
+    const notification = notificationFactory.createNotification();
+    const client = createClient(uriBuilder.orgBaseURI);
+    // console.log(JSON.stringify(notification, null, 2));
+    const scope = nock(uriBuilder.orgBaseURI);
+    scope
+      .get(notification.relativeUri)
+      .reply(200, notification.data);
+
+    return client
+      .fetch(notification.relativeUri, HalResource)
+      .then((result: HalResource) => {
+        const array = result.prop(notificationFactory.nonEmbeddedArray);
+        expect(array).toHaveLength(1);
+        const toCheck = array[0];
+        expect(toCheck).not.toBeInstanceOf(HalResource);
+        checkObject(toCheck, 'nonEmbeddedArray');
+      });
+
+  });
+
+  test('fetch as hal-resource: embedded array of non-hal objects contains hal-resources', () => {
+    const notification = notificationFactory.createNotification();
+    const client = createClient(uriBuilder.orgBaseURI);
+
+    const scope = nock(uriBuilder.orgBaseURI);
+    scope
+      .get(notification.relativeUri)
+      .reply(200, notification.data);
+
+    return client
+      .fetch(notification.relativeUri, HalResource)
+      .then((result: HalResource) => {
+        const array = result.prop(notificationFactory.embeddedArray);
+        expect(array).toHaveLength(1);
+        const toCheck = array[0];
+        expect(toCheck).toBeInstanceOf(HalResource);
+        if (toCheck instanceof HalResource) {
+          checkHalresource(toCheck, 'embeddedArray');
+        }
+      });
+
+  });
+
 });

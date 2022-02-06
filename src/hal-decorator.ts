@@ -1,54 +1,67 @@
-import "reflect-metadata";
-import { HalResource } from "./hal-resource";
-import { IHalResourceConstructor } from "./hal-resource-interface";
+import 'reflect-metadata';
+import { HalResource } from './hal-resource';
+import { IHalResourceConstructor, INewable } from './hal-resource-interface';
 
 /**
- * get the transco decorator
+ * get or create the MetaData
+ *
+ * @param metaDataKey
+ * @param target
+ * @returns
  */
-function getHalClientDecorator(transconame: string, target: any): object {
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-  let transco = Reflect.getMetadata("halClient:" + transconame, target);
-  if (transco === undefined) {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-    transco = {};
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-    Reflect.defineMetadata("halClient:" + transconame, transco, target);
+function getOrCreateMetaData(metaDataKey: string, target: object): object {
+
+  let result = Reflect.getMetadata(metaDataKey, target);
+  if (result === undefined) {
+    result = {};
+    Reflect.defineMetadata(metaDataKey, result, target);
   }
-  return transco;
+  return result;
 }
 
 export function HalProperty<T extends HalResource>(
-  // eslint-disable-next-line @typescript-eslint/ban-types
-  { name, resourceType }: { name?: string; resourceType?: IHalResourceConstructor<T> | Function; } = {}):
-  (target: any, key: string) => void {
 
-  return (target: any, key: string) => {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-    const baseType = Reflect.getMetadata("design:type", target, key);
+  { name, resourceType }: { name?: string; resourceType?: IHalResourceConstructor<T> | INewable } =  { }):
+  (targetHalResource: object, propertyName: string) => void {
+
+  return (targetHalResource: object, propertyName: string) => {
+    const baseType = Reflect.getMetadata('design:type', targetHalResource, propertyName);
+
     if (baseType === Array && resourceType === undefined) {
-      // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-      throw new Error(`${target.constructor.name}.${key} for Array you need to specify a resource type on @HalProperty.`);
+      throw new Error(`${targetHalResource.constructor.name}.${propertyName} for Array you need to specify a resource type on @HalProperty.`);
     }
 
-    const halToTs = getHalClientDecorator("halToTs", target);
-    const tsToHal = getHalClientDecorator("tsToHal", target);
-    halToTs[name || key] = key;
-    tsToHal[key] = name || key;
+    const workwith = resourceType || baseType;
+    let isHalResource = false;
+    if (workwith) {
+      const proto = workwith.prototype;
+      let proto2 = Object.getPrototypeOf(proto);
+      while (proto2 && !isHalResource) {
+        isHalResource = proto2.constructor.name === 'HalResource';
+        proto2 = Object.getPrototypeOf(proto2);
+      }
+    }
 
+    const halToTs = getOrCreateMetaData('halClient:halToTs', targetHalResource);
+    const tsToHal = getOrCreateMetaData('halClient:tsToHal', targetHalResource);
+    const isHal = getOrCreateMetaData('halClient:isHal', targetHalResource);
+
+    halToTs[name || propertyName] = propertyName;
+    isHal[name || propertyName] = isHalResource;
+    tsToHal[propertyName] = name || propertyName;
     const type = resourceType || baseType;
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-    Reflect.defineMetadata("halClient:specificType", type, target, key);
+    Reflect.defineMetadata('halClient:specificType', type, targetHalResource, propertyName);
     if (name && resourceType) {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-      Reflect.defineMetadata("halClient:specificType", type, target, name);
+      Reflect.defineMetadata('halClient:specificType', type, targetHalResource, name);
     }
 
     // Delete property.
-    if (delete target[key]) {
+    // TODO 1663 refactor HalResource prop(name: string, value?: any)
+    if (delete targetHalResource[propertyName]) {
       // Create new property with getter and setter
-      Object.defineProperty(target, key, {
-        get() { return this.prop(key); },
-        set(value) { this.prop(key, value); },
+      Object.defineProperty(targetHalResource, propertyName, {
+        get() { return this.prop(propertyName); },
+        set(value) { this.prop(propertyName, value); },
         configurable: true,
         enumerable: true,
       });

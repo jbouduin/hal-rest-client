@@ -71,24 +71,22 @@ describe('fetch resources', () => {
       });
   });
 
-  // TODO current result is not ok: it retrieves from com
-  // but both cache-key and uri of the fetched resource are org
-  test.skip('create client on org and fetch a resource from com', () => {
+  test('create client on org and fetch a resource from com', () => {
     const client = createClient(uriBuilder.orgBaseURI);
-    const resourceOnCom = dataFactory.createResourceData('com', 'dashboard', undefined, undefined);
-    const scope = nock(uriBuilder.comBaseURI);
+    const dashboardOnCom = dataFactory.createResourceData('com', 'dashboard', undefined, undefined);
+    dashboardOnCom.data['name'] = 'test';
 
+    const scope = nock(uriBuilder.comBaseURI);
     scope
-      .get(resourceOnCom.relativeUri)
-      .reply(200, dashboard.data);
+      .get(dashboardOnCom.relativeUri)
+      .reply(200, dashboardOnCom.data);
 
     return client
-      .fetch(resourceOnCom.fullUri, DashboardInfo)
+      .fetch(dashboardOnCom.fullUri, DashboardInfo)
       .then((dashboardInfo: DashboardInfo) => {
         expect(dashboardInfo).toBeInstanceOf(DashboardInfo);
         expect(dashboardInfo.name).toBe<string>('test');
-
-        expect(dashboardInfo.uri.resourceURI).toBe<string>(resourceOnCom.fullUri);
+        expect(dashboardInfo.uri.resourceURI).toBe<string>(dashboardOnCom.fullUri);
         scope.done();
       });
   });
@@ -119,6 +117,7 @@ describe('fetch resources', () => {
   });
 });
 
+// TODO 1660 Remove non compliant feature of retrieving an array of HAL-resources
 describe('fetch arrays', () => {
   let uriBuilder: UriBuilder;
   let personFactory: PersonFactory;
@@ -209,15 +208,15 @@ describe('fetch arrays', () => {
       });
   });
 
-  // TODO 1660 this is definitely not compliant to the HAL specification
   test('fetch Array of Hal-Resources', () => {
     const person = personFactory.createPerson(1);
     const persons = new Array<IData>();
+    const endpoint = uriBuilder.resourceUri(contextTld, true, 'persons');
     persons.push(person.data);
 
     const scope = nock(uriBuilder.orgBaseURI);
     scope
-      .get('/persons')
+      .get(endpoint)
       .reply(200, [
         person.data,
         {
@@ -231,7 +230,7 @@ describe('fetch arrays', () => {
       );
 
     return createClient(uriBuilder.orgBaseURI)
-      .fetchArray('/persons', Person)
+      .fetchArray(endpoint, Person)
       .then((persons: Array<Person>) => {
         expect(persons).toHaveLength(2);
         expect(persons[0]).toBeInstanceOf(Person);

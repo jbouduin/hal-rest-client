@@ -1,8 +1,9 @@
 import { DefaultSerializer, IJSONSerializer } from "./hal-json-serializer";
 import { IHalResource, IHalResourceConstructor } from "./hal-resource-interface";
-import { HalRestClient } from "./hal-rest-client";
+import { HalRestClient, IHalRestClient } from "./hal-rest-client";
 import { URI } from "./uri";
 
+// TODO 1663 refactor HalResource :add a getter: hasChanges();
 export class HalResource implements IHalResource {
   protected _links: Record<string, any>;
   protected _props: Record<string, any>;
@@ -11,16 +12,17 @@ export class HalResource implements IHalResource {
   public get links(): Record<string, any> { return this._links; }
   public get props(): Record<string, any> { return this._props; }
 
+  // TODO 1663 refactor HalResource: should be a public get private/internal set (it is only set by the JSON Parser)
   public isLoaded = false;
 
-  protected restClient: HalRestClient;
+  protected restClient: IHalRestClient;
 
   private readonly settedProps: Array<string>;
   private readonly settedLinks: Array<string>;
   private initEnded = false;
 
 
-  constructor(restClient: HalRestClient, uri?: URI) {
+  constructor(restClient: IHalRestClient, uri?: URI) {
     this.restClient = restClient;
     this._uri = uri;
     this._links = {};
@@ -42,7 +44,7 @@ export class HalResource implements IHalResource {
     if ((this.isLoaded && !forceOrParams) || this.uri === undefined) {
       return new Promise((resolve) => resolve(this));
     } else {
-      return this.restClient.fetch(
+      return (this.restClient as HalRestClient).fetchInternal(
         this.uri.fill(forceOrParams as object),
         this.constructor as IHalResourceConstructor<this>,
         this,
@@ -53,6 +55,7 @@ export class HalResource implements IHalResource {
   /**
    * to clear value use null not undefined
    */
+  // TODO 1663 refactor HalResource prop(name: string, value?: any) / consider generic method also
   public prop(name: string, value?: any): any {
     if (value !== void 0) {
       if (this.links[name]) {
@@ -83,6 +86,8 @@ export class HalResource implements IHalResource {
   /**
    * to clear value use null not undefined
    */
+  // TODO 1663 refactor HalResource : can we replace any by HalResource ?
+  // TODO 1663 refactor HalResource prop(name: string, value?: any)
   public link(name: string, value?: any): any {
     if (value !== void 0) {
       this.links[name] = value;
@@ -102,8 +107,8 @@ export class HalResource implements IHalResource {
    *   - an halResource returned by server
    *   - a json object return by server
    */
-  public delete(): Promise<any> {
-    return this.restClient.delete(this);
+  public delete<T extends IHalResource>(c?: IHalResourceConstructor<T>): Promise<T | Record<string, any>> {
+    return this.restClient.delete(this, c);
   }
 
   public onInitEnded() {
@@ -115,20 +120,20 @@ export class HalResource implements IHalResource {
    *
    * @param serializer : object used to serialize the prop and link value
    */
-  public update(serializer?: IJSONSerializer): Promise<any> {
+  public update<T extends IHalResource>(c?: IHalResourceConstructor<T>, serializer?: IJSONSerializer): Promise<T | Record<string, any>> {
     const json = this.serialize(this.settedProps, this.settedLinks, serializer);
-    return this.restClient.update(this.uri.resourceURI, json, false, this.constructor as IHalResourceConstructor<this>);
+    return this.restClient.update(this.uri.resourceURI, json, false, c);
   }
 
   /**
    * save the resource
    */
-  public create(serializer?: IJSONSerializer): Promise<any> {
+  public create<T extends IHalResource>(c?: IHalResourceConstructor<T>, serializer?: IJSONSerializer): Promise<T | Record<string, any>>{
     const json = this.serialize(Object.keys(this.props), Object.keys(this.links), serializer);
-    return this.restClient.create(this.uri.resourceURI, json, this.constructor as IHalResourceConstructor<this>);
+    return this.restClient.create(this.uri.resourceURI, json, c);
   }
 
-  public reset() {
+  public reset(): void {
     Object.keys(this.props).forEach((prop) => {
       delete this.props[prop];
     });

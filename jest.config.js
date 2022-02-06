@@ -19,5 +19,7 @@ module.exports = {
   "collectCoverageFrom": [
     "!**/models/**",
     "!**/data/**",
+    "!**/do-not-commit*",
+    "!**/open-project/**"
   ]
 }

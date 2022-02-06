@@ -2,25 +2,30 @@ import { AxiosRequestConfig } from 'axios';
 import { HalCache, IHalCache } from './hal-cache';
 import { HalResource } from './hal-resource';
 import { IHalResource, IHalResourceConstructor } from './hal-resource-interface';
-import { HalRestClient } from './hal-rest-client';
+import { HalRestClient, IHalRestClient } from './hal-rest-client';
 import { URI } from './uri';
 
 export const cache: IHalCache = new HalCache();
 
 /**
  * create hal rest client
- * if a client with same base already exists, same client is returned
+ * if a client with same base uri already exists, same client is returned
  *
  */
-export function createClient(basename?: string, options: AxiosRequestConfig = {}): HalRestClient {
-  let result: HalRestClient;
-  if (!basename) {
+export function createClient(baseUri?: string, options: AxiosRequestConfig = {}): IHalRestClient {
+  let result: IHalRestClient;
+  if (!baseUri) {
     result = new HalRestClient();
-  } else if (!cache.hasClient(basename)) {
-    result = new HalRestClient(basename, options);
-    cache.setClient(basename, result);
   } else {
-    result = cache.getClient(basename);
+    while (baseUri.endsWith('/')) {
+      baseUri = baseUri.slice(0, -1);
+    }
+    if (!cache.hasClient(baseUri)) {
+      result = new HalRestClient(baseUri, options);
+      cache.setClient(baseUri, result);
+    } else {
+      result = cache.getClient(baseUri);
+    }
   }
   return result;
 }
@@ -37,7 +42,7 @@ export function createClient(basename?: string, options: AxiosRequestConfig = {}
  * @returns
  */
 export function createResource<T extends IHalResource>(
-  client: HalRestClient,
+  client: IHalRestClient,
   c: IHalResourceConstructor<T>,
   uri?: string | URI): T {
 
@@ -49,14 +54,17 @@ export function createResource<T extends IHalResource>(
     result = new c(client, uri);
   } else {
     const objectURI = typeof uri === 'string' ? new URI(uri, false) : uri;
-    if (!cache.hasResource(objectURI.uri)) {
+    const cacheKey = objectURI.uri?.toLowerCase().startsWith('http') ?
+      objectURI.uri :
+      `${client.config.baseURL}${objectURI.uri}`;
+    // console.log(`key ${cacheKey} ${cache.hasResource(cacheKey) ? 'is' : 'is not'} in cache`)
+    if (!cache.hasResource(cacheKey)) {
       result = new c(client, objectURI);
-      cache.setResource(objectURI.uri, result);
+      cache.setResource(cacheKey, result);
     } else {
-      const cached = cache.getResource(objectURI.uri) as any;
+      const cached = cache.getResource(cacheKey) as any;
       result = cached instanceof c ? cached : HalResource.createFromExisting(cached, c);
     }
   }
   return result;
 }
-

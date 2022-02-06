@@ -1,6 +1,6 @@
 
 import * as nock from 'nock';
-import { createClient, createResource, HalProperty, HalResource } from '..';
+import { cache, createClient, createResource, HalProperty, HalResource } from '..';
 import { IEmbeddedCollection } from './data/common-definitions';
 import { DataFactory } from './data/data-factory';
 import { UriBuilder } from './data/uri-builder';
@@ -21,6 +21,10 @@ class TestModel extends HalResource {
 
 //#region setup/teardown ------------------------------------------------------
 afterAll(() => nock.restore());
+
+afterEach(() => {
+  cache.reset();
+});
 //#endregion
 
 describe('@HalProperty', () => {
@@ -56,7 +60,7 @@ describe('@HalProperty', () => {
       .get(test.relativeUri)
       .reply(200, test.data);
     scope
-      .intercept(test.relativeUri, 'PATCH', { id: 1, name: 'noname', jsonProperty: 'novalue' })
+      .intercept(test.relativeUri, 'PATCH', { name: 'noname', jsonProperty: 'novalue' })
       .reply(200);
     const client = createClient(baseUri);
     return client
@@ -124,4 +128,6 @@ describe('@HalProperty', () => {
       }
     }).toThrowError(/Test\.test for Array you need to specify a resource type on @HalProperty/)
   });
+
+
 });

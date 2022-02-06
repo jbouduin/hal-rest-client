@@ -55,11 +55,12 @@ export class UriBuilder {
     if (!relative) {
       asArray.push(this.hosts.get(tld));
     }
+
     if (parts) {
       asArray.push(...parts
-        .filter((part: string | number) => part ? true : false)
-        .map((part: string | number) => (part && typeof part === 'string') ? part : part.toString())
-      )
+        .filter((part: string | number) => part || part == 0 ? true : false)
+        .map((part: string | number) => typeof part === 'string' ? part : part.toString())
+      );
     }
     return `${relative ? '/' : this.protocol}${asArray.join('/')}${queryParameters || ''}`;
   }

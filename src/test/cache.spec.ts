@@ -1,9 +1,8 @@
 import * as nock from 'nock';
-import { createClient, HalResource, cache } from '..';
-import { IFactoryResult, IData, HostTld, ILink } from './data/common-definitions';
-import { DataFactory } from './data/data-factory';
+import { createClient, HalResource, cache, HalRestClient, createResource } from '..';
+import { IFactoryResult, IData, HostTld } from './data/common-definitions';
+import { DataFactory, SelfOption } from './data/data-factory';
 import { UriBuilder } from './data/uri-builder';
-import { Person } from './models';
 
 //#region setup/teardown ------------------------------------------------------
 beforeAll(() => {
@@ -19,54 +18,98 @@ afterEach(() => {
 });
 //#endregion
 
-describe('Basic cache functionality', () => {
+type FetchType = 'absolute' | 'relative';
+describe.each([
+  // if no self-link => No caching
+  [true, 'org', 'relative', SelfOption.NoSelf, 0],
+  [true, 'org', 'relative', SelfOption.NullLink, 0],
+  [true, 'org', 'relative', SelfOption.NullString, 0],
+  [true, 'org', 'absolute', SelfOption.NoSelf, 0],
+  [true, 'org', 'absolute', SelfOption.NullLink, 0],
+  [true, 'org', 'absolute', SelfOption.NullString, 0],
+  [false, 'org', 'absolute', SelfOption.NoSelf, 0],
+  [false, 'org', 'absolute', SelfOption.NullLink, 0],
+  [false, 'org', 'absolute', SelfOption.NullString, 0],
+  // if self-link is templated => no caching => covered in another links.spec.ts
+  // self-link is absolute => cache using self-link as key
+  [false, 'org', 'absolute', SelfOption.AbsoluteLink, 2],
+  [false, 'org', 'absolute', SelfOption.AbsoluteString, 2],
+  [true, 'org', 'relative', SelfOption.AbsoluteLink, 2],
+  [true, 'org', 'relative', SelfOption.AbsoluteString, 2],
+  [true, 'org', 'absolute', SelfOption.AbsoluteLink, 2],
+  [true, 'org', 'absolute', SelfOption.AbsoluteString, 2],
+  [true, 'com', 'absolute', SelfOption.AbsoluteLink, 2],
+  [true, 'com', 'absolute', SelfOption.AbsoluteString, 2],
+  // rest client has no base URI and self-link is relative => no caching
+  [false, 'org', 'absolute', SelfOption.RelativeLink, 0],
+  [false, 'org', 'absolute', SelfOption.RelativeString, 0],
+  // rest client has a base URI and self-link resource was fetched with an absolute URL on a different server => no caching
+  [true, 'com', 'absolute', SelfOption.RelativeLink, 0],
+  [true, 'com', 'absolute', SelfOption.RelativeString, 0],
+  // rest client has a base URI and self-link is relative => cache using combined base URI and self-link
+  [true, 'org', 'relative', SelfOption.RelativeLink, 2],
+  [true, 'org', 'relative', SelfOption.RelativeString, 2],
+  [true, 'org', 'absolute', SelfOption.RelativeLink, 2],
+  [true, 'org', 'absolute', SelfOption.RelativeString, 2]
+])('Caching resources', (clientWithBaseURI: boolean, dummyTld: HostTld, fetch: FetchType, selfOption: SelfOption, cachedEntries: number) => {
   const uriBuilder = new UriBuilder();
   const dummyFactory = new DataFactory(uriBuilder);
+  const client = createClient(clientWithBaseURI ? uriBuilder.baseUri('org') : undefined);
 
-  test('Fetched resource is cached with its full URI test 1', () => {
-    const client = createClient(uriBuilder.orgBaseURI);
-    const dummy = dummyFactory.createResourceData('org', 'dummy', 1);
-    const scope = nock(uriBuilder.orgBaseURI);
+  test(`Fetch resource from ${dummyTld} using ${fetch} uri, client created ${clientWithBaseURI ? 'with baseURL' : 'wihtout baseURL'} - self is ${selfOption}`, () => {
+    const embedded = dummyFactory.createResourceData(dummyTld, 'embedded', 1, undefined, undefined, selfOption);
+    const dummy = dummyFactory.createResourceData(dummyTld, 'dummy', 1, { child: embedded.data }, undefined, selfOption);
+
+    const scope = nock(uriBuilder.baseUri(dummyTld));
     scope
       .get(dummy.relativeUri)
       .reply(200, dummy.data);
+
     return client
-      .fetch(dummy.relativeUri, HalResource)
+      .fetch(fetch === 'absolute' ? dummy.fullUri : dummy.relativeUri, HalResource)
       .then(() => {
-        expect(cache.getKeys('Resource')).toContain<string>(dummy.fullUri);
+        const cacheKeys = cache.getKeys('Resource');
+        expect(cacheKeys).toHaveLength(cachedEntries);
+        if (cachedEntries > 0) {
+          expect(cacheKeys).toContainEqual<string>(dummy.fullUri);
+          expect(cacheKeys).toContainEqual<string>(embedded.fullUri);
+        }
         scope.done();
       });
   });
+});
 
-  // TODO this one fails
-  test.skip('Fetched resource is cached with its full URI even if self is returned relative', () => {
-    const client = createClient(uriBuilder.orgBaseURI);
-    const dummy = dummyFactory.createResourceData('org', 'dummy', 1);
-    (dummy.data._links.self as ILink).href = dummy.relativeUri;
-
-    const scope = nock(uriBuilder.orgBaseURI);
-    scope
-      .get(dummy.relativeUri)
-      .reply(200, dummy.data);
-    return client
-      .fetch(dummy.relativeUri, HalResource)
-      .then(() => {
-        expect(cache.getKeys('Resource')).toContain<string>(dummy.fullUri);
-        scope.done();
-      })
-  });
-
+describe('Caching clients', () => {
+  const uriBuilder = new UriBuilder();
   test('Client created with URI is cached', () => {
-    createClient(uriBuilder.orgBaseURI);
-    expect(cache.getKeys('Client')).toHaveLength(1);
-    expect(cache.getKeys('Client')).toContain(uriBuilder.orgBaseURI);
+    const client = createClient(uriBuilder.orgBaseURI);
+    const keys = cache.getKeys('Client');
+    expect(client).toBeInstanceOf(HalRestClient);
+    expect(keys).toHaveLength(1);
+    expect(keys[0]).toBe<string>(uriBuilder.orgBaseURI);
   });
 
   test('Client created without URI is not cached', () => {
-    createClient();
+    const client = createClient();
+    expect(client).toBeInstanceOf(HalRestClient);
     expect(cache.getKeys('Client')).toHaveLength(0);
   });
 
+  test('Client is created and cached without trailing slash', () => {
+    const client = createClient(uriBuilder.orgBaseURI + '/');
+    const keys = cache.getKeys('Client');
+    expect(keys).toHaveLength(1);
+    expect(keys[0]).toBe<string>(uriBuilder.orgBaseURI);
+    expect(client.config.baseURL).toBe<string>(uriBuilder.orgBaseURI);
+  });
+
+  test('Client is created and cached without trailing slashes', () => {
+    const client = createClient(uriBuilder.orgBaseURI + '///');
+    const keys = cache.getKeys('Client');
+    expect(keys).toHaveLength(1);
+    expect(keys[0]).toBe<string>(uriBuilder.orgBaseURI);
+    expect(client.config.baseURL).toBe<string>(uriBuilder.orgBaseURI);
+  });
 });
 
 describe('Reset cache', () => {
@@ -292,9 +335,11 @@ describe('clear resource cache tests', () => {
   });
 });
 
-describe('refreshing mechanism', () => {
+describe('using cache', () => {
   const uriBuilder = new UriBuilder();
   const dummyFactory = new DataFactory(uriBuilder);
+
+  // TODO 1660 Remove non compliant feature of retrieving an array of HAL-resources
   test('Lists are refreshed when calling fetchArray', () => {
 
     const dummy1 = dummyFactory.createResourceData('org', 'dummy', 1, { done: { count: 1 } });
@@ -311,134 +356,59 @@ describe('refreshing mechanism', () => {
     return createClient()
       .fetchArray(dummy1.fullUri, HalResource)
       .then((dummies: Array<HalResource>) => {
-        expect(dummies[0].prop('done').count).toBe<number>(1);
+        expect(dummies[0].prop('done').prop('count')).toBe<number>(1);
         return createClient()
           .fetchArray(dummy1.fullUri, HalResource)
           .then((dummies2: Array<HalResource>) => {
             expect(dummies2[0].prop('done')).toBeUndefined();
-            expect(dummies2[0].prop('testing').count).toBe<number>(1);
+            expect(dummies2[0].prop('testing').prop('count')).toBe<number>(1);
             scope.done();
           });
       });
   });
+
+  test('client with a baseUrl is re-used', () => {
+    const getClientSpy = jest.spyOn(cache, 'getClient')
+    const setClientSpy = jest.spyOn(cache, 'setClient')
+    const client = createClient(uriBuilder.orgBaseURI);
+    const client2 = createClient(uriBuilder.orgBaseURI);
+
+    expect(cache.getKeys('Client')).toHaveLength(1);
+    expect(getClientSpy).toHaveBeenCalledTimes(1);
+    expect(setClientSpy).toHaveBeenCalledTimes(1);
+    expect(client).toBe(client2);
+    getClientSpy.mockReset();
+    getClientSpy.mockRestore();
+    setClientSpy.mockReset();
+    setClientSpy.mockRestore();
+  });
+
 });
 
-describe.skip('Still to do tests', () => {
-  beforeAll(() => {
-    const person1 = {
-      _embedded: {
-        'best-friend': {
-          _links: {
-            self: {
-              href: 'http://test.fr/person/2',
-            },
-          },
-          name: 'My bestfriend',
-        },
-        'father': {
-          _links: {
-            self: {
-              href: 'http://test.fr/person/12',
-            },
-          },
-          name: 'My father',
-        },
-        'mother': {
-          _links: {
-            self: {
-              href: 'http://test.fr/person/12',
-            },
-          },
-          name: 'My mother',
-        },
-        'my-friends': [
-          {
-            _links: { self: { href: 'http://test.fr/person/5' } },
-            name: 'Thomas',
-          },
-        ],
-      },
-      _links: {
-        contacts: {
-          href: 'http://test.fr/person/2/contacts',
-        },
-        'home': {
-          href: 'http://test.fr/person/1/location/home',
-        },
-        'place-of-employment': {
-          href: 'http://test.fr/person/1/location/work',
-        },
-        self: {
-          href: 'http://test.fr/person/1',
-        },
-      },
-      name: 'Project 1',
-    };
-
-    const scope2 = nock('http://test.fr/').persist();
-    scope2.get('/person/1')
-      .reply(200, person1);
-
-  });
-
+describe.each([
+  [true, true],
+  [true, false],
+  [false, false]
+])('createResource uses cache', (clientWithBaseUri: boolean, fetchWithRelativeUri: boolean) => {
   const uriBuilder = new UriBuilder();
-  // TODO understand or redefine the caching mechanism before trying to solve the next two
-  test('refresh from cache reload from cached object', () => {
-    const client = createClient(uriBuilder.baseUri('org'));
+  const dummyFactory = new DataFactory(uriBuilder);
+
+  test(`Client created ${clientWithBaseUri ? 'with' : 'without'} baseUri, fetching with ${fetchWithRelativeUri ? 'relative' : 'absolute'} uri`, () => {
+    const client = createClient(clientWithBaseUri ? uriBuilder.orgBaseURI : undefined);
+    const dummy = dummyFactory.createResourceData('org', 'dummy', 1);
+    const scope = nock(uriBuilder.orgBaseURI);
+    scope
+      .get(dummy.relativeUri)
+      .once()
+      .reply(200, dummy.data);
+
     return client
-      .fetch('/person/1', Person)
-      .then((person: Person) => {
-        expect(person.name).toBe<string>('Project 1');
-        person.name = 'test';
-        expect(person.name).toBe<string>('test');
-        return client
-          .fetch('/person/1', Person)
-          .then((fetched: Person) => {
-            expect(fetched.name).toBe<string>('Project 1');
-          });
+      .fetch(fetchWithRelativeUri ? dummy.relativeUri : dummy.fullUri, HalResource)
+      .then((fetched: HalResource) => {
+        expect(fetched.isLoaded).toBe<boolean>(true);
+        const created = createResource(client, HalResource, clientWithBaseUri ? dummy.relativeUri : dummy.fullUri);
+        expect(created.isLoaded).toBe<boolean>(true);
+        expect(created).toBe(fetched);
       });
   });
-
-  test('refresh from cache does not reload from cached object after resetCache', () => {
-
-    const client = createClient(uriBuilder.baseUri('org'));
-    return client
-      .fetch('/person/1', Person)
-      .then((person: Person) => {
-        expect(person.name).toBe<string>('Project 1');
-        person.name = 'test';
-        expect(person.name).toBe<string>('test');
-        cache.reset();
-        return client
-          .fetch('/person/1', Person)
-          .then((fetched: Person) => {
-            expect(fetched.name).toBe<string>('Project 1');
-          });
-      });
-  });
-
-  test('chached resource is reused', () => {
-    const getResourceSpy = jest.spyOn(cache, 'getResource')
-    const setResourceSpy = jest.spyOn(cache, 'setResource')
-    const client = createClient(uriBuilder.baseUri('org'));
-    return client
-      .fetch('/dummy', HalResource)
-      .then(() => {
-        return client
-          .fetch('/dummy', HalResource)
-          .then(() => {
-
-            expect(cache.getKeys('Resource')).toHaveLength(1);
-
-            expect(getResourceSpy).toHaveBeenCalledTimes(1);
-            expect(setResourceSpy).toHaveBeenCalledTimes(1);
-            getResourceSpy.mockReset();
-            getResourceSpy.mockRestore();
-            setResourceSpy.mockReset();
-            setResourceSpy.mockRestore();
-          });
-      });
-  });
-
-
 });

@@ -12,14 +12,16 @@ Reason for doing this: the original repository has been archived and is showing 
 ## What I did:
 * updated the dependencies (the main reason I forked)
 * switched from tslint to eslint and linted the sources (causing a lot of work and I still had to throw a few eslint-disable's in)
-* switched the testing framework to jest.
+* switched the testing framework to jest
+* avoid the use of ```any``` and ```object``` whenever possible
 
 ## Braking change(s) compared to the original library:
-* HalProperty has a different parameter signature, compared to the original library.
+* The parameter signature of HalProperty is different.
+* JSON without the _links property are also accepted as Hal-resource
 
 ## What I intend to do (without the intention to invest lots of time):
 * Do some clean-up where appropriate
-* Adapt and extend the library to my own needs
+* Adapt and extend the library to my own needs and any changes (although not probable) in the HAL-Specification
 * Correct bugs (feel free to create issues if you find one)
 
 ## Pull requests
@@ -27,7 +29,7 @@ I am willing to merge any useful Pull Request (feel free to create them), if:
   * the change is covered by new tests
   * the implementation is compliant to the [Hal-Specification](https://datatracker.ietf.org/doc/html/draft-kelly-json-hal)
   * no unecessary dependencies are introduced
-
+The decision to merge is taken at my own discretion.
 
 hal-rest-client library to help you work with Hypertext Application Language (HAL) on Typescript. It's work fine with browser or nodejs app.
 
@@ -41,7 +43,7 @@ Using npm :
 npm install @jbouduin/hal-rest-client
 ```
 
-## How to use (mostly original documentation)
+## How to use (mostly original documentation - to be updated)
 
 The library provide two access method :
 1. use generic object `HalResource` to map service return
