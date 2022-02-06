@@ -20,6 +20,6 @@ module.exports = {
     "!**/models/**",
     "!**/data/**",
     "!**/do-not-commit*",
-    "!**/open-project"
+    "!**/open-project/**"
   ]
 }
