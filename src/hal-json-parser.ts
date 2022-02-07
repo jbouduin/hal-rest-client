@@ -131,13 +131,19 @@ export class JSONParser implements IJSONParser {
 
   //#region private methods ---------------------------------------------------
   private processLink<T extends IHalResource>(halRestClient: IHalRestClient, link: string | IHalLink, type: IHalResourceConstructor<T>): T {
+    let linkResource: T;
     const href = this.extractURI(link);
-    const linkResource = createResource(halRestClient, type, href);
+    if (typeof link !== 'string' && link.type && link.type !== 'application/hal+json') {
+      linkResource = new type(halRestClient, href); // not really correct to decide this here
+    } else {
+      linkResource = createResource(halRestClient, type, href);
+    }
     for (const propKey of Object.keys(link)) {
       linkResource.prop(propKey, link[propKey]);
     }
     return linkResource;
   }
+
 
   private parseJson(
     halRestClient: IHalRestClient,

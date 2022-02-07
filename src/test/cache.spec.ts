@@ -496,7 +496,45 @@ describe('things not to be cached', () => {
       })
   });
 
-  test.todo('links which have a type which is not hal-json')
+  test('links which have a type which is not hal-json', () => {
+    const client = createClient(uriBuilder.orgBaseURI);
+    const scope = nock(uriBuilder.orgBaseURI);
+    const dummyUri = uriBuilder.resourceUri('org', true, 'dummy');
+    const htmlUri = uriBuilder.resourceUri('org', false, 'html');
+    const typedResourceUri = uriBuilder.resourceUri('org', false, 'typedResource');
+    const nonTypedResourceUri = uriBuilder.resourceUri('org', false, 'nontypedResource');
+    const dummyReply = {
+      _links: {
+        htmlLink: {
+          href: htmlUri,
+          type: 'text/html'
+        },
+        typed: {
+          href: typedResourceUri,
+          type: 'application/hal+json'
+        },
+        nontyped: {
+          href: nonTypedResourceUri
+        }
+      }
+    };
+
+    scope
+      .get(dummyUri)
+      .reply(200, dummyReply);
+
+    return client
+      .fetch(dummyUri, HalResource)
+      .then((result: HalResource) => {
+        expect(result.link('typed')).toBeInstanceOf(HalResource);
+        expect(result.link('nontyped')).toBeInstanceOf(HalResource);
+        expect(result.link('htmlLink')).toBeInstanceOf(HalResource);
+        const cacheKeys = cache.getKeys('Resource');
+        expect(cacheKeys).toHaveLength(2);
+        expect(cacheKeys).toContainEqual(nonTypedResourceUri);
+        expect(cacheKeys).toContainEqual(typedResourceUri);
+      })
+  })
 });
 
 describe.each([
