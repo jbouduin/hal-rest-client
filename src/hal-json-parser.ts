@@ -190,7 +190,9 @@ export class JSONParser implements IJSONParser {
 
   private tryConvertLink(value: string | Record<string, any>): IHalLink {
     let result: IHalLink;
-    if (typeof value === 'string') {
+    if (!value) {
+      result = { href: null };
+    } else if (typeof value === 'string') {
       result = { href: value };
     } else {
       const keys = Object.keys(value);

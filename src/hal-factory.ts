@@ -50,11 +50,11 @@ export function createResource<T extends IHalResource>(
 
   if (!uri) {
     result = new c(client);
-  } else if (uri instanceof URI && uri.templated) {
+  } else if (uri instanceof URI && (uri.templated || !uri.uri)) {
     result = new c(client, uri);
   } else {
     const objectURI = typeof uri === 'string' ? new URI(uri, false) : uri;
-    const cacheKey = objectURI.uri?.toLowerCase().startsWith('http') ?
+    const cacheKey = objectURI.uri.toLowerCase().startsWith('http') ?
       objectURI.uri :
       `${client.config.baseURL}${objectURI.uri}`;
     // console.log(`key ${cacheKey} ${cache.hasResource(cacheKey) ? 'is' : 'is not'} in cache`)
