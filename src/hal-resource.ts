@@ -61,9 +61,11 @@ export class HalResource implements IHalResource {
       if (this.links[name]) {
         this.link(name, value);
       } else {
-        this.props[name] = value;
-        if (this.initEnded) {
-          this.settedProps.push(name);
+        if (this.props[name] !== value) {
+          this.props[name] = value;
+          if (this.initEnded) {
+            this.settedProps.push(name);
+          }
         }
       }
       return this;
@@ -90,9 +92,11 @@ export class HalResource implements IHalResource {
   // TODO 1663 refactor HalResource prop(name: string, value?: any)
   public link(name: string, value?: any): any {
     if (value !== void 0) {
-      this.links[name] = value;
-      if (this.initEnded) {
-        this.settedLinks.push(name);
+      if (this.links[name] !== value) {
+        this.links[name] = value;
+        if (this.initEnded) {
+          this.settedLinks.push(name);
+        }
       }
       return this;
     } else {
@@ -128,7 +132,7 @@ export class HalResource implements IHalResource {
   /**
    * save the resource
    */
-  public create<T extends IHalResource>(c?: IHalResourceConstructor<T>, serializer?: IJSONSerializer): Promise<T | Record<string, any>>{
+  public create<T extends IHalResource>(c?: IHalResourceConstructor<T>, serializer?: IJSONSerializer): Promise<T | Record<string, any>> {
     const json = this.serialize(Object.keys(this.props), Object.keys(this.links), serializer);
     return this.restClient.create(this.uri.resourceURI, json, c);
   }
