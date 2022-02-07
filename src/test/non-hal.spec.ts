@@ -63,7 +63,6 @@ describe('Handling non-hal data', () => {
   test('fetch as model: non-embedded non-hal object is instance of his class', () => {
     const notification = notificationFactory.createNotification();
     const client = createClient(uriBuilder.orgBaseURI);
-    // console.log(JSON.stringify(notification, null, 2));
     const scope = nock(uriBuilder.orgBaseURI);
     scope
       .get(notification.relativeUri)
@@ -82,7 +81,6 @@ describe('Handling non-hal data', () => {
   test('fetch as model: embedded non-hal is instance of his class', () => {
     const notification = notificationFactory.createNotification();
     const client = createClient(uriBuilder.orgBaseURI);
-    // console.log(JSON.stringify(notification, null, 2));
     const scope = nock(uriBuilder.orgBaseURI);
     scope
       .get(notification.relativeUri)
@@ -101,7 +99,6 @@ describe('Handling non-hal data', () => {
   test('fetch as model: non-embedded array of non-hal objects contains instance of the class', () => {
     const notification = notificationFactory.createNotification();
     const client = createClient(uriBuilder.orgBaseURI);
-    // console.log(JSON.stringify(notification, null, 2));
     const scope = nock(uriBuilder.orgBaseURI);
     scope
       .get(notification.relativeUri)
@@ -122,7 +119,6 @@ describe('Handling non-hal data', () => {
   test('fetch as model: embedded array of non-hal objects contains instance of the class', () => {
     const notification = notificationFactory.createNotification();
     const client = createClient(uriBuilder.orgBaseURI);
-    // console.log(JSON.stringify(notification, null, 2));
     const scope = nock(uriBuilder.orgBaseURI);
     scope
       .get(notification.relativeUri)
@@ -183,7 +179,6 @@ describe('Handling non-hal data', () => {
   test('fetch as hal-resource: non-embedded array of non-hal objects contains no hal-resource instances', () => {
     const notification = notificationFactory.createNotification();
     const client = createClient(uriBuilder.orgBaseURI);
-    // console.log(JSON.stringify(notification, null, 2));
     const scope = nock(uriBuilder.orgBaseURI);
     scope
       .get(notification.relativeUri)

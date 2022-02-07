@@ -133,14 +133,20 @@ export class JSONParser implements IJSONParser {
   private processLink<T extends IHalResource>(halRestClient: IHalRestClient, link: string | IHalLink, type: IHalResourceConstructor<T>): T {
     let linkResource: T;
     const href = this.extractURI(link);
+
     if (typeof link !== 'string' && link.type && link.type !== 'application/hal+json') {
-      linkResource = new type(halRestClient, href); // not really correct to decide this here
+      // TODO 1689 Refactor ProcessLink in json-parser
+      // not really correct to decide this here
+      linkResource = new type(halRestClient, href);
     } else {
       linkResource = createResource(halRestClient, type, href);
     }
     for (const propKey of Object.keys(link)) {
+      // TODO 1689 Refactor ProcessLink in json-parser
+      // this will still copy and eventually overwrite typical link properties (like title, and name) to the resource!
       linkResource.prop(propKey, link[propKey]);
     }
+
     return linkResource;
   }
 
