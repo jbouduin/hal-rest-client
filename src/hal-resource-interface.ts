@@ -1,8 +1,9 @@
 import { IHalRestClient } from "./hal-rest-client";
 import { URI } from "./uri";
+
 export interface IHalResource {
-  isLoaded: boolean;
-  uri: URI;
+  readonly isLoaded: boolean;
+  readonly uri: URI;
 
   /**
    * fetch the current resource
@@ -33,7 +34,7 @@ export interface IHalResource {
    * @param name : the link name
    * @param value : the new resource. If you want reset a link use null and not undefined
    */
-  link(name: string, value?: any): any;
+  link(name: string, value?: IHalResource): IHalResource;
 
   /**
    * function called when object is populated

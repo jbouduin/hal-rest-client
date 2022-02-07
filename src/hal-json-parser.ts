@@ -107,7 +107,8 @@ export class JSONParser implements IJSONParser {
           }
         }
         if (links.self) {
-          resource.uri = this.extractURI(this.tryConvertLink(links.self), fetchedURI);
+          // TODO this is dirty and could be moved up
+          ((resource as unknown) as HalResource).uri = this.extractURI(this.tryConvertLink(links.self), fetchedURI);
         }
       } else if (key === "_embedded") {
         const embedded: Record<string, unknown> = json._embedded;
@@ -123,7 +124,8 @@ export class JSONParser implements IJSONParser {
       }
     }
 
-    resource.isLoaded = true;
+    // TODO this is dirty
+    ((resource as unknown) as HalResource).isLoaded = true;
     resource.onInitEnded();
     return resource;
   }

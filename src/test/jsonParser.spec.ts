@@ -29,7 +29,7 @@ describe('Generic JSON Parser', () => {
     const json = {}
     const resource = parser.objectToHalResource(client, json, '', HalResource);
     expect(resource).toBeInstanceOf(HalResource);
-    expect(Object.keys(resource.props)).toHaveLength(0);
+    expect(Object.keys(resource['props'])).toHaveLength(0);
   });
 
   test('create HalModel using JSON without _links', () => {
@@ -53,7 +53,7 @@ describe('Generic JSON Parser', () => {
     const json = {}
     const resource = parser.objectToHalResource(client, json, '', ToHalResourceModel);
     expect(resource).toBeInstanceOf(ToHalResourceModel);
-    expect(Object.keys(resource.props)).toHaveLength(0);
+    expect(Object.keys(resource['props'])).toHaveLength(0);
   });
 });
 

@@ -5,41 +5,60 @@ import { URI } from "./uri";
 
 // TODO 1663 refactor HalResource :add a getter: hasChanges();
 export class HalResource implements IHalResource {
-  protected _links: Record<string, any>;
-  protected _props: Record<string, any>;
-  protected _uri?: URI;
 
-  public get links(): Record<string, any> { return this._links; }
-  public get props(): Record<string, any> { return this._props; }
-
-  // TODO 1663 refactor HalResource: should be a public get private/internal set (it is only set by the JSON Parser)
-  public isLoaded = false;
-
-  protected restClient: IHalRestClient;
-
+  //#region Private properties ------------------------------------------------
   private readonly settedProps: Array<string>;
   private readonly settedLinks: Array<string>;
   private initEnded = false;
+  private links: Record<string, IHalResource>;
+  private props: Record<string, any>;
+  //#endregion
+
+  //#region protected properties ----------------------------------------------
+  // TODO can't these be private ?
+  protected _uri?: URI;
+  protected restClient: IHalRestClient;
+  //#endregion
+
+  //#region public properties -------------------------------------------------
+
+  // TODO 1663 refactor HalResource: should be a public get private/internal set (it is only set by the JSON Parser)
+  public isLoaded = false;
+  //#endregion
 
 
-  constructor(restClient: IHalRestClient, uri?: URI) {
+  //#region IHalResource interface members ------------------------------------
+  // TODO can't we make it readonly only the parser is setting it to put 'self'? other possibility is to make the parser passing the uri in the constructor
+  public set uri(uri: URI) {
+    this._uri = uri;
+  }
+
+  public get uri(): URI {
+    return this._uri;
+  }
+  //#endregion
+
+  //#region Constructor & C° --------------------------------------------------
+  public constructor(restClient: IHalRestClient, uri?: URI) {
     this.restClient = restClient;
     this._uri = uri;
-    this._links = {};
-    this._props = {};
+    this.links = {};
+    this.props = {};
     this.settedLinks = new Array<string>();
     this.settedProps = new Array<string>();
   }
 
   public static createFromExisting<T extends HalResource>(existing: T, type: IHalResourceConstructor<T>): T {
     const result = new type(existing.restClient, existing._uri);
-    result._links = existing.links;
-    result._props = existing.props;
+    result.links = existing.links;
+    result.props = existing.props;
     result.settedLinks.push(...existing.settedLinks);
     result.settedProps.push(...existing.settedProps);
     return result;
   }
+  //#endregion
 
+  //#region IHalResource methods ----------------------------------------------
   public fetch(forceOrParams?: boolean | object): Promise<this> {
     if ((this.isLoaded && !forceOrParams) || this.uri === undefined) {
       return new Promise((resolve) => resolve(this));
@@ -78,13 +97,6 @@ export class HalResource implements IHalResource {
     }
   }
 
-  set uri(uri: URI) {
-    this._uri = uri;
-  }
-
-  get uri(): URI {
-    return this._uri;
-  }
   /**
    * to clear value use null not undefined
    */
@@ -137,6 +149,7 @@ export class HalResource implements IHalResource {
     return this.restClient.create(this.uri.resourceURI, json, c);
   }
 
+  //TODO only used by parser after eventually loading from cache
   public reset(): void {
     Object.keys(this.props).forEach((prop) => {
       delete this.props[prop];
@@ -146,10 +159,12 @@ export class HalResource implements IHalResource {
       delete this.props[prop];
     });
   }
+  //#endregion
 
   /**
    * get the service prop name corresponding to ts attribute name
    */
+  // TODO only used in serialize, will read metadata for every property
   protected tsProptoHalProd(prop: string) {
     const tsToHal = Reflect.getMetadata("halClient:tsToHal", this)
     return tsToHal ? tsToHal[prop] : prop;
