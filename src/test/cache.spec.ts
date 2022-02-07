@@ -385,6 +385,120 @@ describe('using cache', () => {
 
 });
 
+describe('things not to be cached', () => {
+  const uriBuilder = new UriBuilder();
+
+  test('null href in _links', () => {
+    const client = createClient(uriBuilder.orgBaseURI);
+    const scope = nock(uriBuilder.orgBaseURI);
+    const dummyUri = uriBuilder.resourceUri('org', true, 'dummy');
+    const noNullUri = uriBuilder.resourceUri('org', false, 'no-null');
+    const dummyReply = {
+      _links: {
+        withNull: { href: null },
+        noNull: { href: noNullUri}
+      }
+    };
+
+    scope
+      .get(dummyUri)
+      .reply(200, dummyReply);
+
+    return client
+      .fetch(dummyUri, HalResource)
+      .then((result: HalResource) => {
+        expect(result.link('withNull')).toBeInstanceOf(HalResource);
+        expect(result.link('noNull')).toBeInstanceOf(HalResource);
+        const cacheKeys = cache.getKeys('Resource');
+        expect(cacheKeys).toHaveLength(1);
+        expect(cacheKeys[0]).toBe<string>(noNullUri);
+      })
+  });
+
+  test('empty href in _links', () => {
+    const client = createClient(uriBuilder.orgBaseURI);
+    const scope = nock(uriBuilder.orgBaseURI);
+    const dummyUri = uriBuilder.resourceUri('org', true, 'dummy');
+    const noNullUri = uriBuilder.resourceUri('org', false, 'no-null');
+    const dummyReply = {
+      _links: {
+        withNull: { href: '' },
+        noNull: { href: noNullUri }
+      }
+    };
+
+    scope
+      .get(dummyUri)
+      .reply(200, dummyReply);
+
+    return client
+      .fetch(dummyUri, HalResource)
+      .then((result: HalResource) => {
+        expect(result.link('withNull')).toBeInstanceOf(HalResource);
+        expect(result.link('noNull')).toBeInstanceOf(HalResource);
+        const cacheKeys = cache.getKeys('Resource');
+        expect(cacheKeys).toHaveLength(1);
+        expect(cacheKeys[0]).toBe<string>(noNullUri);
+      })
+  });
+
+  test('null string in _links', () => {
+    const client = createClient(uriBuilder.orgBaseURI);
+    const scope = nock(uriBuilder.orgBaseURI);
+    const dummyUri = uriBuilder.resourceUri('org', true, 'dummy');
+    const noNullUri = uriBuilder.resourceUri('org', false, 'no-null');
+    const dummyReply = {
+      _links: {
+        withNull: null,
+        noNull: noNullUri
+      }
+    };
+
+    scope
+      .get(dummyUri)
+      .reply(200, dummyReply);
+
+    return client
+      .fetch(dummyUri, HalResource)
+      .then((result: HalResource) => {
+        expect(result.link('withNull')).toBeInstanceOf(HalResource);
+        expect(result.link('noNull')).toBeInstanceOf(HalResource);
+        const cacheKeys = cache.getKeys('Resource');
+        expect(cacheKeys).toHaveLength(1);
+        expect(cacheKeys[0]).toBe<string>(noNullUri);
+      })
+  });
+
+  test('empty string in _links', () => {
+    const client = createClient(uriBuilder.orgBaseURI);
+    const scope = nock(uriBuilder.orgBaseURI);
+    const dummyUri = uriBuilder.resourceUri('org', true, 'dummy');
+    const noNullUri = uriBuilder.resourceUri('org', false, 'no-null');
+    const dummyReply = {
+      _links: {
+        withNull: '',
+        noNull: noNullUri
+      }
+    };
+
+    scope
+      .get(dummyUri)
+      .reply(200, dummyReply);
+
+    return client
+      .fetch(dummyUri, HalResource)
+      .then((result: HalResource) => {
+        expect(result.link('withNull')).toBeInstanceOf(HalResource);
+        expect(result.link('noNull')).toBeInstanceOf(HalResource);
+        const cacheKeys = cache.getKeys('Resource');
+        expect(cacheKeys).toHaveLength(1);
+        expect(cacheKeys[0]).toBe<string>(noNullUri);
+      })
+  });
+
+  test.todo('links which have a type which is not hal-json')
+});
+
 describe.each([
   [true, true],
   [true, false],
