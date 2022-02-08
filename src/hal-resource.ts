@@ -21,12 +21,12 @@ export class HalResource implements IHalResource {
   //#region IHalResource interface members ------------------------------------
   public get hasChanges(): boolean {
     return this.settedLinks.length + this.settedProps.length > 0;
-  };
+  }
 
   public get isLoaded(): boolean
   {
     return this._isLoaded;
-  };
+  }
 
   public get restClient(): IHalRestClient {
     return this._restClient;

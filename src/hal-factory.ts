@@ -1,7 +1,6 @@
 import { AxiosRequestConfig } from 'axios';
 import { HalCache } from './hal-cache';
 import { IHalCache } from './hal-cache.interface';
-import { HalResource } from './hal-resource';
 import { IHalResource, IHalResourceConstructor } from './hal-resource.interface';
 import { HalRestClient } from './hal-rest-client';
 import { IHalRestClient } from './hal-rest-client.interface';
