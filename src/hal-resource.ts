@@ -160,35 +160,31 @@ export class HalResource implements IHalResource {
   }
   //#endregion
 
-  /**
-   * get the service prop name corresponding to ts attribute name
-   */
-  // TODO only used in serialize, will read metadata for every property
-  protected tsProptoHalProd(prop: string) {
-    const tsToHal = Reflect.getMetadata("halClient:tsToHal", this);
-    return tsToHal ? tsToHal[prop] : prop;
-  }
 
+
+  //#region private methods ---------------------------------------------------
   /**
    * serialize this object to json
    */
   private serialize(props: Array<string>, links: Array<string>, serializer: IJSONSerializer = new DefaultSerializer()): object {
-    const json = {};
+    const tsToHal = Reflect.getMetadata("halClient:tsToHal", this);
+    const result = {};
 
     for (const prop of props) {
-      const jsonKey = this.tsProptoHalProd(prop);
+      const jsonKey = tsToHal ? tsToHal[prop] : prop;
       if (this.props[prop] !== undefined && this.props[prop] !== null && this.props[prop] instanceof HalResource) {
-        json[jsonKey] = serializer.parseResource(this.props[prop] as IHalResource);
+        result[jsonKey] = serializer.parseResource(this.props[prop] as IHalResource);
       } else {
-        json[jsonKey] = serializer.parseProp(this.props[prop]);
+        result[jsonKey] = serializer.parseProp(this.props[prop]);
       }
     }
 
     for (const link of links) {
-      const jsonKey = this.tsProptoHalProd(link);
-      json[jsonKey] = serializer.parseResource(this.links[link] as IHalResource);
+      const jsonKey = tsToHal ? tsToHal[link] : link;
+      result[jsonKey] = serializer.parseResource(this.links[link] as IHalResource);
     }
 
-    return json;
+    return result;
   }
+  //#endregion
 }
