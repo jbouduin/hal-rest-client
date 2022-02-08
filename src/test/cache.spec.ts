@@ -1,5 +1,5 @@
 import * as nock from 'nock';
-import { HalRestClient } from '../hal-rest-client';
+import { HalRestClient } from '../lib/hal-rest-client';
 import { createClient, cache, createResource, IHalResource, HalResource } from '..';
 import { IFactoryResult, IData, HostTld } from './data/common-definitions';
 import { DataFactory, SelfOption } from './data/data-factory';
