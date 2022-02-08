@@ -2,7 +2,7 @@ import "reflect-metadata";
 import { AxiosDefaults, AxiosInterceptorManager } from "axios";
 import { AxiosRequestConfig, AxiosResponse } from "axios";
 import { IJSONParser } from "./hal-json-parser";
-import { IHalResourceConstructor, IHalResource } from "./hal-resource-interface";
+import { IHalResourceConstructor, IHalResource } from "./hal-resource.interface";
 
 export interface IHalRestClient {
   //#region read-only properties ----------------------------------------------

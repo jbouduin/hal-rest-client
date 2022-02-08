@@ -1,5 +1,5 @@
 import 'reflect-metadata';
-import { IHalResource, IHalResourceConstructor, INewable } from './hal-resource-interface';
+import { IHalResource, IHalResourceConstructor, INewable } from './hal-resource.interface';
 
 /**
  * get or create the MetaData

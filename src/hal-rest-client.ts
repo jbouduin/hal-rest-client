@@ -2,7 +2,7 @@ import "reflect-metadata";
 import Axios, { AxiosInterceptorManager } from "axios";
 import { AxiosInstance, AxiosRequestConfig, AxiosResponse } from "axios";
 import { IJSONParser, JSONParser } from "./hal-json-parser";
-import { IHalResourceConstructor, IHalResource } from "./hal-resource-interface";
+import { IHalResourceConstructor, IHalResource } from "./hal-resource.interface";
 import { IHalRestClient } from "./hal-rest-client.interface";
 
 // TODO 1659 Appropriate Encapsulation

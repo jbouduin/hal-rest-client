@@ -1,4 +1,4 @@
-import { IHalResource } from "./hal-resource-interface";
+import { IHalResource } from "./hal-resource.interface";
 
 export interface IJSONSerializer {
   /**

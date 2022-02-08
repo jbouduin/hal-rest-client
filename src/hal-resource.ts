@@ -1,5 +1,5 @@
 import { DefaultSerializer, IJSONSerializer } from "./hal-json-serializer";
-import { IHalResource, IHalResourceConstructor } from "./hal-resource-interface";
+import { IHalResource, IHalResourceConstructor } from "./hal-resource.interface";
 import { HalRestClient } from "./hal-rest-client";
 import { IHalRestClient } from "./hal-rest-client.interface";
 import { URI } from "./uri";
