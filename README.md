@@ -15,10 +15,6 @@ Reason for doing this: the original repository has been archived and is showing 
 * switched the testing framework to jest
 * avoid the use of ```any``` and ```object``` whenever possible
 
-## Braking change(s) compared to the original library:
-* The parameter signature of HalProperty is different.
-* JSON without the _links property are also accepted as Hal-resource
-
 ## What I intend to do (without the intention to invest lots of time):
 * Do some clean-up where appropriate
 * Adapt and extend the library to my own needs and any changes (although not probable) in the HAL-Specification
@@ -43,7 +39,7 @@ Using npm :
 npm install @jbouduin/hal-rest-client
 ```
 
-## How to use (mostly original documentation - to be updated)
+## How to use (mostly original documentation - to be updated as there are some breaking changes)
 
 The library provide two access method :
 1. use generic object `HalResource` to map service return
