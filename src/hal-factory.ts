@@ -39,21 +39,21 @@ export function createClient(baseUri?: string, options: AxiosRequestConfig = {})
  * If found and of the wrong type, an exception is thrown.
  * If not found, it is created and cached
  * @param client
- * @param c
+ * @param resourceType
  * @param uri
  * @returns
  */
 export function createResource<T extends IHalResource>(
   client: IHalRestClient,
-  c: IHalResourceConstructor<T>,
+  resourceType: IHalResourceConstructor<T>,
   uri?: string | URI): T {
 
   let result: T
 
   if (!uri) {
-    result = new c(client);
+    result = new resourceType(client);
   } else if (uri instanceof URI && (uri.templated || !uri.uri)) {
-    result = new c(client, uri);
+    result = new resourceType(client, uri);
   } else {
     const objectURI = typeof uri === 'string' ? new URI(uri, false) : uri;
     const cacheKey = objectURI.uri.toLowerCase().startsWith('http') ?
@@ -61,12 +61,12 @@ export function createResource<T extends IHalResource>(
       `${client.config.baseURL}${objectURI.uri}`;
     // console.log(`key ${cacheKey} ${cache.hasResource(cacheKey) ? 'is' : 'is not'} in cache`)
     if (!cache.hasResource(cacheKey)) {
-      result = new c(client, objectURI);
-      cache.setResource(cacheKey, result);
+      result = new resourceType(client, objectURI);
     } else {
-      const cached = cache.getResource(cacheKey) as any;
-      result = cached instanceof c ? cached : HalResource.createFromExisting(cached, c);
+      const cached = cache.getResource(cacheKey);
+      result = cached instanceof resourceType ? cached : cached.convert(resourceType);
     }
+    cache.setResource(cacheKey, result);
   }
   return result;
 }

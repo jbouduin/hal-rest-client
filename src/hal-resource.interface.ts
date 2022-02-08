@@ -1,14 +1,26 @@
-import { IJSONSerializer } from "./hal-json-serializer";
+import { IJSONSerializer } from "./hal-json-serializer.interface";
 import { IHalRestClient } from "./hal-rest-client.interface";
 import { URI } from "./uri";
 
 export interface IHalResource {
+
+  /**
+   * indicates whether the resource is loaded or not
+   */
   readonly isLoaded: boolean;
+
+  /**
+   * the uri of the resource
+   */
   readonly uri: URI;
+
+  /**
+   * the hal-rest client
+   */
   readonly restClient: IHalRestClient;
 
   /**
-   * returns true if the resources has changed properties or links
+   * returns true if the resources has changed properties and/or links
    */
   readonly hasChanges: boolean;
 
@@ -22,36 +34,50 @@ export interface IHalResource {
   fetch(forceOrParams?: boolean | object): Promise<this>;
 
   /**
-   * reset the object
-   * must clean all props and all links for this object
+   * reset the resource
+   * deletes (!) all the properties and links from the resource
    * this is used when the cached object will be refreshed
    */
   reset(): void;
 
   /**
-   * get or set a prop or a link.
-   * if name is a link. link function is used
+   * set a property or a link.
+   *
    * @param name : the prop/link name
-   * @param value : the value to set. Use null to clear value not undefined
+   * @param value : the value to set.
    */
-  // prop(name: string, value?: any): any;
   setProp(name: string, value?: unknown): void;
+
+  /**
+   * get a property or link value
+   * @param name the property/link name
+   */
   getProp<T>(name: string): T;
+
   /**
-   * get or set a link.
-   * @param name : the link name
-   * @param value : the new resource. If you want reset a link use null and not undefined
+   * set a link.
+   *
+   * @param name : the prop/link name
+   * @param value : the value to set.
    */
-  // link(name: string, value?: IHalResource | Array<IHalResource>): IHalResource | Array<IHalResource>
   setLink(name: string, value?: IHalResource | Array<IHalResource>): void;
-  getLink<T = IHalResource | Array<IHalResource>>(name: string): T;
+
   /**
-   * function called when object is populated
+   * get a link
+   *
+   * @param name : the prop/link name
+   * @param value : the value to set.
    */
+  getLink<T = IHalResource | Array<IHalResource>>(name: string): T;
 
   update<T extends IHalResource>(type?: IHalResourceConstructor<T>, serializer?: IJSONSerializer): Promise<T | Record<string, any>>
 
-  onInitEnded();
+  /**
+   * Converts the Halresource to another type, taking all properties and links with it
+   * @param type
+   */
+  convert<N extends IHalResource>(type: IHalResourceConstructor<N>): N
+
 }
 
 export interface IHalResourceConstructor<T extends IHalResource> {

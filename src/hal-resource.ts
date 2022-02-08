@@ -1,37 +1,35 @@
-import { DefaultSerializer, IJSONSerializer } from "./hal-json-serializer";
-import { IHalResource, IHalResourceConstructor } from "./hal-resource.interface";
-import { HalRestClient } from "./hal-rest-client";
-import { IHalRestClient } from "./hal-rest-client.interface";
-import { URI } from "./uri";
+import { DefaultSerializer } from './hal-json-serializer';
+import { IJSONSerializer } from './hal-json-serializer.interface';
+import { IHalResource, IHalResourceConstructor } from './hal-resource.interface';
+import { HalRestClient } from './hal-rest-client';
+import { IHalRestClient } from './hal-rest-client.interface';
+import { URI } from './uri';
 
 export class HalResource implements IHalResource {
 
   //#region Private properties ------------------------------------------------
+  private _isLoaded: boolean;
+  private _restClient: IHalRestClient;
+  private _uri?: URI;
   private readonly settedProps: Array<string>;
   private readonly settedLinks: Array<string>;
-  private initEnded = false;
+  private initEnded: boolean;
   private links: Record<string, IHalResource | Array<IHalResource>>;
   private props: Record<string, unknown>;
   //#endregion
 
-  //#region protected properties ----------------------------------------------
-  // TODO can't these be private ?
-  protected _uri?: URI;
-  public restClient: IHalRestClient;
-  //#endregion
-
-  //#region public properties -------------------------------------------------
+  //#region IHalResource interface members ------------------------------------
   public get hasChanges(): boolean {
     return this.settedLinks.length + this.settedProps.length > 0;
-  }
-  // TODO 1663 refactor HalResource: should be a public get private/internal set (it is only set by the JSON Parser)
-  public isLoaded = false;
-  //#endregion
+  };
 
-  //#region IHalResource interface members ------------------------------------
-  // TODO can't we make it readonly only the parser is setting it to put 'self'? other possibility is to make the parser passing the uri in the constructor
-  public set uri(uri: URI) {
-    this._uri = uri;
+  public get isLoaded(): boolean
+  {
+    return this._isLoaded;
+  };
+
+  public get restClient(): IHalRestClient {
+    return this._restClient;
   }
 
   public get uri(): URI {
@@ -41,22 +39,16 @@ export class HalResource implements IHalResource {
 
   //#region Constructor & C° --------------------------------------------------
   public constructor(restClient: IHalRestClient, uri?: URI) {
-    this.restClient = restClient;
+    this._restClient = restClient;
     this._uri = uri;
+    this._isLoaded = false;
+    this.initEnded = false;
     this.links = {};
     this.props = {};
     this.settedLinks = new Array<string>();
     this.settedProps = new Array<string>();
   }
 
-  public static createFromExisting<T extends HalResource>(existing: T, type: IHalResourceConstructor<T>): T {
-    const result = new type(existing.restClient, existing.uri);
-    result.links = existing.links;
-    result.props = existing.props;
-    result.settedLinks.push(...existing.settedLinks);
-    result.settedProps.push(...existing.settedProps);
-    return result;
-  }
   //#endregion
 
   //#region IHalResource methods ----------------------------------------------
@@ -116,11 +108,6 @@ export class HalResource implements IHalResource {
     return this.restClient.delete(this, type);
   }
 
-  // TODO this is only used by parser, check if we can hide it
-  public onInitEnded() {
-    this.initEnded = true;
-  }
-
   public update<T extends IHalResource>(type?: IHalResourceConstructor<T>, serializer?: IJSONSerializer): Promise<T | Record<string, any>> {
     const json = this.serialize(this.settedProps, this.settedLinks, serializer);
     return this.restClient
@@ -130,7 +117,6 @@ export class HalResource implements IHalResource {
         return response;
       });
   }
-
 
   public create<T extends IHalResource>(type?: IHalResourceConstructor<T>, serializer?: IJSONSerializer): Promise<T | Record<string, any>> {
     const json = this.serialize(Object.keys(this.props), Object.keys(this.links), serializer);
@@ -142,7 +128,18 @@ export class HalResource implements IHalResource {
       });
   }
 
-  //TODO only used by parser after eventually loading from cache
+  public convert<N extends IHalResource>(type: IHalResourceConstructor<N>): N {
+    const result = new type(this.restClient, this.uri);
+    result['links'] = this.links;
+    result['props'] = this.props;
+    // result['settedLinks'].push(...this.settedLinks);
+    // result['settedProps'].push(...this.settedProps);
+    result['_isLoaded'] = false;
+    result['initEnded'] = false;
+    return result;
+  }
+
+  //TODO 1659 Appropriate Encapsulation: only used by parser after eventually loading from cache
   public reset(): void {
     Object.keys(this.props).forEach((prop) => {
       delete this.props[prop];
@@ -153,7 +150,7 @@ export class HalResource implements IHalResource {
     });
   }
 
-  // TODO this is for internal use only
+  // TODO 1659 Appropriate Encapsulation:  this is for internal use only
   public clearChanges(): void {
     this.settedLinks.length = 0;
     this.settedProps.length = 0;
@@ -165,7 +162,7 @@ export class HalResource implements IHalResource {
    * serialize this object
    */
   private serialize(props: Array<string>, links: Array<string>, serializer: IJSONSerializer = new DefaultSerializer()): object {
-    const tsToHal = Reflect.getMetadata("halClient:tsToHal", this);
+    const tsToHal = Reflect.getMetadata('halClient:tsToHal', this);
     const result = {};
 
     for (const prop of props) {

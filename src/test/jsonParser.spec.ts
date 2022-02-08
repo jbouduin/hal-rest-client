@@ -1,6 +1,7 @@
-import { createClient, HalResource, IHalResource, IJSONParser, JSONParser, JSONParserException } from ".."
-import { UriBuilder } from "./data/uri-builder"
-import { ToHalResourceModel, ToModelModel } from "./models";
+import { IJSONParser, JSONParser } from '../hal-json-parser';
+import { createClient, HalResource, IHalResource, JSONParserException } from '..';
+import { UriBuilder } from './data/uri-builder'
+import { ToHalResourceModel, ToModelModel } from './models';
 
 describe('Generic JSON Parser', () => {
   const uriBuilder = new UriBuilder()

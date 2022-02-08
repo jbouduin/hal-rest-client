@@ -1,15 +1,5 @@
+import { IJSONSerializer } from "./hal-json-serializer.interface";
 import { IHalResource } from "./hal-resource.interface";
-
-export interface IJSONSerializer {
-  /**
-   * parse a prop value to server comprehensible value
-   */
-  parseProp(value: any);
-  /**
-   * parse a hal-resource to server comprehensible value
-   */
-  parseResource(value: IHalResource);
-}
 
 /**
  * convert a resource to json
@@ -21,14 +11,14 @@ export class DefaultSerializer implements IJSONSerializer {
   /**
    * parse a prop value to server comprehensible value
    */
-  public parseProp(value: any) {
+  public parseProp(value: any): unknown {
     return value === null ? undefined : value;
   }
 
   /**
    * parse a hal-resource to server comprehensible value
    */
-  public parseResource(value: IHalResource) {
+  public parseResource(value: IHalResource): unknown {
     return value ? value.uri.uri : undefined;
   }
 }
