@@ -35,6 +35,7 @@ interface IHalLink {
   [key: string]: any;
 }
 
+/** @internal */
 export class JSONParser implements IJSONParser {
 
   //#region IJsonParser interface method --------------------------------------
@@ -77,8 +78,7 @@ export class JSONParser implements IJSONParser {
             }
           } else {
             const uri = this.buildURI(this.tryConvertLink(links.self), fetchedURI);
-            // TODO 1659 Appropriate Encapsulation: this is dirty
-            ((resource as any) as HalResource)['_uri'] = uri
+            resource.setUri(uri);
           }
         }
       } else if (key === "_embedded") {
@@ -95,9 +95,8 @@ export class JSONParser implements IJSONParser {
       }
     }
 
-    // TODO 1659 Appropriate Encapsulation: this is dirty
-    ((resource as unknown) as HalResource)['_isLoaded'] = true;
-    ((resource as unknown) as HalResource)['initEnded'] = true;
+    resource.setLoaded();
+    resource.onInitEnded();
     return resource;
   }
   //#endregion

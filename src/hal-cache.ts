@@ -3,6 +3,7 @@ import { HalCacheType, IHalCache } from "./hal-cache.interface";
 import { IHalResource } from "./hal-resource.interface";
 import { IHalRestClient } from "./hal-rest-client.interface";
 
+/** @internal */
 export class HalCache implements IHalCache {
   private clientCache: Map<string, IHalRestClient>;
   private resourceCache: Map<string, IHalResource>;

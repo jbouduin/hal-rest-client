@@ -34,13 +34,6 @@ export interface IHalResource {
   fetch(forceOrParams?: boolean | object): Promise<this>;
 
   /**
-   * reset the resource
-   * deletes (!) all the properties and links from the resource
-   * this is used when the cached object will be refreshed
-   */
-  reset(): void;
-
-  /**
    * set a property or a link.
    *
    * @param name : the prop/link name
@@ -78,6 +71,17 @@ export interface IHalResource {
    */
   convert<N extends IHalResource>(type: IHalResourceConstructor<N>): N
 
+  /** @internal */
+  reset(): void;
+
+  /** @internal */
+  setUri(uri: URI): void;
+
+  /** @internal */
+  onInitEnded(): void
+
+  /** @internal */
+  setLoaded(): void;
 }
 
 export interface IHalResourceConstructor<T extends IHalResource> {

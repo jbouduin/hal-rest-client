@@ -138,8 +138,10 @@ export class HalResource implements IHalResource {
     result['initEnded'] = false;
     return result;
   }
+  //#endregion
 
-  //TODO 1659 Appropriate Encapsulation: only used by parser after eventually loading from cache
+  //#region internal methods --------------------------------------------------
+  /** @internal */
   public reset(): void {
     Object.keys(this.props).forEach((prop) => {
       delete this.props[prop];
@@ -150,10 +152,25 @@ export class HalResource implements IHalResource {
     });
   }
 
-  // TODO 1659 Appropriate Encapsulation:  this is for internal use only
+  /** @internal */
   public clearChanges(): void {
     this.settedLinks.length = 0;
     this.settedProps.length = 0;
+  }
+
+  /** @internal */
+  public setUri(uri: URI): void {
+    this._uri = uri;
+  }
+
+  /** @internal */
+  public onInitEnded(): void {
+    this.initEnded = true;
+  }
+
+  /** @internal */
+  setLoaded(): void {
+    this._isLoaded = true;
   }
   //#endregion
 
