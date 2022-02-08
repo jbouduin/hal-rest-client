@@ -160,11 +160,9 @@ export class HalResource implements IHalResource {
   }
   //#endregion
 
-
-
   //#region private methods ---------------------------------------------------
   /**
-   * serialize this object to json
+   * serialize this object
    */
   private serialize(props: Array<string>, links: Array<string>, serializer: IJSONSerializer = new DefaultSerializer()): object {
     const tsToHal = Reflect.getMetadata("halClient:tsToHal", this);

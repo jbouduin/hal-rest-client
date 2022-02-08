@@ -1,5 +1,5 @@
 import { createResource } from "./hal-factory";
-import { JSONParserException } from "./hal-json-parser-exception";
+import { JSONParserException } from "./hal-json-parser.exception";
 import { HalResource } from "./hal-resource";
 import { IHalResource, IHalResourceConstructor } from "./hal-resource.interface";
 import { IHalRestClient } from "./hal-rest-client.interface";
