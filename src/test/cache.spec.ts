@@ -1,5 +1,6 @@
 import * as nock from 'nock';
-import { createClient, HalResource, cache, HalRestClient, createResource } from '..';
+import { HalRestClient } from '../hal-rest-client';
+import { createClient, cache, createResource, IHalResource, HalResource } from '..';
 import { IFactoryResult, IData, HostTld } from './data/common-definitions';
 import { DataFactory, SelfOption } from './data/data-factory';
 import { UriBuilder } from './data/uri-builder';
@@ -356,12 +357,12 @@ describe('using cache', () => {
     return createClient()
       .fetchArray(dummy1.fullUri, HalResource)
       .then((dummies: Array<HalResource>) => {
-        expect(dummies[0].prop('done').prop('count')).toBe<number>(1);
+        expect((dummies[0].getProp<IHalResource>('done')).getProp('count')).toBe<number>(1);
         return createClient()
           .fetchArray(dummy1.fullUri, HalResource)
           .then((dummies2: Array<HalResource>) => {
-            expect(dummies2[0].prop('done')).toBeUndefined();
-            expect(dummies2[0].prop('testing').prop('count')).toBe<number>(1);
+            expect(dummies2[0].getProp('done')).toBeUndefined();
+            expect((dummies2[0].getProp<IHalResource>('testing')).getProp('count')).toBe<number>(1);
             scope.done();
           });
       });
@@ -407,8 +408,8 @@ describe('things not to be cached', () => {
     return client
       .fetch(dummyUri, HalResource)
       .then((result: HalResource) => {
-        expect(result.link('withNull')).toBeInstanceOf(HalResource);
-        expect(result.link('noNull')).toBeInstanceOf(HalResource);
+        expect(result.getLink('withNull')).toBeInstanceOf(HalResource);
+        expect(result.getLink('noNull')).toBeInstanceOf(HalResource);
         const cacheKeys = cache.getKeys('Resource');
         expect(cacheKeys).toHaveLength(1);
         expect(cacheKeys[0]).toBe<string>(noNullUri);
@@ -434,8 +435,8 @@ describe('things not to be cached', () => {
     return client
       .fetch(dummyUri, HalResource)
       .then((result: HalResource) => {
-        expect(result.link('withNull')).toBeInstanceOf(HalResource);
-        expect(result.link('noNull')).toBeInstanceOf(HalResource);
+        expect(result.getLink('withNull')).toBeInstanceOf(HalResource);
+        expect(result.getLink('noNull')).toBeInstanceOf(HalResource);
         const cacheKeys = cache.getKeys('Resource');
         expect(cacheKeys).toHaveLength(1);
         expect(cacheKeys[0]).toBe<string>(noNullUri);
@@ -461,8 +462,8 @@ describe('things not to be cached', () => {
     return client
       .fetch(dummyUri, HalResource)
       .then((result: HalResource) => {
-        expect(result.link('withNull')).toBeInstanceOf(HalResource);
-        expect(result.link('noNull')).toBeInstanceOf(HalResource);
+        expect(result.getLink('withNull')).toBeInstanceOf(HalResource);
+        expect(result.getLink('noNull')).toBeInstanceOf(HalResource);
         const cacheKeys = cache.getKeys('Resource');
         expect(cacheKeys).toHaveLength(1);
         expect(cacheKeys[0]).toBe<string>(noNullUri);
@@ -488,8 +489,8 @@ describe('things not to be cached', () => {
     return client
       .fetch(dummyUri, HalResource)
       .then((result: HalResource) => {
-        expect(result.link('withNull')).toBeInstanceOf(HalResource);
-        expect(result.link('noNull')).toBeInstanceOf(HalResource);
+        expect(result.getLink('withNull')).toBeInstanceOf(HalResource);
+        expect(result.getLink('noNull')).toBeInstanceOf(HalResource);
         const cacheKeys = cache.getKeys('Resource');
         expect(cacheKeys).toHaveLength(1);
         expect(cacheKeys[0]).toBe<string>(noNullUri);
@@ -526,9 +527,9 @@ describe('things not to be cached', () => {
     return client
       .fetch(dummyUri, HalResource)
       .then((result: HalResource) => {
-        expect(result.link('typed')).toBeInstanceOf(HalResource);
-        expect(result.link('nontyped')).toBeInstanceOf(HalResource);
-        expect(result.link('htmlLink')).toBeInstanceOf(HalResource);
+        expect(result.getLink('typed')).toBeInstanceOf(HalResource);
+        expect(result.getLink('nontyped')).toBeInstanceOf(HalResource);
+        expect(result.getLink('htmlLink')).toBeInstanceOf(HalResource);
         const cacheKeys = cache.getKeys('Resource');
         expect(cacheKeys).toHaveLength(2);
         expect(cacheKeys).toContainEqual(nonTypedResourceUri);

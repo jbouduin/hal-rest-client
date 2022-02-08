@@ -1,45 +1,57 @@
-import { DefaultSerializer, IJSONSerializer } from "./hal-json-serializer";
-import { IHalResource, IHalResourceConstructor } from "./hal-resource-interface";
-import { HalRestClient, IHalRestClient } from "./hal-rest-client";
-import { URI } from "./uri";
+import { DefaultSerializer } from './hal-json-serializer';
+import { IJSONSerializer } from './hal-json-serializer.interface';
+import { IHalResource, IHalResourceConstructor } from './hal-resource.interface';
+import { HalRestClient } from './hal-rest-client';
+import { IHalRestClient } from './hal-rest-client.interface';
+import { URI } from './uri';
 
-// TODO 1663 refactor HalResource :add a getter: hasChanges();
 export class HalResource implements IHalResource {
-  protected _links: Record<string, any>;
-  protected _props: Record<string, any>;
-  protected _uri?: URI;
 
-  public get links(): Record<string, any> { return this._links; }
-  public get props(): Record<string, any> { return this._props; }
-
-  // TODO 1663 refactor HalResource: should be a public get private/internal set (it is only set by the JSON Parser)
-  public isLoaded = false;
-
-  protected restClient: IHalRestClient;
-
+  //#region Private properties ------------------------------------------------
+  private _isLoaded: boolean;
+  private _restClient: IHalRestClient;
+  private _uri?: URI;
   private readonly settedProps: Array<string>;
   private readonly settedLinks: Array<string>;
-  private initEnded = false;
+  private initEnded: boolean;
+  private links: Record<string, IHalResource | Array<IHalResource>>;
+  private props: Record<string, unknown>;
+  //#endregion
 
+  //#region IHalResource interface members ------------------------------------
+  public get hasChanges(): boolean {
+    return this.settedLinks.length + this.settedProps.length > 0;
+  }
 
-  constructor(restClient: IHalRestClient, uri?: URI) {
-    this.restClient = restClient;
+  public get isLoaded(): boolean
+  {
+    return this._isLoaded;
+  }
+
+  public get restClient(): IHalRestClient {
+    return this._restClient;
+  }
+
+  public get uri(): URI {
+    return this._uri;
+  }
+  //#endregion
+
+  //#region Constructor & C° --------------------------------------------------
+  public constructor(restClient: IHalRestClient, uri?: URI) {
+    this._restClient = restClient;
     this._uri = uri;
-    this._links = {};
-    this._props = {};
+    this._isLoaded = false;
+    this.initEnded = false;
+    this.links = {};
+    this.props = {};
     this.settedLinks = new Array<string>();
     this.settedProps = new Array<string>();
   }
 
-  public static createFromExisting<T extends HalResource>(existing: T, type: IHalResourceConstructor<T>): T {
-    const result = new type(existing.restClient, existing._uri);
-    result._links = existing.links;
-    result._props = existing.props;
-    result.settedLinks.push(...existing.settedLinks);
-    result.settedProps.push(...existing.settedProps);
-    return result;
-  }
+  //#endregion
 
+  //#region IHalResource methods ----------------------------------------------
   public fetch(forceOrParams?: boolean | object): Promise<this> {
     if ((this.isLoaded && !forceOrParams) || this.uri === undefined) {
       return new Promise((resolve) => resolve(this));
@@ -52,91 +64,82 @@ export class HalResource implements IHalResource {
     }
   }
 
-  /**
-   * to clear value use null not undefined
-   */
-  // TODO 1663 refactor HalResource prop(name: string, value?: any) / consider generic method also
-  public prop(name: string, value?: any): any {
-    if (value !== void 0) {
-      if (this.links[name]) {
-        this.link(name, value);
+  public setProp<T>(name: string, value?: T): void {
+    if (this.links[name]) {
+      if (Array.isArray(value)) {
+        this.setLink(name, value)
       } else {
-        if (this.props[name] !== value) {
-          this.props[name] = value;
-          if (this.initEnded) {
-            this.settedProps.push(name);
-          }
-        }
+        this.setLink(name, (value as unknown) as IHalResource);
       }
-      return this;
     } else {
-      if (this.props[name] !== undefined) {
-        return this.props[name];
-      } else if (this.links[name]) {
-        return this.link(name);
-      }
-    }
-  }
-
-  set uri(uri: URI) {
-    this._uri = uri;
-  }
-
-  get uri(): URI {
-    return this._uri;
-  }
-  /**
-   * to clear value use null not undefined
-   */
-  // TODO 1663 refactor HalResource : can we replace any by HalResource ?
-  // TODO 1663 refactor HalResource prop(name: string, value?: any)
-  public link(name: string, value?: any): any {
-    if (value !== void 0) {
-      if (this.links[name] !== value) {
-        this.links[name] = value;
+      if (this.props[name] !== value) {
+        this.props[name] = value;
         if (this.initEnded) {
-          this.settedLinks.push(name);
+          this.settedProps.push(name);
         }
       }
-      return this;
-    } else {
-      return this.links[name];
     }
   }
 
-  /**
-   * delete the resource
-   * according server, return can be :
-   *   - the request
-   *   - an halResource returned by server
-   *   - a json object return by server
-   */
-  public delete<T extends IHalResource>(c?: IHalResourceConstructor<T>): Promise<T | Record<string, any>> {
-    return this.restClient.delete(this, c);
+  public getProp<T>(name: string): T {
+    if (this.props[name] !== undefined) {
+      return this.props[name] as T;
+    } else if (this.links[name]) {
+
+      return (this.links[name] as unknown) as T;
+    }
+    return undefined;
   }
 
-  public onInitEnded() {
-    this.initEnded = true;
+  public setLink(name: string, value?: IHalResource | Array<IHalResource> ): void {
+    if (this.links[name] !== value) {
+      this.links[name] = value;
+      if (this.initEnded) {
+        this.settedLinks.push(name);
+      }
+    }
   }
 
-  /**
-   * update the resource
-   *
-   * @param serializer : object used to serialize the prop and link value
-   */
-  public update<T extends IHalResource>(c?: IHalResourceConstructor<T>, serializer?: IJSONSerializer): Promise<T | Record<string, any>> {
+  public getLink<T = IHalResource | Array<IHalResource>>(name: string): T  {
+    return (this.links[name] as unknown) as T;
+  }
+
+  public delete<T extends IHalResource>(type?: IHalResourceConstructor<T>): Promise<T | Record<string, any>> {
+    return this.restClient.delete(this, type);
+  }
+
+  public update<T extends IHalResource>(type?: IHalResourceConstructor<T>, serializer?: IJSONSerializer): Promise<T | Record<string, any>> {
     const json = this.serialize(this.settedProps, this.settedLinks, serializer);
-    return this.restClient.update(this.uri.resourceURI, json, false, c);
+    return this.restClient
+      .update(this.uri.resourceURI, json, false, type)
+      .then((response: T) => {
+        this.clearChanges();
+        return response;
+      });
   }
 
-  /**
-   * save the resource
-   */
-  public create<T extends IHalResource>(c?: IHalResourceConstructor<T>, serializer?: IJSONSerializer): Promise<T | Record<string, any>> {
+  public create<T extends IHalResource>(type?: IHalResourceConstructor<T>, serializer?: IJSONSerializer): Promise<T | Record<string, any>> {
     const json = this.serialize(Object.keys(this.props), Object.keys(this.links), serializer);
-    return this.restClient.create(this.uri.resourceURI, json, c);
+    return this.restClient
+      .create(this.uri.resourceURI, json, type)
+      .then((response: T) => {
+        this.clearChanges();
+        return response;
+      });
   }
 
+  public convert<N extends IHalResource>(type: IHalResourceConstructor<N>): N {
+    const result = new type(this.restClient, this.uri);
+    result['links'] = this.links;
+    result['props'] = this.props;
+    // result['settedLinks'].push(...this.settedLinks);
+    // result['settedProps'].push(...this.settedProps);
+    result['_isLoaded'] = false;
+    result['initEnded'] = false;
+    return result;
+  }
+
+  //TODO 1659 Appropriate Encapsulation: only used by parser after eventually loading from cache
   public reset(): void {
     Object.keys(this.props).forEach((prop) => {
       delete this.props[prop];
@@ -147,34 +150,36 @@ export class HalResource implements IHalResource {
     });
   }
 
-  /**
-   * get the service prop name corresponding to ts attribute name
-   */
-  protected tsProptoHalProd(prop: string) {
-    const tsToHal = Reflect.getMetadata("halClient:tsToHal", this)
-    return tsToHal ? tsToHal[prop] : prop;
+  // TODO 1659 Appropriate Encapsulation:  this is for internal use only
+  public clearChanges(): void {
+    this.settedLinks.length = 0;
+    this.settedProps.length = 0;
   }
+  //#endregion
 
+  //#region private methods ---------------------------------------------------
   /**
-   * serialize this object to json
+   * serialize this object
    */
   private serialize(props: Array<string>, links: Array<string>, serializer: IJSONSerializer = new DefaultSerializer()): object {
-    const json = {};
+    const tsToHal = Reflect.getMetadata('halClient:tsToHal', this);
+    const result = {};
 
     for (const prop of props) {
-      const jsonKey = this.tsProptoHalProd(prop);
-      if (this.props[prop] !== undefined && this.props[prop] !== null && this.props[prop].onInitEnded !== undefined) {
-        json[jsonKey] = serializer.parseResource(this.props[prop] as IHalResource);
+      const jsonKey = tsToHal ? tsToHal[prop] : prop;
+      if (this.props[prop] !== undefined && this.props[prop] !== null && this.props[prop] instanceof HalResource) {
+        result[jsonKey] = serializer.parseResource(this.props[prop] as IHalResource);
       } else {
-        json[jsonKey] = serializer.parseProp(this.props[prop]);
+        result[jsonKey] = serializer.parseProp(this.props[prop]);
       }
     }
 
     for (const link of links) {
-      const jsonKey = this.tsProptoHalProd(link);
-      json[jsonKey] = serializer.parseResource(this.links[link] as IHalResource);
+      const jsonKey = tsToHal ? tsToHal[link] : link;
+      result[jsonKey] = serializer.parseResource(this.links[link] as IHalResource);
     }
 
-    return json;
+    return result;
   }
+  //#endregion
 }

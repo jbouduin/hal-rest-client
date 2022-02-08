@@ -39,7 +39,7 @@ describe('test request headers and interceptor', () => {
     return createClient(baseUri, { headers: { authorization: 'Basic Auth' } })
       .fetch(me.relativeUri, HalResource)
       .then((project: HalResource) => {
-        expect(project.prop('name')).toBe<string>('Johan');
+        expect(project.getProp('name')).toBe<string>('Johan');
         scope.done();
       });
   });
@@ -51,7 +51,7 @@ describe('test request headers and interceptor', () => {
     return client
       .fetch(me.relativeUri, HalResource)
       .then((project: HalResource) => {
-        expect(project.prop('name')).toBe<string>('Johan');
+        expect(project.getProp('name')).toBe<string>('Johan');
         scope.done();
       });
   });
@@ -62,7 +62,7 @@ describe('test request headers and interceptor', () => {
       .addHeader('authorization', 'Basic Auth')
       .fetch(me.relativeUri, HalResource)
       .then((project: HalResource) => {
-        expect(project.prop('name')).toBe<string>('Johan');
+        expect(project.getProp('name')).toBe<string>('Johan');
         scope.done();
       });
   });
@@ -79,7 +79,7 @@ describe('test request headers and interceptor', () => {
     return client
       .fetch(uri, HalResource)
       .then((project: HalResource) => {
-        expect(project.prop('name')).toBe<string>('Johan');
+        expect(project.getProp('name')).toBe<string>('Johan');
         scope.done();
       });
   });
@@ -95,7 +95,7 @@ describe('test request headers and interceptor', () => {
     return client
       .fetch(me.fullUri, HalResource)
       .then((project: HalResource) => {
-        expect(project.prop('name')).toBe<string>('You\'ve been hacked');
+        expect(project.getProp('name')).toBe<string>('You\'ve been hacked');
         scope.done();
       });
   });

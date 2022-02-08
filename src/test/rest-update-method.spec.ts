@@ -1,4 +1,4 @@
-import { createClient, HalResource, cache } from '..';
+import { createClient, HalResource, cache, IHalResource } from '..';
 import * as nock from 'nock';
 import { UriBuilder } from './data/uri-builder';
 import { PersonFactory } from './data/person-factory';
@@ -17,7 +17,6 @@ afterEach(() => {
 });
 //#endregion
 
-// TODO 1670 Add missing tests to rest-update-method.spec.ts
 describe('Rest update calls', () => {
   const uriBuilder = new UriBuilder();
   const personFactory = new PersonFactory('org', uriBuilder);
@@ -42,8 +41,8 @@ describe('Rest update calls', () => {
         client.fetch(person2.fullUri, HalResource)
       ])
       .then((resources: [HalResource, HalResource]) => {
-        resources[0].prop('name', 'test');
-        resources[0].prop('best-friend', resources[1]);
+        resources[0].setProp('name', 'test');
+        resources[0].setProp('best-friend', resources[1]);
         return resources[0]
           .update()
           .then((result: Record<string, any>) => {
@@ -76,18 +75,18 @@ describe('Rest update calls', () => {
     return client
       .fetch(person.fullUri, HalResource)
       .then((resource: HalResource) => {
-        return resource.prop('contacts')
+        return resource.getProp<IHalResource>('contacts')
           .fetch()
           .then(() => resource);
       })
       .then((resource: HalResource) => {
-        resource.prop('name', newName);
-        resource.prop('contacts').prop('phone', newPhone);
+        resource.setProp('name', newName);
+        resource.getProp<IHalResource>('contacts').setProp('phone', newPhone);
 
         return Promise
           .all([
             resource.update(),
-            resource.prop('contacts').update()
+            resource.getProp<IHalResource>('contacts').update()
           ])
           .then((result: [Record<string, any>, Record<string, any>]) => {
             expect(result[0].status).toBe<number>(200);
@@ -120,8 +119,8 @@ describe('Rest update calls', () => {
         client.fetch(person.contacts.relativeUri, HalResource)
       ])
       .then((resources: [HalResource, HalResource]) => {
-        resources[0].prop('name', newName);
-        resources[0].prop('contacts', resources[1]);
+        resources[0].setProp('name', newName);
+        resources[0].setProp('contacts', resources[1]);
         return resources[0].update()
           .then((result: Record<string, any>) => {
             expect(result.status).toBe<number>(200);
@@ -144,8 +143,8 @@ describe('Rest update calls', () => {
     return client
       .fetch(person.relativeUri, HalResource)
       .then((resource: HalResource) => {
-        resource.prop('name', null);
-        resource.prop('home', null);
+        resource.setProp('name', null);
+        resource.setProp('home', null);
         return resource.update()
           .then((result: Record<string, any>) => {
             expect(result.status).toBe<number>(200);
@@ -176,8 +175,8 @@ describe('Rest update calls', () => {
         client.fetch(person2.relativeUri, HalResource)
       ])
       .then((result: [HalResource, HalResource]) => {
-        result[0].prop('name', newName);
-        result[0].prop('best-friend', result[1]);
+        result[0].setProp('name', newName);
+        result[0].setProp('best-friend', result[1]);
 
         return result[0]
           .update(undefined, {
@@ -305,7 +304,7 @@ describe('Different return values of calling update', () => {
     return client
       .update(fullUri, updateRequest, true, HalResource)
       .then((result: HalResource) => {
-        expect(result.prop('name')).toBe<string>(newName);
+        expect(result.getProp('name')).toBe<string>(newName);
         scope.done();
       });
   });

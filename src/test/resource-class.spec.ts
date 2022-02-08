@@ -1,5 +1,5 @@
 import * as nock from 'nock';
-import { createClient, createResource, cache, HalResource, URI } from '..';
+import { createClient, createResource, cache, HalResource, URI, IHalResource } from '..';
 import { Contacts } from './models/contacts';
 import { DashboardInfo, Location, Person } from './models';
 import { ProjectFactory } from './data/project-factory';
@@ -33,15 +33,15 @@ describe('hal-resource fetching', () => {
       .fetch(projectList.fullUri, HalResource)
       .then((value: HalResource) => {
         expect(value.uri.fill({})).toBe<string>(projectList.fullUri);
-        expect(value.prop('results')).toHaveLength(2);
-        expect(value.prop('results')[0].prop('name')).toBe<string>('Project 0');
-        expect(value.prop('results')[0]).toBeInstanceOf(HalResource);
-        expect(typeof value.prop('results')[0].fetch).toBe<string>('function');
-        expect(value.prop('results')[0].uri.uri)
+        expect(value.getProp('results')).toHaveLength(2);
+        expect(value.getProp('results')[0].getProp('name')).toBe<string>('Project 0');
+        expect(value.getProp('results')[0]).toBeInstanceOf(HalResource);
+        expect(typeof value.getProp('results')[0].fetch).toBe<string>('function');
+        expect(value.getProp('results')[0].uri.uri)
           .toBe<string>(uriBuilder.resourceUri('org', false, projectFactory.projectsPath, 0));
-        expect(value.prop('results')[1].prop('name')).toBe<string>('Project 10');
-        expect(typeof value.prop('results')[0].fetch).toBe<string>('function');
-        expect(value.prop('results')[1].uri.uri)
+        expect(value.getProp('results')[1].getProp('name')).toBe<string>('Project 10');
+        expect(typeof value.getProp('results')[0].fetch).toBe<string>('function');
+        expect(value.getProp('results')[1].uri.uri)
           .toBe<string>(uriBuilder.resourceUri('org', false, projectFactory.projectsPath, 10));
       });
   });
@@ -57,12 +57,12 @@ describe('hal-resource fetching', () => {
     return createClient()
       .fetch(project.fullUri, HalResource)
       .then((fetched: HalResource) => {
-        fetched.prop('name', 'modified');
-        expect(fetched.prop('name')).toBe<string>('modified');
+        fetched.setProp('name', 'modified');
+        expect(fetched.getProp('name')).toBe<string>('modified');
         return fetched
           .fetch()
           .then((refetched) => {
-            expect(refetched.prop('name')).toBe<string>('modified');
+            expect(refetched.getProp('name')).toBe<string>('modified');
             scope.done();
           });
       });
@@ -79,12 +79,12 @@ describe('hal-resource fetching', () => {
     return createClient()
       .fetch(project.fullUri, HalResource)
       .then((fetched: HalResource) => {
-        fetched.prop('name', 'modified');
-        expect(fetched.prop('name')).toBe<string>('modified');
+        fetched.setProp('name', 'modified');
+        expect(fetched.getProp('name')).toBe<string>('modified');
         return fetched
           .fetch(true)
           .then((refetched: HalResource) => {
-            expect(refetched.prop('name')).toBe<string>('Project 1');
+            expect(refetched.getProp('name')).toBe<string>('Project 1');
             scope.done();
           });
       });
@@ -102,13 +102,13 @@ describe('hal-resource fetching', () => {
     return client
       .fetch(project.fullUri, HalResource)
       .then((fetched: HalResource) => {
-        fetched.prop('name', 'modified');
-        expect(fetched.prop('name')).toBe<string>('modified');
+        fetched.setProp('name', 'modified');
+        expect(fetched.getProp('name')).toBe<string>('modified');
         return client
           .fetch(project.fullUri, HalResource)
           .then((refetched) => {
-            expect(refetched.prop('name')).toBe<string>('Project 1');
-            expect(fetched.prop('name')).toBe<string>('Project 1');
+            expect(refetched.getProp('name')).toBe<string>('Project 1');
+            expect(fetched.getProp('name')).toBe<string>('Project 1');
             scope.done();
           });
       });
@@ -121,11 +121,11 @@ describe('hal-resource fetching', () => {
       .get(project.relativeUri)
       .reply(200, project.data);
 
-    expect(resource.prop('name')).toBeUndefined();
+    expect(resource.getProp('name')).toBeUndefined();
     return resource
       .fetch()
       .then(() => {
-        expect(resource.prop('name')).toBe<string>('Project 1');
+        expect(resource.getProp('name')).toBe<string>('Project 1');
         scope.done();
       });
   });
@@ -144,8 +144,8 @@ describe('hal-resource fetching', () => {
     return createClient()
       .fetch(project.fullUri, HalResource)
       .then((project: HalResource) => {
-        const testResource = project.prop('test');
-        expect(testResource.prop('name')).toBe<string>('Test 1');
+        const testResource = project.getProp<IHalResource>('test');
+        expect(testResource.getProp('name')).toBe<string>('Test 1');
       });
   });
 
@@ -159,7 +159,7 @@ describe('hal-resource fetching', () => {
     return createClient(`${uriBuilder.orgBaseURI}/`)
       .fetch(project.relativeUri, HalResource)
       .then((project: HalResource) => {
-        expect(project.prop('name')).toBe<string>('Project 1');
+        expect(project.getProp('name')).toBe<string>('Project 1');
         scope.done();
       });
   });
@@ -174,7 +174,7 @@ describe('hal-resource fetching', () => {
     return createClient(uriBuilder.orgBaseURI)
       .fetch(project.relativeUri, HalResource)
       .then((project: HalResource) => {
-        expect(project.prop('name')).toBe<string>('Project 1');
+        expect(project.getProp('name')).toBe<string>('Project 1');
       });
   });
 
@@ -188,7 +188,7 @@ describe('hal-resource fetching', () => {
     return createClient(uriBuilder.orgBaseURI)
       .fetch(project.relativeUri.substring(1), HalResource)
       .then((project: HalResource) => {
-        expect(project.prop('name')).toBe<string>('Project 1');
+        expect(project.getProp('name')).toBe<string>('Project 1');
       });
   });
 
@@ -297,4 +297,9 @@ describe('Resource class properties', () => {
       });
   });
 
+});
+
+describe('hasChanges and ClearChanges', () => {
+  test.todo('haschanges');
+  test.todo('clear changes');
 });
