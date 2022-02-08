@@ -1,8 +1,10 @@
 import { AxiosRequestConfig } from 'axios';
-import { HalCache, IHalCache } from './hal-cache';
+import { HalCache } from './hal-cache';
+import { IHalCache } from './hal-cache.interface';
 import { HalResource } from './hal-resource';
 import { IHalResource, IHalResourceConstructor } from './hal-resource-interface';
-import { HalRestClient, IHalRestClient } from './hal-rest-client';
+import { HalRestClient } from './hal-rest-client';
+import { IHalRestClient } from './hal-rest-client.interface';
 import { URI } from './uri';
 
 export const cache: IHalCache = new HalCache();

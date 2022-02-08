@@ -1,4 +1,4 @@
-import { createClient, HalResource, IJSONParser, JSONParser, JSONParserException } from ".."
+import { createClient, HalResource, IHalResource, IJSONParser, JSONParser, JSONParserException } from ".."
 import { UriBuilder } from "./data/uri-builder"
 import { ToHalResourceModel, ToModelModel } from "./models";
 
@@ -13,7 +13,7 @@ describe('Generic JSON Parser', () => {
     };
     const resource = parser.objectToHalResource(client, json, '', HalResource);
     expect(resource).toBeInstanceOf(HalResource);
-    expect(resource.prop('name')).toBe<string>('name');
+    expect(resource.getProp('name')).toBe<string>('name');
   });
 
   test('create HalResource using JSON without _embedded', () => {
@@ -22,7 +22,7 @@ describe('Generic JSON Parser', () => {
     };
     const resource = parser.objectToHalResource(client, json, '', HalResource);
     expect(resource).toBeInstanceOf(HalResource);
-    expect(resource.prop('name')).toBe<string>('name');
+    expect(resource.getProp('name')).toBe<string>('name');
   });
 
   test('create HalResource using empty JSON', () => {
@@ -46,7 +46,7 @@ describe('Generic JSON Parser', () => {
     };
     const resource = parser.objectToHalResource(client, json, '', ToHalResourceModel);
     expect(resource).toBeInstanceOf(ToHalResourceModel);
-    expect(resource.prop('name')).toBe<string>('name');
+    expect(resource.getProp('name')).toBe<string>('name');
   });
 
   test('create HalModel using empty JSON', () => {
@@ -63,53 +63,56 @@ describe('JSON Parser: links', () => {
   const parser: IJSONParser = new JSONParser();
 
   const testHalResource = (resource: HalResource) => {
-    let link1 = resource.link('link1');
+    const link1 = resource.getLink<IHalResource>('link1');
     expect(link1).toBeInstanceOf(HalResource)
-    expect(link1.prop('href')).toBe<string>('/link1');
-    expect(link1.uri.uri).toBe<string>('/link1')
-    link1 = resource.prop('link1');
-    expect(link1).toBeInstanceOf(HalResource)
-    expect(link1.prop('href')).toBe<string>('/link1');
+    expect(link1.getProp('href')).toBe<string>('/link1');
     expect(link1.uri.uri).toBe<string>('/link1')
 
-    let link2 = resource.link('link2');
+    const link1b = resource.getProp<IHalResource>('link1');
+    expect(link1b).toBeInstanceOf(HalResource)
+    expect(link1b.getProp('href')).toBe<string>('/link1');
+    expect(link1b.uri.uri).toBe<string>('/link1')
+
+    const link2 = resource.getLink<Array<IHalResource>>('link2');
     expect(link2).toHaveLength(2);
     expect(link2[0]).toBeInstanceOf(HalResource)
-    expect(link2[0].prop('href')).toBe<string>('/link2.1');
+    expect(link2[0].getProp('href')).toBe<string>('/link2.1');
     expect(link2[0].uri.uri).toBe<string>('/link2.1');
     expect(link2[1]).toBeInstanceOf(HalResource)
-    expect(link2[1].prop('href')).toBe<string>('/link2.2');
+    expect(link2[1].getProp('href')).toBe<string>('/link2.2');
     expect(link2[1].uri.uri).toBe<string>('/link2.2');
-    link2 = resource.prop('link2');
-    expect(link2).toHaveLength(2);
-    expect(link2[0]).toBeInstanceOf(HalResource)
-    expect(link2[0].prop('href')).toBe<string>('/link2.1');
-    expect(link2[0].uri.uri).toBe<string>('/link2.1');
-    expect(link2[1]).toBeInstanceOf(HalResource)
-    expect(link2[1].prop('href')).toBe<string>('/link2.2');
-    expect(link2[1].uri.uri).toBe<string>('/link2.2');
+
+    const link2b = resource.getProp<Array<IHalResource>>('link2');
+    expect(link2b).toHaveLength(2);
+    expect(link2b[0]).toBeInstanceOf(HalResource)
+    expect(link2b[0].getProp('href')).toBe<string>('/link2.1');
+    expect(link2b[0].uri.uri).toBe<string>('/link2.1');
+    expect(link2b[1]).toBeInstanceOf(HalResource)
+    expect(link2b[1].getProp('href')).toBe<string>('/link2.2');
+    expect(link2b[1].uri.uri).toBe<string>('/link2.2');
   };
 
   const testToHalResourceModel = (model: ToHalResourceModel) => {
     testHalResource(model);
     expect(model.link1).toBeInstanceOf(HalResource);
-    expect(model.link1.prop('href')).toBe<string>('/link1');
+    expect(model.link1.getProp('href')).toBe<string>('/link1');
     expect(model.link1.uri.uri).toBe<string>('/link1');
     expect(model.link2).toHaveLength(2);
     expect(model.link2[0]).toBeInstanceOf(HalResource);
-    expect(model.link2[0].prop('href')).toBe<string>('/link2.1');
+    expect(model.link2[0].getProp('href')).toBe<string>('/link2.1');
     expect(model.link2[0].uri.uri).toBe<string>('/link2.1');
     expect(model.link2[1]).toBeInstanceOf(HalResource);
-    expect(model.link2[1].prop('href')).toBe<string>('/link2.2');
+    expect(model.link2[1].getProp('href')).toBe<string>('/link2.2');
     expect(model.link2[1].uri.uri).toBe<string>('/link2.2');
   };
 
   const testToModelModel = (model: ToModelModel) => {
     testToHalResourceModel(model);
-    expect(model.link('link1')).toBeInstanceOf(ToModelModel);
-    expect(model.prop('link1')).toBeInstanceOf(ToModelModel)
+    expect(model.getLink('link1')).toBeInstanceOf(ToModelModel);
+    expect(model.getProp('link1')).toBeInstanceOf(ToModelModel)
     expect(model.link1).toBeInstanceOf(ToModelModel);
-    const link2 = model.link('link2');
+
+    const link2 = model.getLink('link2');
     expect(link2[0]).toBeInstanceOf(ToModelModel);
     expect(link2[1]).toBeInstanceOf(ToModelModel);
     expect(model.link2[0]).toBeInstanceOf(ToModelModel);
@@ -157,8 +160,8 @@ describe('JSON Parser: links', () => {
     };
     const resource = parser.objectToHalResource(client, toParse, '', HalResource);
     testHalResource(resource);
-    expect(resource.link('link3')).toBeInstanceOf(HalResource)
-    expect(resource.link('link3').prop('href')).toBe<string>('/link3');
+    expect(resource.getLink<IHalResource>('link3')).toBeInstanceOf(HalResource)
+    expect((resource.getLink<IHalResource>('link3')).getProp('href')).toBe<string>('/link3');
   });
 
   test('HalModel linking to HalResource - string links', () => {
@@ -203,8 +206,8 @@ describe('JSON Parser: links', () => {
     };
     const model = parser.objectToHalResource(client, toParse, '', ToHalResourceModel);
     testToHalResourceModel(model);
-    expect(model.link('link3')).toBeInstanceOf(HalResource)
-    expect(model.link('link3').prop('href')).toBe<string>('/link3');
+    expect(model.getLink<IHalResource>('link3')).toBeInstanceOf(HalResource)
+    expect((model.getLink<IHalResource>('link3')).getProp('href')).toBe<string>('/link3');
     expect(model.link3).toBeInstanceOf(HalResource);
     expect(model.link3.uri.uri).toBe<string>('/link3');
   });
@@ -253,8 +256,8 @@ describe('JSON Parser: links', () => {
     };
     const model = parser.objectToHalResource(client, toParse, '', ToModelModel);
     testToHalResourceModel(model);
-    expect(model.link('link3')).toBeInstanceOf(ToModelModel)
-    expect(model.link('link3').prop('href')).toBe<string>('/link3');
+    expect(model.getLink<IHalResource>('link3')).toBeInstanceOf(ToModelModel)
+    expect((model.getLink<IHalResource>('link3')).getProp('href')).toBe<string>('/link3');
     expect(model.link3).toBeInstanceOf(ToModelModel);
     expect(model.link3.uri.uri).toBe<string>('/link3');
   });
@@ -284,37 +287,37 @@ describe('JSON Parser: links', () => {
       }
     };
     const resource = parser.objectToHalResource(client, json, '', HalResource);
-    const link1 = resource.link('link1');
+    const link1 = resource.getLink<IHalResource>('link1');
     expect(link1).toBeInstanceOf(HalResource);
-    expect(link1.prop('href')).toBe<string>('/link1');
-    expect(link1.prop('templated')).toBe<boolean>(false);
-    expect(link1.prop('type')).toBe<string>('application/json');
-    expect(link1.prop('name')).toBe<string>('name of link1');
-    expect(link1.prop('title')).toBe<string>('title of link1');
+    expect(link1.getProp('href')).toBe<string>('/link1');
+    expect(link1.getProp('templated')).toBe<boolean>(false);
+    expect(link1.getProp('type')).toBe<string>('application/json');
+    expect(link1.getProp('name')).toBe<string>('name of link1');
+    expect(link1.getProp('title')).toBe<string>('title of link1');
     expect(link1.uri.uri).toBe<string>('/link1');
     expect(link1.uri.templated).toBe<boolean>(false);
 
-    const link2 = resource.link('link2');
+    const link2 = resource.getLink<IHalResource>('link2');
     expect(link2).toBeInstanceOf(HalResource);
-    expect(link2.prop('href')).toBe<string>('/link2');
-    expect(link2.prop('templated')).toBeUndefined();
+    expect(link2.getProp('href')).toBe<string>('/link2');
+    expect(link2.getProp('templated')).toBeUndefined();
     expect(link2.uri.uri).toBe<string>('/link2');
     expect(link2.uri.templated).toBe<boolean>(false);
 
-    const link3 = resource.link('link3');
+    const link3 = resource.getLink<IHalResource>('link3');
     expect(link3).toBeInstanceOf(HalResource);
-    expect(link3.prop('href')).toBe<string>('/link3');
-    expect(link3.prop('templated')).toBe<boolean>(true);
-    expect(link3.prop('type')).toBe<string>('application/json');
-    expect(link3.prop('name')).toBe<string>('name of link3');
-    expect(link3.prop('title')).toBe<string>('title of link3');
+    expect(link3.getProp('href')).toBe<string>('/link3');
+    expect(link3.getProp('templated')).toBe<boolean>(true);
+    expect(link3.getProp('type')).toBe<string>('application/json');
+    expect(link3.getProp('name')).toBe<string>('name of link3');
+    expect(link3.getProp('title')).toBe<string>('title of link3');
     expect(link3.uri.uri).toBe<string>('/link3');
     expect(link3.uri.templated).toBe<boolean>(true);
 
-    const link4 = resource.link('link4');
+    const link4 = resource.getLink<IHalResource>('link4');
     expect(link4).toBeInstanceOf(HalResource);
-    expect(link4.prop('href')).toBe<string>('/link4');
-    expect(link4.prop('nonStd')).toBe<string>('non standard property');
+    expect(link4.getProp('href')).toBe<string>('/link4');
+    expect(link4.getProp('nonStd')).toBe<string>('non standard property');
   });
 
   test('link without href throws exception', () => {
@@ -342,8 +345,8 @@ describe('JSON Parser: links', () => {
       }
     };
     const resource = parser.objectToHalResource(client, json, '', HalResource);
-    expect(resource.link('link1').uri.uri).toBeNull();
-    expect(resource.link('link1').href).toBeUndefined();
-    expect(resource.prop('link1').href).toBeUndefined();
+
+    expect((resource.getLink<IHalResource>('link1')).uri.uri).toBeNull();
+    expect((resource.getProp<IHalResource>('link1')).uri.uri).toBeNull();
   });
 });

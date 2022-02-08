@@ -200,7 +200,7 @@ class Resource extends HalResource {
 
 }
 ```
-> your model must extends HalResource
+> your model musT extends IHalResource
 >
 > each property must be annoted with `@HalProperty`.
 > \_links, \_embedded, an simple props must to be map with `@HalProperty`

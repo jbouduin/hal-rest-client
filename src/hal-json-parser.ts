@@ -2,7 +2,7 @@ import { createResource } from "./hal-factory";
 import { JSONParserException } from "./hal-json-parser-exception";
 import { HalResource } from "./hal-resource";
 import { IHalResource, IHalResourceConstructor } from "./hal-resource-interface";
-import { IHalRestClient } from "./hal-rest-client";
+import { IHalRestClient } from "./hal-rest-client.interface";
 import { URI } from "./uri";
 
 export interface IJSONParser {
@@ -96,14 +96,16 @@ export class JSONParser implements IJSONParser {
             // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
             const type = Reflect.getMetadata("halClient:specificType", c.prototype, linkKey) || HalResource;
             const propKey = halToTs[linkKey] || linkKey;
-            let result: any;
+
             if (Array.isArray(links[linkKey])) {
-              result = (links[linkKey] as Array<any>).map((item) => this.processLink(halRestClient, this.tryConvertLink(item), type)) // eslint-disable-line
+              resource.setLink(
+                propKey,
+                (links[linkKey] as Array<any>).map((item) => this.processLink(halRestClient, this.tryConvertLink(item), type)) // eslint-disable-line
+              );
             } else {
               const link = this.tryConvertLink(links[linkKey]);
-              result = this.processLink(halRestClient, link, type); // eslint-disable-line
+              resource.setLink(propKey, this.processLink(halRestClient, link, type)); // eslint-disable-line
             }
-            resource.link(propKey, result);
           }
         }
         if (links.self) {
@@ -115,12 +117,12 @@ export class JSONParser implements IJSONParser {
         for (const prop of Object.keys(embedded)) {
           const propKey = halToTs[prop] || prop;
           // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-          resource.prop(propKey, this.parseJson(halRestClient, embedded[prop], true, requestedURI, c.prototype, propKey));
+          resource.setProp(propKey, this.parseJson(halRestClient, embedded[prop], true, requestedURI, c.prototype, propKey));
         }
       } else {
         const propKey = halToTs[key] || key;
         // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-        resource.prop(propKey, this.parseJson(halRestClient, json[key], false, requestedURI, c.prototype, propKey));
+        resource.setProp(propKey, this.parseJson(halRestClient, json[key], false, requestedURI, c.prototype, propKey));
       }
     }
 
@@ -146,7 +148,7 @@ export class JSONParser implements IJSONParser {
     for (const propKey of Object.keys(link)) {
       // TODO 1689 Refactor ProcessLink in json-parser
       // this will still copy and eventually overwrite typical link properties (like title, and name) to the resource!
-      linkResource.prop(propKey, link[propKey]);
+      linkResource.setProp(propKey, link[propKey]);
     }
 
     return linkResource;

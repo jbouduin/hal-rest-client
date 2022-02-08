@@ -1,10 +1,11 @@
-import { IHalRestClient } from "./hal-rest-client";
+import { IJSONSerializer } from "./hal-json-serializer";
+import { IHalRestClient } from "./hal-rest-client.interface";
 import { URI } from "./uri";
 
 export interface IHalResource {
   readonly isLoaded: boolean;
   readonly uri: URI;
-
+  readonly restClient: IHalRestClient;
   /**
    * fetch the current resource
    *
@@ -27,18 +28,23 @@ export interface IHalResource {
    * @param name : the prop/link name
    * @param value : the value to set. Use null to clear value not undefined
    */
-  prop(name: string, value?: any): any;
-
+  // prop(name: string, value?: any): any;
+  setProp(name: string, value?: unknown): void;
+  getProp<T>(name: string): T;
   /**
    * get or set a link.
    * @param name : the link name
    * @param value : the new resource. If you want reset a link use null and not undefined
    */
-  link(name: string, value?: IHalResource): IHalResource;
-
+  // link(name: string, value?: IHalResource | Array<IHalResource>): IHalResource | Array<IHalResource>
+  setLink(name: string, value?: IHalResource | Array<IHalResource>): void;
+  getLink<T = IHalResource | Array<IHalResource>>(name: string): T;
   /**
    * function called when object is populated
    */
+
+  update<T extends IHalResource>(type?: IHalResourceConstructor<T>, serializer?: IJSONSerializer): Promise<T | Record<string, any>>
+
   onInitEnded();
 }
 

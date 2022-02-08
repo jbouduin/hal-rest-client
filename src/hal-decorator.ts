@@ -1,6 +1,6 @@
 import 'reflect-metadata';
 import { HalResource } from './hal-resource';
-import { IHalResourceConstructor, INewable } from './hal-resource-interface';
+import { IHalResource, IHalResourceConstructor, INewable } from './hal-resource-interface';
 
 /**
  * get or create the MetaData
@@ -19,7 +19,7 @@ function getOrCreateMetaData(metaDataKey: string, target: object): object {
   return result;
 }
 
-export function HalProperty<T extends HalResource>(
+export function HalProperty<T extends IHalResource>(
 
   { name, resourceType }: { name?: string; resourceType?: IHalResourceConstructor<T> | INewable } =  { }):
   (targetHalResource: object, propertyName: string) => void {
@@ -55,13 +55,12 @@ export function HalProperty<T extends HalResource>(
       Reflect.defineMetadata('halClient:specificType', type, targetHalResource, name);
     }
 
-    // Delete property.
-    // TODO 1663 refactor HalResource prop(name: string, value?: any)
+    // Delete existing property and replace it by the get and set methods of HalResource
     if (delete targetHalResource[propertyName]) {
       // Create new property with getter and setter
       Object.defineProperty(targetHalResource, propertyName, {
-        get() { return this.prop(propertyName); },
-        set(value) { this.prop(propertyName, value); },
+        get() { return this.getProp(propertyName); },
+        set(value) { this.setProp(propertyName, value); },
         configurable: true,
         enumerable: true,
       });

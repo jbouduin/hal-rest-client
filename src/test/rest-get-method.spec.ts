@@ -1,5 +1,5 @@
 import * as nock from 'nock';
-import { createClient, HalResource, cache } from '..';
+import { createClient, HalResource, cache, IHalResource } from '..';
 import { IFactoryResult, IData, ILinkCollection, HostTld } from './data/common-definitions';
 import { DataFactory } from './data/data-factory';
 import { PersonFactory } from './data/person-factory';
@@ -109,7 +109,7 @@ describe('fetch resources', () => {
           .then((dashboardInfo: DashboardInfo) => {
             expect(dashboardInfo).toBeInstanceOf(DashboardInfo);
             expect(dashboardInfo.name).toBe<string>('test');
-            spa.link(linkKey).prop('name', 'updated');
+            (spa.getLink<IHalResource>(linkKey)).setProp('name', 'updated');
             expect(dashboardInfo.name).toBe<string>('updated');
             scope.done();
           });

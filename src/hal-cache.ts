@@ -1,6 +1,6 @@
 
 import { HalCacheType, IHalCache } from "./hal-cache.interface";
-import { IHalResource } from "./hal-resource";
+import { IHalResource } from "./hal-resource-interface";
 import { IHalRestClient } from "./hal-rest-client.interface";
 
 export class HalCache implements IHalCache {

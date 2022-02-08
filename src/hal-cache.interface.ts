@@ -1,5 +1,5 @@
 
-import { IHalResource } from "./hal-resource";
+import { IHalResource } from "./hal-resource-interface";
 import { IHalRestClient } from "./hal-rest-client.interface";
 
 export type HalCacheType = 'Client' | 'Resource';
