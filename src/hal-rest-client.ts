@@ -4,7 +4,6 @@ import { AxiosInstance, AxiosRequestConfig, AxiosResponse } from "axios";
 import { IJSONParser, JSONParser } from "./hal-json-parser";
 import { IHalResourceConstructor, IHalResource } from "./hal-resource-interface";
 import { IHalRestClient } from "./hal-rest-client.interface";
-import { HalResource } from "./hal-resource";
 
 // TODO 1659 Appropriate Encapsulation
 // hide that internal method

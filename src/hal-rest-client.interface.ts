@@ -3,7 +3,6 @@ import { AxiosDefaults, AxiosInterceptorManager } from "axios";
 import { AxiosRequestConfig, AxiosResponse } from "axios";
 import { IJSONParser } from "./hal-json-parser";
 import { IHalResourceConstructor, IHalResource } from "./hal-resource-interface";
-import { HalResource } from "./hal-resource";
 
 export interface IHalRestClient {
   //#region read-only properties ----------------------------------------------
