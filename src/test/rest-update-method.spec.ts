@@ -181,7 +181,8 @@ describe('Rest update calls', () => {
         return result[0]
           .update(undefined, {
             parseProp: (value: string) => `${prefix}${value}`,
-            parseResource: (value: { uri: { uri: string; }; }) => `${prefix}${value.uri.uri}`,
+            //eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+            parseResource: (value: IHalResource) => `${prefix}${value['_uri'].href}`,
           })
           .then((result2: Record<string, any>) => {
             expect(result2.status).toBe<number>(200);

@@ -1,5 +1,5 @@
 import * as nock from 'nock';
-import { createClient, createResource, cache, HalResource, URI, IHalResource } from '..';
+import { createClient, createResource, cache, HalResource, UriData, IHalResource } from '..';
 import { Contacts } from './models/contacts';
 import { DashboardInfo, Location, Person } from './models';
 import { ProjectFactory } from './data/project-factory';
@@ -32,16 +32,16 @@ describe('hal-resource fetching', () => {
     return createClient()
       .fetch(projectList.fullUri, HalResource)
       .then((value: HalResource) => {
-        expect(value.uri.fill({})).toBe<string>(projectList.fullUri);
+        expect(value.uri.resourceUri).toBe<string>(projectList.fullUri);
         expect(value.getProp('results')).toHaveLength(2);
         expect(value.getProp('results')[0].getProp('name')).toBe<string>('Project 0');
         expect(value.getProp('results')[0]).toBeInstanceOf(HalResource);
         expect(typeof value.getProp('results')[0].fetch).toBe<string>('function');
-        expect(value.getProp('results')[0].uri.uri)
+        expect(value.getProp('results')[0].uri.href)
           .toBe<string>(uriBuilder.resourceUri('org', false, projectFactory.projectsPath, 0));
         expect(value.getProp('results')[1].getProp('name')).toBe<string>('Project 10');
         expect(typeof value.getProp('results')[0].fetch).toBe<string>('function');
-        expect(value.getProp('results')[1].uri.uri)
+        expect(value.getProp('results')[1].uri.href)
           .toBe<string>(uriBuilder.resourceUri('org', false, projectFactory.projectsPath, 10));
       });
   });
@@ -115,7 +115,7 @@ describe('hal-resource fetching', () => {
   })
   test('create Resource by URL and fetch it', () => {
     const project = projectFactory.createProject(1);
-    const resource = new HalResource(createClient(), new URI(project.fullUri));
+    const resource = new HalResource(createClient(), new UriData(project.fullUri));
     const scope = nock(uriBuilder.orgBaseURI);
     scope
       .get(project.relativeUri)
@@ -299,7 +299,64 @@ describe('Resource class properties', () => {
 
 });
 
+describe('updating an array of embedded properties', () => {
+  const uriBuilder = new UriBuilder();
+  const personFactory = new PersonFactory('org', uriBuilder);
+
+  test('Removing 1 entry from an array', () => {
+    const person = personFactory.createPerson(1);
+    const scope = nock(uriBuilder.orgBaseURI);
+
+    scope
+      .get(person.relativeUri)
+      .reply(200, person.data);
+    scope
+      .intercept(person.relativeUri, 'PATCH', {'my-friends': [person.friends[0].fullUri]})
+      .reply(200);
+
+    const client = createClient(uriBuilder.orgBaseURI);
+    return client
+      .fetch(person.relativeUri, Person)
+      .then((person: Person) => {
+        person.myFriends = [person.myFriends[0]];
+        expect(person.getProp('myFriends')).toHaveLength(1);
+        return person.update().then(() => scope.done());
+      });
+  });
+
+  test('clearing an array', () => {
+    const person = personFactory.createPerson(1);
+    const scope = nock(uriBuilder.orgBaseURI);
+    scope
+      .get(person.relativeUri)
+      .reply(200, person.data);
+    scope
+      .intercept(person.relativeUri, 'PATCH', {'my-friends': []})
+      .reply(200);
+
+    const client = createClient(uriBuilder.orgBaseURI);
+    return client
+      .fetch(person.relativeUri, Person)
+      .then((person: Person) => {
+        person.myFriends = [];
+        expect(person.getProp('myFriends')).toHaveLength(0);
+        return person.update().then(() => scope.done());
+      });
+  });
+
+  test.todo('Adding 1 entry to an array');
+
+  test.todo('assigning a complete new array');
+});
+
+describe('updating an array of links', () => {
+  test.todo('Removing 1 entry from an array');
+  test.todo('clearing an array');
+  test.todo('Adding 1 entry to an array');
+  test.todo('assigning a complete new array');
+})
+
 describe('hasChanges and ClearChanges', () => {
-  test.todo('haschanges');
+  test.todo('tests on haschanges');
   test.todo('clear changes');
 });

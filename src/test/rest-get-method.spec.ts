@@ -86,7 +86,7 @@ describe('fetch resources', () => {
       .then((dashboardInfo: DashboardInfo) => {
         expect(dashboardInfo).toBeInstanceOf(DashboardInfo);
         expect(dashboardInfo.name).toBe<string>('test');
-        expect(dashboardInfo.uri.resourceURI).toBe<string>(dashboardOnCom.fullUri);
+        expect(dashboardInfo.uri.resourceUri).toBe<string>(dashboardOnCom.fullUri);
         scope.done();
       });
   });

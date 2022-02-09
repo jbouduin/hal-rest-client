@@ -19,6 +19,6 @@ export class DefaultSerializer implements IJSONSerializer {
    * parse a hal-resource to server comprehensible value
    */
   public parseResource(value: IHalResource): unknown {
-    return value ? value.uri.uri : undefined;
+    return value ? value.uri.resourceUri : undefined;
   }
 }

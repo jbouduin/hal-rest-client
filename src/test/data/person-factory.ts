@@ -6,6 +6,7 @@ export interface IPersonFactoryResult extends IFactoryResult<IData> {
   work: IFactoryResult<IData>,
   home: IFactoryResult<IData>,
   contacts: IFactoryResult<IData>
+  friends: Array<IFactoryResult<IData>>
 }
 
 export class PersonFactory extends DataFactory {
@@ -52,8 +53,10 @@ export class PersonFactory extends DataFactory {
     this.AddEmbeddedPerson(result.data._embedded, 'father', newId++, this.myFathersName);
     this.AddEmbeddedPerson(result.data._embedded, 'mother', newId++, this.myMothersName);
     result.data._embedded['my-friends'] = [];
-    this.AddEmbeddedPerson(result.data._embedded['my-friends'], '', newId++, this.firstFriendsName);
-    this.AddEmbeddedPerson(result.data._embedded['my-friends'], '', newId++, this.secondFriendsName);
+    result.friends = new Array<IFactoryResult<IData>>(
+      this.AddEmbeddedPerson(result.data._embedded['my-friends'], '', newId++, this.firstFriendsName),
+      this.AddEmbeddedPerson(result.data._embedded['my-friends'], '', newId++, this.secondFriendsName)
+    );
     // fill _links
     this.addLinkToFactoredData(
       result.data,
@@ -71,14 +74,15 @@ export class PersonFactory extends DataFactory {
     return result;
   }
 
-  public AddEmbeddedPerson(parent: any, key: string, id: number, name: string): void {
-    const result = this.createResourceData(this.tld, 'person', id).data;
-    result['name'] = name;
+  public AddEmbeddedPerson(parent: any, key: string, id: number, name: string): IFactoryResult<IData> {
+    const result = this.createResourceData(this.tld, 'person', id);
+    result.data['name'] = name;
     if (Array.isArray(parent)) {
-      parent.push(result);
+      parent.push(result.data);
     } else {
-      parent[key] = result;
+      parent[key] = result.data;
     }
+    return result;
   }
 
   public createContacts(id: number): IFactoryResult<IData> {
