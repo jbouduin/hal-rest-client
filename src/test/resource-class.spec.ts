@@ -299,7 +299,64 @@ describe('Resource class properties', () => {
 
 });
 
+describe('updating an array of embedded properties', () => {
+  const uriBuilder = new UriBuilder();
+  const personFactory = new PersonFactory('org', uriBuilder);
+
+  test('Removing 1 entry from an array', () => {
+    const person = personFactory.createPerson(1);
+    const scope = nock(uriBuilder.orgBaseURI);
+
+    scope
+      .get(person.relativeUri)
+      .reply(200, person.data);
+    scope
+      .intercept(person.relativeUri, 'PATCH', {'my-friends': [person.friends[0].fullUri]})
+      .reply(200);
+
+    const client = createClient(uriBuilder.orgBaseURI);
+    return client
+      .fetch(person.relativeUri, Person)
+      .then((person: Person) => {
+        person.myFriends = [person.myFriends[0]];
+        expect(person.getProp('myFriends')).toHaveLength(1);
+        return person.update().then(() => scope.done());
+      });
+  });
+
+  test('clearing an array', () => {
+    const person = personFactory.createPerson(1);
+    const scope = nock(uriBuilder.orgBaseURI);
+    scope
+      .get(person.relativeUri)
+      .reply(200, person.data);
+    scope
+      .intercept(person.relativeUri, 'PATCH', {'my-friends': []})
+      .reply(200);
+
+    const client = createClient(uriBuilder.orgBaseURI);
+    return client
+      .fetch(person.relativeUri, Person)
+      .then((person: Person) => {
+        person.myFriends = [];
+        expect(person.getProp('myFriends')).toHaveLength(0);
+        return person.update().then(() => scope.done());
+      });
+  });
+
+  test.todo('Adding 1 entry to an array');
+
+  test.todo('assigning a complete new array');
+});
+
+describe('updating an array of links', () => {
+  test('Removing 1 entry from an array');
+  test('clearing an array');
+  test.todo('Adding 1 entry to an array');
+  test.todo('assigning a complete new array');
+})
+
 describe('hasChanges and ClearChanges', () => {
-  test.todo('haschanges');
+  test.todo('tests on haschanges');
   test.todo('clear changes');
 });

@@ -23,8 +23,7 @@ export class HalResource implements IHalResource {
     return this.settedLinks.length + this.settedProps.length > 0;
   }
 
-  public get isLoaded(): boolean
-  {
+  public get isLoaded(): boolean {
     return this._isLoaded;
   }
 
@@ -92,7 +91,7 @@ export class HalResource implements IHalResource {
     return undefined;
   }
 
-  public setLink(name: string, value?: IHalResource | Array<IHalResource> ): void {
+  public setLink(name: string, value?: IHalResource | Array<IHalResource>): void {
     if (this.links[name] !== value) {
       this.links[name] = value;
       if (this.initEnded) {
@@ -101,7 +100,7 @@ export class HalResource implements IHalResource {
     }
   }
 
-  public getLink<T = IHalResource | Array<IHalResource>>(name: string): T  {
+  public getLink<T = IHalResource | Array<IHalResource>>(name: string): T {
     return (this.links[name] as unknown) as T;
   }
 
@@ -185,16 +184,32 @@ export class HalResource implements IHalResource {
 
     for (const prop of props) {
       const jsonKey = tsToHal ? tsToHal[prop] : prop;
-      if (this.props[prop] !== undefined && this.props[prop] !== null && this.props[prop] instanceof HalResource) {
-        result[jsonKey] = serializer.parseResource(this.props[prop] as IHalResource);
+      const theProp = this.props[prop];
+      if (theProp !== undefined && theProp !== null) {
+        result[jsonKey] = this.parseProp(theProp, serializer);
       } else {
-        result[jsonKey] = serializer.parseProp(this.props[prop]);
+        result[jsonKey] = serializer.parseProp(theProp);
       }
     }
 
     for (const link of links) {
       const jsonKey = tsToHal ? tsToHal[link] : link;
-      result[jsonKey] = serializer.parseResource(this.links[link] as IHalResource);
+      const theLink = this.links[link] as IHalResource
+      result[jsonKey] = Array.isArray(theLink) ?
+        theLink.map((link: IHalResource) => serializer.parseResource(link)) :
+        serializer.parseResource(theLink);
+    }
+    return result;
+  }
+
+  private parseProp(theProp: any, serializer: IJSONSerializer): unknown {
+    let result: unknown;
+    if (theProp instanceof HalResource) {
+      result = serializer.parseResource(theProp as IHalResource);
+    } else if (Array.isArray(theProp)) {
+      result = theProp.map((prop: any) => this.parseProp(prop, serializer));
+    } else {
+      result = serializer.parseProp(theProp);
     }
     return result;
   }
