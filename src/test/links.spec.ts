@@ -129,7 +129,7 @@ describe('following links', () => {
     return createClient()
       .fetch(project.fullUri, HalResource)
       .then((project: HalResource) => {
-        expect((project.getLink<IHalResource>('versions')).uri.fill()).toBe<string>(versions);
+        expect((project.getLink<IHalResource>('versions')).uri.resourceUri).toBe<string>(versions);
       });
   });
 });
@@ -215,7 +215,7 @@ describe('Resources with no \'self\'', () => {
     return createClient(uriBuilder.orgBaseURI)
       .fetch(resourceWithoutSelf.relativeUri, HalResource)
       .then((resource: HalResource) => {
-        expect(resource.uri.href).toBeNull();
+        expect(resource.uri.resourceUri).toBeNull();
         expect(resource.getProp('id')).toBe<number>(1);
         expect(resource.getProp('name')).toBe<string>('test');
         const cacheKeys = cache.getKeys('Resource');
@@ -238,7 +238,7 @@ describe('Resources with no \'self\'', () => {
         return resource
           .fetch(true)
           .then((fetched: HalResource) => {
-            expect(fetched.uri.href).toBeNull();
+            expect(fetched.uri.resourceUri).toBeNull();
             expect(fetched.getProp('id')).toBe<number>(1);
             expect(fetched.getProp('name')).toBe<string>('test');
             const cacheKeys = cache.getKeys('Resource');
@@ -269,7 +269,7 @@ describe('Resources with no \'self\'', () => {
       .fetch(resourceWithSubResourceWithoutSelf.relativeUri, HalResource)
       .then((resource: HalResource) => {
         const subResourceWithoutSelf = resource.getProp<IHalResource>('child');
-        expect(subResourceWithoutSelf.uri.href).toBeNull();
+        expect(subResourceWithoutSelf.uri.resourceUri).toBeNull();
         const cacheKeys = cache.getKeys('Resource');
         expect(cacheKeys).toHaveLength(2);
         expect(cacheKeys).toContain<string>(otherLinkAbsolute);
@@ -315,16 +315,16 @@ describe('Templated links', () => {
     return createClient()
       .fetch(projectList.fullUri, HalResource)
       .then((resource: HalResource) => {
-        expect(resource.uri.href).toBe<string>(templatedUriString);
+        expect(resource['_uri'].href).toBe<string>(templatedUriString);
         expect(resource.uri.templated).toBe<boolean>(true);
         expect(resource.getProp('results')).toHaveLength(2);
-        const resourceUri = resource.uri.resourceURI;
+        const resourceUri = resource.uri.resourceUri;
         const fill = {
           offset:0,
           sort: 'LastModified',
           pageSize:20
         };
-        expect(resource.uri.fill(fill)).toBe<string>(resourceUri);
+        expect(resource['_uri'].fill(fill)).toBe<string>(resourceUri);
         scope.done();
       });
   });
@@ -344,12 +344,12 @@ describe('Templated links', () => {
       .then((resource: HalResource) => {
         const findLink = resource.getLink<IHalResource>('jumpTo');
         expect(findLink.uri.templated).toBe<boolean>(true);
-        expect(findLink.uri.resourceURI).toBe<string>('');
+        expect(findLink.uri.resourceUri).toBe<string>('');
         return findLink
           .fetch({ jumpTo: 1 })
           .then((found: HalResource) => {
             expect(found.getProp('results')[0].getProp('id')).toBe<number>(10);
-            expect(found.uri.resourceURI).toBe<string>(projectList1.fullUri);
+            expect(found.uri.resourceUri).toBe<string>(projectList1.fullUri);
             scope.done();
           });
       });
@@ -376,7 +376,7 @@ describe('Templated links', () => {
           .then((found: HalResource) => {
             expect(found.getProp('offset')).toBe<number>(0);
             expect(found.getProp('pageSize')).toBe<number>(20);
-            expect(found.uri.resourceURI).toBe<string>(rootProjectList.fullUri);
+            expect(found.uri.resourceUri).toBe<string>(rootProjectList.fullUri);
             scope.done();
           });
       });

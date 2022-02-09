@@ -1,10 +1,18 @@
 import * as uriTemplates from 'uri-templates';
 
+export interface IUriData {
+  readonly templated: boolean;
+  readonly type: string;
+  /**
+   * Returns the fetched URI in case of a templated URI, the original href otherwise
+   */
+  readonly resourceUri: string;
+}
+
 /** @internal */
-export class UriData {
+export class UriData implements IUriData {
   //#region private properties ------------------------------------------------
   private fetchedURI: string;
-
   private uriTemplates;
   //#endregion
 
@@ -17,10 +25,7 @@ export class UriData {
   //#endregion
 
   //#region public getter -----------------------------------------------------
-  /**
-   * Returns the fetched URI in case of a templated URI, the original URI otherwise
-   */
-  public get resourceURI(): string {
+  public get resourceUri(): string {
     return this.templated ? this.fetchedURI : this.href;
   }
   //#endregion

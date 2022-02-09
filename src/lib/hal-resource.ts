@@ -3,7 +3,7 @@ import { IJSONSerializer } from './hal-json-serializer.interface';
 import { IHalResource, IHalResourceConstructor } from './hal-resource.interface';
 import { HalRestClient } from './hal-rest-client';
 import { IHalRestClient } from './hal-rest-client.interface';
-import { UriData } from './uri-data';
+import { IUriData, UriData } from './uri-data';
 
 export class HalResource implements IHalResource {
 
@@ -32,9 +32,10 @@ export class HalResource implements IHalResource {
     return this._restClient;
   }
 
-  public get uri(): UriData {
+  public get uri(): IUriData {
     return this._uri;
   }
+
   //#endregion
 
   //#region Constructor & C° --------------------------------------------------
@@ -57,7 +58,7 @@ export class HalResource implements IHalResource {
       return new Promise((resolve) => resolve(this));
     } else {
       return (this.restClient as HalRestClient).fetchInternal(
-        this.uri.fill(forceOrParams as object),
+        this._uri.fill(forceOrParams as object),
         this.constructor as IHalResourceConstructor<this>,
         this,
       );
@@ -111,7 +112,7 @@ export class HalResource implements IHalResource {
   public update<T extends IHalResource>(type?: IHalResourceConstructor<T>, serializer?: IJSONSerializer): Promise<T | Record<string, any>> {
     const json = this.serialize(this.settedProps, this.settedLinks, serializer);
     return this.restClient
-      .update(this.uri.resourceURI, json, false, type)
+      .update(this._uri.href, json, false, type)
       .then((response: T) => {
         this.clearChanges();
         return response;
@@ -121,7 +122,7 @@ export class HalResource implements IHalResource {
   public create<T extends IHalResource>(type?: IHalResourceConstructor<T>, serializer?: IJSONSerializer): Promise<T | Record<string, any>> {
     const json = this.serialize(Object.keys(this.props), Object.keys(this.links), serializer);
     return this.restClient
-      .create(this.uri.resourceURI, json, type)
+      .create(this._uri.href, json, type)
       .then((response: T) => {
         this.clearChanges();
         return response;
@@ -129,7 +130,7 @@ export class HalResource implements IHalResource {
   }
 
   public convert<N extends IHalResource>(type: IHalResourceConstructor<N>): N {
-    const result = new type(this.restClient, this.uri);
+    const result = new type(this.restClient, this._uri);
     result['links'] = this.links;
     result['props'] = this.props;
     // result['settedLinks'].push(...this.settedLinks);

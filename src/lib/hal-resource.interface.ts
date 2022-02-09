@@ -1,6 +1,6 @@
 import { IJSONSerializer } from "./hal-json-serializer.interface";
 import { IHalRestClient } from "./hal-rest-client.interface";
-import { UriData } from "./uri-data";
+import { IUriData, UriData } from "./uri-data";
 
 export interface IHalResource {
 
@@ -13,7 +13,7 @@ export interface IHalResource {
   /**
    * the uri of the resource
    */
-  readonly uri: UriData;
+  readonly uri: IUriData;
 
   /**
    * the hal-rest client

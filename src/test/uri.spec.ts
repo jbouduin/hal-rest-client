@@ -73,13 +73,13 @@ describe('usage of fetchedUri', () => {
     const uri = new UriData(uriString, true);
     const fetchedUri = uriBuilder.filledTemplatedResourceUri('org', false, 'projects/12/workpackages', fill)
     uri.setFetchedUri(fetchedUri);
-    expect(uri.resourceURI).toBe<string>(fetchedUri);
+    expect(uri.resourceUri).toBe<string>(fetchedUri);
   });
 
   test('resource URI returns empty when fetched URI has not been set', () => {
     const uriString = uriBuilder.templatedResourceUri('org', false, 'projects/{id}/workpackages', fill);
     const uri = new UriData(uriString, true);
-    expect(uri.resourceURI).toBe<string>('');
+    expect(uri.resourceUri).toBe<string>('');
   });
 });
 
@@ -92,7 +92,7 @@ describe('non-templated URI tests', () => {
 
   test('resourceUri of a non templated URI', () => {
     const uri = new UriData(testUri, false);
-    expect(uri.resourceURI).toBe<string>(testUri);
+    expect(uri.resourceUri).toBe<string>(testUri);
   });
 
   test('fill on a non templated URI returns uri', () => {

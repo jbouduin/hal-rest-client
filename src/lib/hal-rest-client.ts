@@ -81,7 +81,7 @@ export class HalRestClient implements IHalRestClient {
     if (typeof resource === "string") {
       uri = resource;
     } else {
-      uri = resource.uri.resourceURI;
+      uri = resource.uri.resourceUri;
     }
 
     return new Promise((resolve, reject) => {

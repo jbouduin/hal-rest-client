@@ -32,7 +32,7 @@ describe('hal-resource fetching', () => {
     return createClient()
       .fetch(projectList.fullUri, HalResource)
       .then((value: HalResource) => {
-        expect(value.uri.fill({})).toBe<string>(projectList.fullUri);
+        expect(value.uri.resourceUri).toBe<string>(projectList.fullUri);
         expect(value.getProp('results')).toHaveLength(2);
         expect(value.getProp('results')[0].getProp('name')).toBe<string>('Project 0');
         expect(value.getProp('results')[0]).toBeInstanceOf(HalResource);
