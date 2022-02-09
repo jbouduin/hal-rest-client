@@ -41,9 +41,6 @@ describe.each([
   [true, 'org', 'absolute', SelfOption.AbsoluteString, 2],
   [true, 'com', 'absolute', SelfOption.AbsoluteLink, 2],
   [true, 'com', 'absolute', SelfOption.AbsoluteString, 2],
-  // rest client has no base URI and self-link is relative => no caching
-  [false, 'org', 'absolute', SelfOption.RelativeLink, 0],
-  [false, 'org', 'absolute', SelfOption.RelativeString, 0],
   // rest client has a base URI and self-link resource was fetched with an absolute URL on a different server => no caching
   [true, 'com', 'absolute', SelfOption.RelativeLink, 0],
   [true, 'com', 'absolute', SelfOption.RelativeString, 0],
@@ -51,7 +48,12 @@ describe.each([
   [true, 'org', 'relative', SelfOption.RelativeLink, 2],
   [true, 'org', 'relative', SelfOption.RelativeString, 2],
   [true, 'org', 'absolute', SelfOption.RelativeLink, 2],
-  [true, 'org', 'absolute', SelfOption.RelativeString, 2]
+  [true, 'org', 'absolute', SelfOption.RelativeString, 2],
+  // rest client has no base URI and self-link is relative => no caching
+  [false, 'org', 'absolute', SelfOption.RelativeLink, 0],
+  [false, 'org', 'absolute', SelfOption.RelativeString, 0],
+  [false, 'com', 'absolute', SelfOption.RelativeLink, 0],
+  [false, 'com', 'absolute', SelfOption.RelativeString, 0]
 ])('Caching resources', (clientWithBaseURI: boolean, dummyTld: HostTld, fetch: FetchType, selfOption: SelfOption, cachedEntries: number) => {
   const uriBuilder = new UriBuilder();
   const dummyFactory = new DataFactory(uriBuilder);
@@ -386,9 +388,25 @@ describe('using cache', () => {
 
 });
 
+describe.each([
+  [undefined, undefined, false],
+  [undefined, false, false],
+  [undefined, true, false],
+  ['test', undefined, true],
+  ['test', false,  true],
+  ['test', true, false]
+])('caching of resources created using the factory', (uri: string, templated: boolean, isCached: boolean) => {
+  const uriBuilder = new UriBuilder();
+  const logAs = templated ? 'true' : templated === false ? 'false' : 'undefined'
+  test(`resource created ${uri ? 'with' : 'without'} uri, templated = ${logAs}`, () => {
+    createResource(createClient(uriBuilder.orgBaseURI), HalResource, uri, templated);
+    expect(cache.getKeys('Resource')).toHaveLength(isCached ? 1 : 0);
+  });
+});
+
+
 describe('things not to be cached', () => {
   const uriBuilder = new UriBuilder();
-
   test('null href in _links', () => {
     const client = createClient(uriBuilder.orgBaseURI);
     const scope = nock(uriBuilder.orgBaseURI);
@@ -397,7 +415,7 @@ describe('things not to be cached', () => {
     const dummyReply = {
       _links: {
         withNull: { href: null },
-        noNull: { href: noNullUri}
+        noNull: { href: noNullUri }
       }
     };
 

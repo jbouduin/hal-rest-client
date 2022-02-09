@@ -1,19 +1,19 @@
-import { createResource } from "./hal-factory";
+import { createResourceInternal } from "./hal-factory";
 import { JSONParserException } from "./hal-json-parser.exception";
 import { HalResource } from "./hal-resource";
 import { IHalResource, IHalResourceConstructor } from "./hal-resource.interface";
 import { IHalRestClient } from "./hal-rest-client.interface";
-import { URI } from "./uri";
+import { UriData } from "./uri-data";
 
 export interface IJSONParser {
   /**
    * Convert an object to a HalResource
-   * @param halRestClient
-   * @param data the object to convert to a resource
-   * @param requestedUri the requested URI that returned the 'root' resource. This value should be passed through when recursing
-   * @param resourceType the type of HalResource to be created
-   * @param resource : the existing resource if we merge an existing one with new data
-   * @param fetchedURI : the uri fetched from the server, this one is not passed through when recursing
+   * @param halRestClient - the hal-rest client
+   * @param data - the object to convert to a resource
+   * @param requestedUri - the requested URI that returned the 'root' resource.
+   * @param resourceType - the type of HalResource to be created
+   * @param resource - the existing resource if we merge an existing one with new data
+   * @param receivedUri - the uri fetched from the server. This could be the final uri after a chain of redirections
    * @returns a Halrource of the requested type
    */
   objectToHalResource<T extends IHalResource>(
@@ -22,7 +22,7 @@ export interface IJSONParser {
     requestedURI: string,
     resourceType: IHalResourceConstructor<T>,
     resource?: T,
-    fetchedURI?: string,
+    receivedUri?: string,
   ): T;
 }
 
@@ -45,14 +45,14 @@ export class JSONParser implements IJSONParser {
     requestedURI: string,
     resourceType: IHalResourceConstructor<T>,
     resource?: T,
-    fetchedURI?: string): T {
+    receivedURI?: string): T {
     // let resource:T
     if (Array.isArray(json)) {
       throw new JSONParserException(json);
     }
 
     if (!resource) {
-      resource = this.getResource(halRestClient, json, requestedURI, resourceType);
+      resource = this.getResource(halRestClient, json, requestedURI, receivedURI, resourceType);
     }
 
     // get translation between hal-service-name and name on ts class
@@ -77,7 +77,7 @@ export class JSONParser implements IJSONParser {
               resource.setLink(propKey, this.processLink(halRestClient, link, specificType)); // eslint-disable-line
             }
           } else {
-            const uri = this.buildURI(this.tryConvertLink(links.self), fetchedURI);
+            const uri = this.buildURI(this.tryConvertLink(links.self), receivedURI);
             resource.setUri(uri);
           }
         }
@@ -103,22 +103,13 @@ export class JSONParser implements IJSONParser {
 
   //#region private methods ---------------------------------------------------
   private processLink<T extends IHalResource>(halRestClient: IHalRestClient, link: string | IHalLink, type: IHalResourceConstructor<T>): T {
-    let linkResource: T;
-    const href = this.buildURI(link);
-
-    if (typeof link !== 'string' && link.type && link.type !== 'application/hal+json') {
-      // TODO 1689 Refactor ProcessLink in json-parser (probably extract it to link-parser.ts)
-      // not really correct to decide here that we will not cache
-      linkResource = new type(halRestClient, href);
-    } else {
-      linkResource = createResource(halRestClient, type, href);
-    }
+    const href =  this.buildURI(link);
+    const linkResource = createResourceInternal(halRestClient, type, href);
     for (const propKey of Object.keys(link)) {
       // TODO 1689 Refactor ProcessLink in json-parser
       // this will still copy and eventually overwrite typical link properties (like title, and name) to the resource!
       linkResource.setProp(propKey, link[propKey]);
     }
-
     return linkResource;
   }
 
@@ -156,18 +147,19 @@ export class JSONParser implements IJSONParser {
     }
   }
 
-  private buildURI(link: string | IHalLink, fetchedUri?: string): URI {
-    let result: URI;
+  private buildURI(link: string | IHalLink, fetchedUri?: string): UriData {
+    let result: UriData;
     if (typeof link === "string") {
-      result = new URI(link, false);
+      result = new UriData(link, false);
     } else {
       const uri = link.href;
       const templated = link.templated || false;
-      result = new URI(uri, templated);
+      result = new UriData(uri, templated, undefined, fetchedUri, link.type);
       if (templated) {
         result.setFetchedUri(fetchedUri || '');
       }
     }
+    // console.log(result);
     return result;
   }
 
@@ -200,40 +192,27 @@ export class JSONParser implements IJSONParser {
   private getResource<T extends IHalResource>(
     halRestClient: IHalRestClient,
     json: Record<string, any>,
-    requestedURI: string,
+    requestedUri: string,
+    receivedUri: string,
     type: IHalResourceConstructor<T>): T {
-    let cacheKey: string;
-    // calculate the cache key:
-    // if no self-link => No caching
-    // if self-link is templated => no caching
-    // self-link is absolute => cache using self-link as key
-    // rest client has no base URI and self-link is relative => no caching
-    // rest client has a base URI and resource was retrieve from a different base URI => no cache
-    // rest client has a base URI and self-link is relative => cache using combined base URI and self-link
-    // rest client has a base URI and self-link is absolute and starts with the baseURL of the rest client => use self-link as cache key
-    // rest client has a base URI and self-link is absolute but does not start with the baseURL of the rest client => no caching
+
+    let uri: UriData;
     if (json._links?.self) {
       if (typeof json._links.self === "string") {
-        cacheKey = json._links.self;
-      } else if (!json._links.self.templated) {
-        cacheKey = json._links.self.href;
+        //eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+        uri = new UriData(json._links.self, false, requestedUri, receivedUri);
+      } else {
+        const templated = json._links.self.templated;
+        //eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+        uri = new UriData(json._links.self.href, templated, requestedUri, receivedUri, json._links.self.type);
       }
+    }
+    else {
+      //eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+      uri = new UriData(null, false, requestedUri, receivedUri);
     }
 
-    if (cacheKey) {
-      if (!cacheKey.toLowerCase().startsWith('http')) {
-        if (!halRestClient.config.baseURL) {
-          cacheKey = undefined;
-        } else {
-          if (requestedURI.toLowerCase().startsWith('http') && !requestedURI.startsWith(halRestClient.config.baseURL)) {
-            cacheKey = undefined
-          } else {
-            cacheKey = `${halRestClient.config.baseURL}${cacheKey}`
-          }
-        }
-      }
-    }
-    const result = createResource(halRestClient, type, cacheKey);
+    const result = createResourceInternal(halRestClient, type, uri);
     if (result instanceof HalResource) {
       result.reset();
     }

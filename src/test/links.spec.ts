@@ -215,7 +215,7 @@ describe('Resources with no \'self\'', () => {
     return createClient(uriBuilder.orgBaseURI)
       .fetch(resourceWithoutSelf.relativeUri, HalResource)
       .then((resource: HalResource) => {
-        expect(resource.uri).toBeUndefined();
+        expect(resource.uri.href).toBeNull();
         expect(resource.getProp('id')).toBe<number>(1);
         expect(resource.getProp('name')).toBe<string>('test');
         const cacheKeys = cache.getKeys('Resource');
@@ -229,6 +229,7 @@ describe('Resources with no \'self\'', () => {
     const scope = nock(uriBuilder.orgBaseURI);
     scope
       .get(resourceWithoutSelf.relativeUri)
+      .twice()
       .reply(200, resourceWithoutSelf.data);
 
     return createClient(uriBuilder.orgBaseURI)
@@ -237,7 +238,7 @@ describe('Resources with no \'self\'', () => {
         return resource
           .fetch(true)
           .then((fetched: HalResource) => {
-            expect(fetched.uri).toBeUndefined();
+            expect(fetched.uri.href).toBeNull();
             expect(fetched.getProp('id')).toBe<number>(1);
             expect(fetched.getProp('name')).toBe<string>('test');
             const cacheKeys = cache.getKeys('Resource');
@@ -268,7 +269,7 @@ describe('Resources with no \'self\'', () => {
       .fetch(resourceWithSubResourceWithoutSelf.relativeUri, HalResource)
       .then((resource: HalResource) => {
         const subResourceWithoutSelf = resource.getProp<IHalResource>('child');
-        expect(subResourceWithoutSelf.uri).toBeUndefined();
+        expect(subResourceWithoutSelf.uri.href).toBeNull();
         const cacheKeys = cache.getKeys('Resource');
         expect(cacheKeys).toHaveLength(2);
         expect(cacheKeys).toContain<string>(otherLinkAbsolute);
@@ -314,7 +315,7 @@ describe('Templated links', () => {
     return createClient()
       .fetch(projectList.fullUri, HalResource)
       .then((resource: HalResource) => {
-        expect(resource.uri.uri).toBe<string>(templatedUriString);
+        expect(resource.uri.href).toBe<string>(templatedUriString);
         expect(resource.uri.templated).toBe<boolean>(true);
         expect(resource.getProp('results')).toHaveLength(2);
         const resourceUri = resource.uri.resourceURI;

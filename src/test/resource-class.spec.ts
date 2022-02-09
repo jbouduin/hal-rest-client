@@ -1,5 +1,5 @@
 import * as nock from 'nock';
-import { createClient, createResource, cache, HalResource, URI, IHalResource } from '..';
+import { createClient, createResource, cache, HalResource, UriData, IHalResource } from '..';
 import { Contacts } from './models/contacts';
 import { DashboardInfo, Location, Person } from './models';
 import { ProjectFactory } from './data/project-factory';
@@ -37,11 +37,11 @@ describe('hal-resource fetching', () => {
         expect(value.getProp('results')[0].getProp('name')).toBe<string>('Project 0');
         expect(value.getProp('results')[0]).toBeInstanceOf(HalResource);
         expect(typeof value.getProp('results')[0].fetch).toBe<string>('function');
-        expect(value.getProp('results')[0].uri.uri)
+        expect(value.getProp('results')[0].uri.href)
           .toBe<string>(uriBuilder.resourceUri('org', false, projectFactory.projectsPath, 0));
         expect(value.getProp('results')[1].getProp('name')).toBe<string>('Project 10');
         expect(typeof value.getProp('results')[0].fetch).toBe<string>('function');
-        expect(value.getProp('results')[1].uri.uri)
+        expect(value.getProp('results')[1].uri.href)
           .toBe<string>(uriBuilder.resourceUri('org', false, projectFactory.projectsPath, 10));
       });
   });
@@ -115,7 +115,7 @@ describe('hal-resource fetching', () => {
   })
   test('create Resource by URL and fetch it', () => {
     const project = projectFactory.createProject(1);
-    const resource = new HalResource(createClient(), new URI(project.fullUri));
+    const resource = new HalResource(createClient(), new UriData(project.fullUri));
     const scope = nock(uriBuilder.orgBaseURI);
     scope
       .get(project.relativeUri)

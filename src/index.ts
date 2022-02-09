@@ -8,4 +8,4 @@ export * from './lib/hal-resource.interface';
 export * from './lib/hal-resource';
 // export * from './hal-rest-client';
 export * from './lib/hal-rest-client.interface';
-export * from './lib/uri';
+export * from './lib/uri-data';

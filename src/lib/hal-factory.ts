@@ -4,7 +4,7 @@ import { IHalCache } from './hal-cache.interface';
 import { IHalResource, IHalResourceConstructor } from './hal-resource.interface';
 import { HalRestClient } from './hal-rest-client';
 import { IHalRestClient } from './hal-rest-client.interface';
-import { URI } from './uri';
+import { UriData } from './uri-data';
 
 /** The cache containing instantiated clients and resources */
 export const cache: IHalCache = new HalCache();
@@ -46,27 +46,40 @@ export function createClient(baseUri?: string, options: AxiosRequestConfig = {})
 export function createResource<T extends IHalResource>(
   client: IHalRestClient,
   resourceType: IHalResourceConstructor<T>,
-  uri?: string | URI): T {
+  uri?: string,
+  templated = false): T {
+  const uriData = new UriData(uri, templated);
+  return createResourceInternal(client, resourceType, uriData);
+}
 
+/** @internal */
+export function createResourceInternal<T extends IHalResource>(
+  client: IHalRestClient,
+  resourceType: IHalResourceConstructor<T>,
+  uri: UriData) {
   let result: T
 
-  if (!uri) {
-    result = new resourceType(client);
-  } else if (uri instanceof URI && (uri.templated || !uri.uri)) {
+  if (uri.templated) {
     result = new resourceType(client, uri);
   } else {
-    const objectURI = typeof uri === 'string' ? new URI(uri, false) : uri;
-    const cacheKey = objectURI.uri.toLowerCase().startsWith('http') ?
-      objectURI.uri :
-      `${client.config.baseURL}${objectURI.uri}`;
+    const cacheKey = uri.calculateCacheKey(client.config.baseURL);
     // console.log(`key ${cacheKey} ${cache.hasResource(cacheKey) ? 'is' : 'is not'} in cache`)
-    if (!cache.hasResource(cacheKey)) {
-      result = new resourceType(client, objectURI);
+    if (cacheKey) {
+      if (cache.hasResource(cacheKey)) {
+        const cached = cache.getResource(cacheKey);
+        if (!(cached instanceof resourceType)) {
+          result = cached.convert(resourceType);
+          cache.setResource(cacheKey, result);
+        } else {
+          result = cached;
+        }
+      } else {
+        result = new resourceType(client, uri);
+        cache.setResource(cacheKey, result);
+      }
     } else {
-      const cached = cache.getResource(cacheKey);
-      result = cached instanceof resourceType ? cached : cached.convert(resourceType);
+      result = new resourceType(client, uri);
     }
-    cache.setResource(cacheKey, result);
   }
   return result;
 }

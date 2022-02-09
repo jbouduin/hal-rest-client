@@ -26,7 +26,7 @@ describe('Test Rest create api', () => {
     expect(resource.getProp('name')).toBe<string>(nameSaved);
     expect(resource.getProp('id')).toBe<number>(id);
     expect(resource.uri.resourceURI).toBe<string>(personUri);
-    expect(resource.uri.uri).toBe<string>(personUri);
+    expect(resource.uri.href).toBe<string>(personUri);
   };
 
   const testModel = (model: SimpleModel) => {
@@ -35,7 +35,7 @@ describe('Test Rest create api', () => {
     expect(model.getProp('id')).toBe<number>(id);
     expect(model.id).toBe<number>(id);
     expect(model.uri.resourceURI).toBe<string>(personUri);
-    expect(model.uri.uri).toBe<string>(personUri);
+    expect(model.uri.href).toBe<string>(personUri);
   };
 
   test('create person using Halresource and receive halresource back', () => {

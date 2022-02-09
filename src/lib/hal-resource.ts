@@ -3,14 +3,14 @@ import { IJSONSerializer } from './hal-json-serializer.interface';
 import { IHalResource, IHalResourceConstructor } from './hal-resource.interface';
 import { HalRestClient } from './hal-rest-client';
 import { IHalRestClient } from './hal-rest-client.interface';
-import { URI } from './uri';
+import { UriData } from './uri-data';
 
 export class HalResource implements IHalResource {
 
   //#region Private properties ------------------------------------------------
   private _isLoaded: boolean;
   private _restClient: IHalRestClient;
-  private _uri?: URI;
+  private _uri?: UriData;
   private readonly settedProps: Array<string>;
   private readonly settedLinks: Array<string>;
   private initEnded: boolean;
@@ -32,13 +32,13 @@ export class HalResource implements IHalResource {
     return this._restClient;
   }
 
-  public get uri(): URI {
+  public get uri(): UriData {
     return this._uri;
   }
   //#endregion
 
   //#region Constructor & C° --------------------------------------------------
-  public constructor(restClient: IHalRestClient, uri?: URI) {
+  public constructor(restClient: IHalRestClient, uri?: UriData) {
     this._restClient = restClient;
     this._uri = uri;
     this._isLoaded = false;
@@ -159,7 +159,7 @@ export class HalResource implements IHalResource {
   }
 
   /** @internal */
-  public setUri(uri: URI): void {
+  public setUri(uri: UriData): void {
     this._uri = uri;
   }
 
@@ -195,7 +195,6 @@ export class HalResource implements IHalResource {
       const jsonKey = tsToHal ? tsToHal[link] : link;
       result[jsonKey] = serializer.parseResource(this.links[link] as IHalResource);
     }
-
     return result;
   }
   //#endregion
