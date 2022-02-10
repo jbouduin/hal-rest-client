@@ -67,6 +67,7 @@ export function createResourceInternal<T extends IHalResource>(
     if (cacheKey) {
       if (cache.hasResource(cacheKey)) {
         const cached = cache.getResource(cacheKey);
+        cached.setUri(uri);
         if (!(cached instanceof resourceType)) {
           result = cached.convert(resourceType);
           cache.setResource(cacheKey, result);

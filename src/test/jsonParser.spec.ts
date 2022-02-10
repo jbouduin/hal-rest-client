@@ -313,7 +313,7 @@ describe('JSON Parser: links', () => {
     expect(link3.getProp('name')).toBe<string>('name of link3');
     expect(link3.getProp('title')).toBe<string>('title of link3');
     expect(link3['_uri'].href).toBe<string>('/link3');
-    expect(link3.uri.resourceUri).toBe<string>('');
+    expect(link3.uri.resourceUri).toBeUndefined();
     expect(link3.uri.templated).toBe<boolean>(true);
 
     const link4 = resource.getLink<IHalResource>('link4');

@@ -1,4 +1,4 @@
-import { HostTld, IData, IEmbeddedCollection, ILinkCollection, IListData, IFactoryResult, ILink } from "./common-definitions";
+import { HostTld, IData, IEmbeddedCollection, ILinkCollection, IListData, IFactoryResult, ILink, IFactoryListResult } from "./common-definitions";
 import { UriBuilder } from "./uri-builder";
 
 export enum SelfOption {
@@ -51,16 +51,24 @@ export class DataFactory {
    * @param links the links that go into the _links property. The 'self' link will automatically be created
    * @returns
    */
-  public createResourceListData(tld: HostTld, path: string, data: IListData, links?: ILinkCollection, selfOption: SelfOption = SelfOption.AbsoluteLink): IFactoryResult<IData> {
+  public createResourceListData(tld: HostTld, path: string, data: IListData, links?: ILinkCollection, selfOption: SelfOption = SelfOption.AbsoluteLink): IFactoryListResult<IData> {
     const absolute = data.queryParameters ?
       this.uriBuilder.filledTemplatedResourceUri(tld, false, path, data.queryParameters) :
       this.uriBuilder.resourceUri(tld, false, path);
     const relative = data.queryParameters ?
       this.uriBuilder.filledTemplatedResourceUri(tld, true, path, data.queryParameters) :
       this.uriBuilder.resourceUri(tld, true, path);
+    const absoluteTemplate = data.queryParameters ?
+      this.uriBuilder.templatedResourceUri(tld, false, path, data.queryParameters) :
+      this.uriBuilder.resourceUri(tld, false, path);
+    const relativeTemplate = data.queryParameters ?
+      this.uriBuilder.templatedResourceUri(tld, true, path, data.queryParameters) :
+      this.uriBuilder.resourceUri(tld, true, path);
     return {
       relativeUri: relative,
       fullUri: absolute,
+      relativeTemplateUri: relativeTemplate,
+      fullTemplateUri: absoluteTemplate,
       data: this.createListResource(absolute, relative, selfOption, data, links)
     };
   }

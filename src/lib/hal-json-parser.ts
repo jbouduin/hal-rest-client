@@ -12,7 +12,7 @@ export interface IJSONParser {
    * @param data - the object to convert to a resource
    * @param requestedUri - the requested URI that returned the 'root' resource.
    * @param resourceType - the type of HalResource to be created
-   * @param resource - the existing resource if we merge an existing one with new data
+   * @param resource - optional parameter. Only set when following a link
    * @param receivedUri - the uri fetched from the server. This could be the final uri after a chain of redirections
    * @returns a Halrource of the requested type
    */
@@ -53,6 +53,13 @@ export class JSONParser implements IJSONParser {
 
     if (!resource) {
       resource = this.getResource(halRestClient, json, requestedURI, receivedURI, resourceType);
+    } else {
+      const resourceUri = resource['_uri'] as UriData;
+      if (resource.uri.templated) {
+        resourceUri.setFetchedUri(requestedURI);
+      }
+      resourceUri.receivedUri = receivedURI;
+      resourceUri.requestedUri = requestedURI;
     }
 
     // get translation between hal-service-name and name on ts class
@@ -76,10 +83,11 @@ export class JSONParser implements IJSONParser {
               const link = this.tryConvertLink(links[linkKey]);
               resource.setLink(propKey, this.processLink(halRestClient, link, specificType)); // eslint-disable-line
             }
-          } else {
-            const uri = this.buildURI(this.tryConvertLink(links.self), receivedURI);
-            resource.setUri(uri);
           }
+          // else {
+          //   const uri = this.buildURI(this.tryConvertLink(links.self), receivedURI);
+          //   // resource.setUri(uri);
+          // }
         }
       } else if (key === "_embedded") {
         const embedded: Record<string, unknown> = json._embedded;
@@ -152,11 +160,12 @@ export class JSONParser implements IJSONParser {
     if (typeof link === "string") {
       result = new UriData(link, false);
     } else {
+
       const uri = link.href;
       const templated = link.templated || false;
       result = new UriData(uri, templated, undefined, fetchedUri, link.type);
       if (templated) {
-        result.setFetchedUri(fetchedUri || '');
+        result.setFetchedUri(fetchedUri);
       }
     }
     // console.log(result);
@@ -205,6 +214,9 @@ export class JSONParser implements IJSONParser {
         const templated = json._links.self.templated;
         //eslint-disable-next-line @typescript-eslint/no-unsafe-argument
         uri = new UriData(json._links.self.href, templated, requestedUri, receivedUri, json._links.self.type);
+        if (templated) {
+          uri.setFetchedUri(receivedUri);
+        }
       }
     }
     else {

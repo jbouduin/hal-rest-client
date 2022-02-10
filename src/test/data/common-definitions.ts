@@ -1,5 +1,7 @@
 export type HostTld = 'com' | 'org';
 
+export type BasicQueryParameterKey = 'sort' | 'offset' | 'pageSize';
+
 export interface IQueryParameters {
   [key: string]: string | number;
 }
@@ -37,4 +39,9 @@ export interface IFactoryResult<T extends IData> {
   relativeUri: string;
   fullUri: string;
   data: T
+}
+
+export interface IFactoryListResult<T extends IData> extends IFactoryResult<T> {
+  relativeTemplateUri: string;
+  fullTemplateUri: string;
 }

@@ -1,6 +1,7 @@
 import * as uriTemplates from 'uri-templates';
 
 export interface IUriData {
+  readonly href: string;
   readonly templated: boolean;
   readonly type: string;
   /**
@@ -18,8 +19,8 @@ export class UriData implements IUriData {
 
   //#region public properties -------------------------------------------------
   public readonly href: string;
-  public readonly requestedUri: string;
-  public readonly receivedUri: string
+  public requestedUri: string;
+  public receivedUri: string
   public readonly templated: boolean;
   public readonly type: string;
   //#endregion
@@ -44,7 +45,7 @@ export class UriData implements IUriData {
     this.receivedUri = receivedUri;
     this.requestedUri = requestedUri;
     this.type = type;
-    this.fetchedURI = '';
+    this.fetchedURI = undefined;
     if (templated && uri) {
       this.uriTemplates = uriTemplates(uri);
     }

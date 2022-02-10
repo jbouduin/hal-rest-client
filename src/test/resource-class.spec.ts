@@ -112,7 +112,8 @@ describe('hal-resource fetching', () => {
             scope.done();
           });
       });
-  })
+  });
+
   test('create Resource by URL and fetch it', () => {
     const project = projectFactory.createProject(1);
     const resource = new HalResource(createClient(), new UriData(project.fullUri));
