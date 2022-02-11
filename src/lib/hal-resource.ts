@@ -1,3 +1,4 @@
+import { cache } from './hal-factory';
 import { DefaultSerializer } from './hal-json-serializer';
 import { IJSONSerializer } from './hal-json-serializer.interface';
 import { IHalResource, IHalResourceConstructor } from './hal-resource.interface';
@@ -136,6 +137,16 @@ export class HalResource implements IHalResource {
     // result['settedProps'].push(...this.settedProps);
     result['_isLoaded'] = false;
     result['initEnded'] = false;
+    return result;
+  }
+
+  public removeFromCache(): boolean {
+    let result = false;
+    const myCacheKey = (this.uri as UriData).calculateCacheKey(this.restClient.config.baseURL);
+    if (cache.hasResource(myCacheKey)) {
+      cache.clear('Resource', myCacheKey);
+      result = true;
+    }
     return result;
   }
   //#endregion

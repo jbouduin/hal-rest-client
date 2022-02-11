@@ -82,6 +82,26 @@ describe.each([
   });
 });
 
+describe('creating a resource once with full and one with relative uri', () => {
+  const uriBuilder = new UriBuilder();
+  const client = createClient(uriBuilder.orgBaseURI);
+  const full = uriBuilder.resourceUri('org', false, 'test', 69);
+  const relative = uriBuilder.resourceUri('org', true, 'test', 69);
+  test('full uri first', () => {
+    createResource(client, HalResource, full);
+    expect(cache.getKeys('Resource')).toHaveLength(1);
+    createResource(client, HalResource, relative);
+    expect(cache.getKeys('Resource')).toHaveLength(1);
+  });
+
+  test('relative uri first', () => {
+    createResource(client, HalResource, relative);
+    expect(cache.getKeys('Resource')).toHaveLength(1);
+    createResource(client, HalResource, full);
+    expect(cache.getKeys('Resource')).toHaveLength(1);
+  });
+});
+
 describe('Caching clients', () => {
   const uriBuilder = new UriBuilder();
   test('Client created with URI is cached', () => {
@@ -249,6 +269,28 @@ describe('clear client cache tests', () => {
   });
 });
 
+describe('resource.removeFromCache method' , () => {
+  const uriBuilder = new UriBuilder();
+  const client = createClient(uriBuilder.orgBaseURI);
+  test('call remove from cache on a cached entry', () => {
+    const full = uriBuilder.resourceUri('org', false, 'test', 69);
+    const resource = createResource(client, HalResource, full);
+    expect(cache.getKeys('Resource')).toHaveLength(1);
+    const result = resource.removeFromCache();
+    expect(result).toBe<boolean>(true);
+    expect(cache.getKeys('Resource')).toHaveLength(0);
+  });
+
+  test('call remove from cache on non a cached entry', () => {
+    const full = uriBuilder.resourceUri('org', false, 'test', 69);
+    const resource = createResource(client, HalResource, full, true);
+    expect(cache.getKeys('Resource')).toHaveLength(0);
+    const result = resource.removeFromCache();
+    expect(result).toBe<boolean>(false);
+    expect(cache.getKeys('Resource')).toHaveLength(0);
+  });
+});
+
 describe('clear resource cache tests', () => {
   const uriBuilder = new UriBuilder();
   const dummyFactory = new DataFactory(uriBuilder);
@@ -393,7 +435,7 @@ describe.each([
   [undefined, false, false],
   [undefined, true, false],
   ['test', undefined, true],
-  ['test', false,  true],
+  ['test', false, true],
   ['test', true, false]
 ])('caching of resources created using the factory', (uri: string, templated: boolean, isCached: boolean) => {
   const uriBuilder = new UriBuilder();

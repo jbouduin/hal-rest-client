@@ -78,6 +78,7 @@ export interface IHalResource {
    */
   convert<N extends IHalResource>(type: IHalResourceConstructor<N>): N
 
+  removeFromCache(): boolean;
   //#endregion
 
   //#region internal methods --------------------------------------------------
