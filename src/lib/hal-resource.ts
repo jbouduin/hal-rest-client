@@ -120,6 +120,9 @@ export class HalResource implements IHalResource {
   }
 
   public create<T extends IHalResource>(type?: IHalResourceConstructor<T>, serializer?: IJSONSerializer): Promise<T | Record<string, any>> {
+    // because the href for create, which is used for caching is not the href of the resource after creation
+    // first remove it from the cache
+    this.removeFromCache();
     const json = this.serialize(Object.keys(this.props), Object.keys(this.links), serializer);
     return this.restClient
       .create(this._uri.href, json, type)
@@ -180,7 +183,7 @@ export class HalResource implements IHalResource {
   }
 
   /** @internal */
-  setLoaded(): void {
+  public setLoaded(): void {
     this._isLoaded = true;
   }
   //#endregion

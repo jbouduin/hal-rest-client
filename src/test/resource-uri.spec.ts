@@ -49,6 +49,9 @@ describe('uri data when fetching resources', () => {
     expect(uri.requestedUri).toBeUndefined();
     expect(uri.type).toBeUndefined();
     expect(uri.resourceUri).toBe<string>(simple.relativeUri);
+    let cacheKeys = cache.getKeys('Resource');
+    expect(cacheKeys).toHaveLength(1);
+    expect(cacheKeys[0]).toBe<string>(simple.fullUri);
     const scope = nock(uriBuilder.orgBaseURI);
     scope
       .get(simple.relativeUri)
@@ -66,6 +69,9 @@ describe('uri data when fetching resources', () => {
         expect(uri.requestedUri).toBe<string>(simple.relativeUri);
         expect(uri.type).toBeUndefined();
         expect(uri.resourceUri).toBe<string>(simple.relativeUri);
+        cacheKeys = cache.getKeys('Resource');
+        expect(cacheKeys).toHaveLength(1);
+        expect(cacheKeys[0]).toBe<string>(simple.fullUri);
         scope.done();
       });
   });
