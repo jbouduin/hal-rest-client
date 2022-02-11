@@ -10,9 +10,13 @@ import { UriData } from './uri-data';
 export const cache: IHalCache = new HalCache();
 
 /**
- * create hal rest client
- * if a client with same base uri already exists, same client is returned
+ * Create hal rest client
+ * If not baseUri is provided, a new HalRestClient is created.
+ * Othwersie, if a client with same base uri already exists, it is retrieved from the cache and returned. If it does not exists yet, a new client is created and cached.
  *
+ * @param {string} baseUri - the baseUri that will be used to configure Axios
+ * @param {AxiosRequestConfig} options - the options that will be passed to Axios
+ * @returns {IHalRestClient} - a IHalrestClient
  */
 export function createClient(baseUri?: string, options: AxiosRequestConfig = {}): IHalRestClient {
   let result: IHalRestClient;
@@ -34,14 +38,16 @@ export function createClient(baseUri?: string, options: AxiosRequestConfig = {})
 
 /**
  * Create a HalResource of the given type. If no uri is specified, an 'empty' resource is created.
- * If uri is a URI and it is templated, the resource is created without caching it.
- * Otherwise the cache is searched for an existing entry. If found and of the correct type it is returned.
- * If found and of the wrong type, an exception is thrown.
- * If not found, it is created and cached
- * @param client
- * @param resourceType
- * @param uri
- * @returns
+ * If templated, the resource is created without caching it.
+ * Otherwise the cache is searched for an existing entry. If found it is returned, eventually converting it to the requested type.
+ * If not found, it is created and cached.
+ *
+ * @template T - extends IHalResource
+ * @param {IHalRestClient} client - the HalRestClient connected to the resource
+ * @param {T} resourceType - the type of resource. If no model is defined, use HalResource
+ * @param {string} uri - the URI of the resources
+ * @param {templated} templated - indicates if the uri of the resource is templated one
+ * @returns {T} - the requested Resource
  */
 export function createResource<T extends IHalResource>(
   client: IHalRestClient,
@@ -52,7 +58,16 @@ export function createResource<T extends IHalResource>(
   return createResourceInternal(client, resourceType, uriData);
 }
 
-/** @internal */
+/**
+ * Internal function to create a Halresource. Do not call it directly
+ *
+ * @internal
+ * @template T - extends IHalResource
+ * @param {IHalRestClient} client - the HalRestClient connected to the resource
+ * @param {T} resourceType - the type of resource. If no model is defined, use HalResource
+ * @param {UriData} uri - the UriData of the resource
+ * @returns {T} - the requested Resource
+ */
 export function createResourceInternal<T extends IHalResource>(
   client: IHalRestClient,
   resourceType: IHalResourceConstructor<T>,
@@ -67,6 +82,7 @@ export function createResourceInternal<T extends IHalResource>(
     if (cacheKey) {
       if (cache.hasResource(cacheKey)) {
         const cached = cache.getResource(cacheKey);
+        cached.setUri(uri);
         if (!(cached instanceof resourceType)) {
           result = cached.convert(resourceType);
           cache.setResource(cacheKey, result);

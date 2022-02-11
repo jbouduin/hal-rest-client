@@ -45,8 +45,8 @@ export class ProjectFactory extends DataFactory {
   public createRootProjectList(): IFactoryResult<IData> {
     const result = this.createProjectList(0);
     result.relativeUri = this.uriBuilder.resourceUri(this.tld, true, this.projectsPath);
-    result.fullUri = this.uriBuilder.resourceUri(this.tld, false, this.projectsPath);
-    result.data._links['self'] = result.fullUri;
+    result.absoluteUri = this.uriBuilder.resourceUri(this.tld, false, this.projectsPath);
+    result.data._links['self'] = result.absoluteUri;
     return result;
   }
 

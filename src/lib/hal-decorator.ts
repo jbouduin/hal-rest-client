@@ -2,11 +2,26 @@ import 'reflect-metadata';
 import { IHalResource, IHalResourceConstructor, INewable } from './hal-resource.interface';
 
 /**
+ * The parameter for HalProperty
+ */
+export type IHalPropertyOptions<T extends IHalResource> = {
+  /**
+   * @type {string} - the property name as found in the hal+json
+   */
+  name?: string;
+  /**
+   * @template T - a class having the HalResource construcor signature
+   * @type {IHalResourceConstructor<T> | INewable} - the type of class the data should be mapped to. It must be a class with a HalResource constructor signature or with a parameterless constructor.
+   */
+  resourceType?: IHalResourceConstructor<T> | INewable
+}
+
+/**
  * get or create the MetaData
  *
- * @param metaDataKey
- * @param target
- * @returns
+ * @param {string} metaDataKey - the key of the metadata
+ * @param {object} target - the object for which to get or create the metadata
+ * @returns {object} - the newly created or existing metadata
  */
 function getOrCreateMetaData(metaDataKey: string, target: object): object {
 
@@ -18,19 +33,23 @@ function getOrCreateMetaData(metaDataKey: string, target: object): object {
   return result;
 }
 
+/**
+ * @template T - a IHalResource extender
+ * @param {IHalPropertyOptions} options - the {@link IHalPropertyOptions} for the property
+ * @returns {Function} -
+ */
 export function HalProperty<T extends IHalResource>(
-
-  { name, resourceType }: { name?: string; resourceType?: IHalResourceConstructor<T> | INewable } =  { }):
+  options: IHalPropertyOptions<T> =  { }):
   (targetHalResource: object, propertyName: string) => void {
 
   return (targetHalResource: object, propertyName: string) => {
     const baseType = Reflect.getMetadata('design:type', targetHalResource, propertyName);
 
-    if (baseType === Array && resourceType === undefined) {
+    if (baseType === Array && options.resourceType === undefined) {
       throw new Error(`${targetHalResource.constructor.name}.${propertyName} for Array you need to specify a resource type on @HalProperty.`);
     }
 
-    const workwith = resourceType || baseType;
+    const workwith = options.resourceType || baseType;
     let isHalResource = false;
     if (workwith) {
       const proto = workwith.prototype;
@@ -45,13 +64,13 @@ export function HalProperty<T extends IHalResource>(
     const tsToHal = getOrCreateMetaData('halClient:tsToHal', targetHalResource);
     const isHal = getOrCreateMetaData('halClient:isHal', targetHalResource);
 
-    halToTs[name || propertyName] = propertyName;
-    isHal[name || propertyName] = isHalResource;
-    tsToHal[propertyName] = name || propertyName;
-    const type = resourceType || baseType;
+    halToTs[options.name || propertyName] = propertyName;
+    isHal[options.name || propertyName] = isHalResource;
+    tsToHal[propertyName] = options.name || propertyName;
+    const type = options.resourceType || baseType;
     Reflect.defineMetadata('halClient:specificType', type, targetHalResource, propertyName);
-    if (name && resourceType) {
-      Reflect.defineMetadata('halClient:specificType', type, targetHalResource, name);
+    if (options.name && options.resourceType) {
+      Reflect.defineMetadata('halClient:specificType', type, targetHalResource, options.name);
     }
 
     // Delete existing property and replace it by the get and set methods of HalResource

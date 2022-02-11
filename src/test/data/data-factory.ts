@@ -1,6 +1,9 @@
-import { HostTld, IData, IEmbeddedCollection, ILinkCollection, IListData, IFactoryResult, ILink } from "./common-definitions";
+import { HostTld, IData, IEmbeddedCollection, ILinkCollection, IListData, IFactoryResult, ILink, IFactoryListResult } from "./common-definitions";
 import { UriBuilder } from "./uri-builder";
 
+/**
+ * the type of self link that will be created
+ */
 export enum SelfOption {
   RelativeString = 'a relative string',
   RelativeLink = 'a relative link',
@@ -11,6 +14,9 @@ export enum SelfOption {
   NoSelf = 'not present'
 }
 
+/**
+ * A base factory for creating test data.
+ */
 export class DataFactory {
   //#region protected properties ----------------------------------------------
   protected readonly uriBuilder: UriBuilder;
@@ -24,43 +30,54 @@ export class DataFactory {
 
   //#region public methods ----------------------------------------------------
   /**
-   * Create a single resource
-   * @param tld one of 'org' or 'com'
-   * @param path the relative path to the resource
-   * @param id the optional id of the resource. Will be added as property and written in the 'self' link
-   * @param data the data that goes into the _embedded property
-   * @param links the links that go into the _links property. The 'self' link will automatically be created
-   * @param selfOption how to generate the self link
-   * @returns the object
+   * Create test data for a single resource
+   *
+   * @param {HostTld} tld - one of 'org' or 'com'
+   * @param {string} path - the relative path to the resource
+   * @param {number } id - the optional id of the resource. Will be added as property and written in the 'self' link
+   * @param {IEmbeddedCollection } data - the data that goes into the _embedded property
+   * @param {ILinkCollection} links - the links that go into the _links property. The 'self' link will automatically be created
+   * @param {SelfOption} selfOption - the kind of self link to create
+   * @returns {IFactoryResult} - the factory result
    */
   public createResourceData(tld: HostTld, path: string, id?: number, data?: IEmbeddedCollection, links?: ILinkCollection, selfOption: SelfOption = SelfOption.AbsoluteLink): IFactoryResult<IData> {
     const absolute = this.uriBuilder.resourceUri(tld, false, path, id);
     const relative = this.uriBuilder.resourceUri(tld, true, path, id);
     return {
       relativeUri: relative,
-      fullUri: absolute,
+      absoluteUri: absolute,
       data: this.createResource(absolute, relative, selfOption, data, id, links)
     };
   }
 
   /**
-   * Create a resource containing an array of resources
-   * @param tld one of 'org' or 'com'
-   * @param path the relative path to the list resource
-   * @param data the listdata
-   * @param links the links that go into the _links property. The 'self' link will automatically be created
-   * @returns
+   * Create test data for resource containing an array of resources.
+   *
+   * @param {HostTld} tld - one of 'org' or 'com'
+   * @param {string} path - the relative path to the list resource
+   * @param {IListData} data - the listdata
+   * @param {ILinkCollection} links - the links that go into the _links property. The 'self' link will automatically be created
+   * @param {SelfOption} selfOption - the kind of self link to create   *
+   * @returns {IFactoryListResult} - a List result
    */
-  public createResourceListData(tld: HostTld, path: string, data: IListData, links?: ILinkCollection, selfOption: SelfOption = SelfOption.AbsoluteLink): IFactoryResult<IData> {
+  public createResourceListData(tld: HostTld, path: string, data: IListData, links?: ILinkCollection, selfOption: SelfOption = SelfOption.AbsoluteLink): IFactoryListResult<IData> {
     const absolute = data.queryParameters ?
       this.uriBuilder.filledTemplatedResourceUri(tld, false, path, data.queryParameters) :
       this.uriBuilder.resourceUri(tld, false, path);
     const relative = data.queryParameters ?
       this.uriBuilder.filledTemplatedResourceUri(tld, true, path, data.queryParameters) :
       this.uriBuilder.resourceUri(tld, true, path);
+    const absoluteTemplate = data.queryParameters ?
+      this.uriBuilder.templatedResourceUri(tld, false, path, data.queryParameters) :
+      this.uriBuilder.resourceUri(tld, false, path);
+    const relativeTemplate = data.queryParameters ?
+      this.uriBuilder.templatedResourceUri(tld, true, path, data.queryParameters) :
+      this.uriBuilder.resourceUri(tld, true, path);
     return {
       relativeUri: relative,
-      fullUri: absolute,
+      absoluteUri: absolute,
+      relativeTemplateUri: relativeTemplate,
+      absoluteTemplateUri: absoluteTemplate,
       data: this.createListResource(absolute, relative, selfOption, data, links)
     };
   }

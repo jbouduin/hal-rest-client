@@ -79,7 +79,7 @@ describe('usage of fetchedUri', () => {
   test('resource URI returns empty when fetched URI has not been set', () => {
     const uriString = uriBuilder.templatedResourceUri('org', false, 'projects/{id}/workpackages', fill);
     const uri = new UriData(uriString, true);
-    expect(uri.resourceUri).toBe<string>('');
+    expect(uri.resourceUri).toBeUndefined();
   });
 });
 

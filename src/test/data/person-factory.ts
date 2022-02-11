@@ -65,11 +65,11 @@ export class PersonFactory extends DataFactory {
     this.addLinkToFactoredData(
       result.data,
       'home',
-      result.home.fullUri);
+      result.home.absoluteUri);
     this.addLinkToFactoredData(
       result.data,
       'place-of-employment',
-      result.work.fullUri);
+      result.work.absoluteUri);
     result.data['name'] = 'me';
     return result;
   }

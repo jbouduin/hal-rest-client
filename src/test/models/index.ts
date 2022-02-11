@@ -7,4 +7,5 @@ export * from './notification';
 export * from './notification-config';
 export * from './notification-email';
 export * from './person';
+export * from './simple-list.model';
 export * from './simple.model';

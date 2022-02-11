@@ -7,10 +7,12 @@
     ]
   },
   "plugins": [
-    "@typescript-eslint"
+    "@typescript-eslint",
+    "jsdoc"
   ],
   "extends": [
     "eslint:recommended",
+    "plugin:jsdoc/recommended",
     "plugin:@typescript-eslint/recommended",
     "plugin:@typescript-eslint/recommended-requiring-type-checking"
   ],
@@ -26,6 +28,22 @@
       2,
       {
         "default": "generic"
+      }
+    ],
+    "jsdoc/check-tag-names": [
+      1,
+      {
+        "definedTags": [
+          "internal"
+        ]
+      }
+    ],
+    "jsdoc/no-undefined-types": [
+      1,
+      {
+        "definedTypes": [
+          "unknown"
+        ]
       }
     ]
   }

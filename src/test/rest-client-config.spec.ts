@@ -93,7 +93,7 @@ describe('test request headers and interceptor', () => {
       return response;
     });
     return client
-      .fetch(me.fullUri, HalResource)
+      .fetch(me.absoluteUri, HalResource)
       .then((project: HalResource) => {
         expect(project.getProp('name')).toBe<string>('You\'ve been hacked');
         scope.done();

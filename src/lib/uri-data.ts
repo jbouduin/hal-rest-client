@@ -1,6 +1,7 @@
 import * as uriTemplates from 'uri-templates';
 
 export interface IUriData {
+  readonly href: string;
   readonly templated: boolean;
   readonly type: string;
   /**
@@ -17,9 +18,9 @@ export class UriData implements IUriData {
   //#endregion
 
   //#region public properties -------------------------------------------------
-  public readonly href: string;
-  public readonly requestedUri: string;
-  public readonly receivedUri: string
+  public href: string;
+  public requestedUri: string;
+  public receivedUri: string
   public readonly templated: boolean;
   public readonly type: string;
   //#endregion
@@ -32,11 +33,11 @@ export class UriData implements IUriData {
 
   //#region Constructor & C° --------------------------------------------------
   /**
-   * Creates a URI
-   * @param href usually the self link of a resource,
-   * @param templated defaults to false
-   * @param requestedUri
-   * @param receivedUri
+   * @param {string} uri - the uri of the resources this UriDate belongs to.
+   * @param {boolean} templated - indicates if the href uri is a templated uri. Defaults to false
+   * @param {string} requestedUri - the relative or absolute uri that was used to call the server
+   * @param {string} receivedUri - The aboslute uri where Axios got the data from. This can be the end of a redirection chain.
+   * @param {string} type - in case of a link, this is the link type (e.g. application/pdf)
    */
   constructor(uri: string, templated = false, requestedUri?: string, receivedUri?: string, type?: string) {
     this.href = uri;
@@ -44,7 +45,7 @@ export class UriData implements IUriData {
     this.receivedUri = receivedUri;
     this.requestedUri = requestedUri;
     this.type = type;
-    this.fetchedURI = '';
+    this.fetchedURI = undefined;
     if (templated && uri) {
       this.uriTemplates = uriTemplates(uri);
     }
@@ -106,6 +107,7 @@ export class UriData implements IUriData {
     }
     return result;
   }
+
   //#endregion
 
   private isAbsolute(href: string): boolean {

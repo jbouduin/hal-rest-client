@@ -88,7 +88,7 @@ export class HalRestClient implements IHalRestClient {
       this.axios.delete(uri).then((response: AxiosResponse<any, any>) => {
         if (type) {
           // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-          resolve(this.jsonParser.objectToHalResource(this, response.data, uri, type));
+          resolve(this.jsonParser.objectToHalResource(this, response.data, uri, type, undefined, response.request.res.responseUrl));
         } else {
           // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
           resolve(response.data ? response.data : response);
@@ -107,7 +107,7 @@ export class HalRestClient implements IHalRestClient {
       this.axios.request({ data, method, url }).then((response: AxiosResponse<any, any>) => {
         if (type) {
           // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-          resolve(this.jsonParser.objectToHalResource(this, response.data, url, type, undefined, response.config.url));
+          resolve(this.jsonParser.objectToHalResource(this, response.data, url, type, undefined, response.request.res.responseUrl));
         } else {
           // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
           resolve(response.data ? response.data : response);
@@ -119,9 +119,12 @@ export class HalRestClient implements IHalRestClient {
   public create<T extends IHalResource>(uri: string, data: object, type?: IHalResourceConstructor<T>): Promise<T | Record<string, unknown>> {
     return new Promise((resolve, reject) => {
       this.axios.post(uri, data).then((response: AxiosResponse<any, any>) => {
+        // const fetchedUrl = response.request.res.responseUrl;
+        // console.log(Object.keys(response.request.res).join(', '));
+        // console.log(`uri: ${uri}, response.config.url: ${response.config.url}, fetched: ${fetchedUrl}`)
         if (type) {
           // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-          resolve(this.jsonParser.objectToHalResource(this, response.data, uri, type, undefined, response.config.url));
+          resolve(this.jsonParser.objectToHalResource(this, response.data, uri, type, undefined, response.request.res.responseUrl));
         } else {
           // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
           resolve(response.data ? response.data : response);
@@ -143,17 +146,20 @@ export class HalRestClient implements IHalRestClient {
 
   //#region methods for internal use in the library ---------------------------
   /**
-  * call an URI to fetch a resource
-  *
-  * @param uri : the uri of resource to fetch
-  * @param type : the class to use to fetch. If you don't want to write you model, use HalResource or @{see fetchResource}
-  * @param resource
-  */
+   * internal method to send a get request to the server
+   *
+   * @template T - a resource type extending {IHalResource}
+   * @param {string} uri - the uri of resource to fetch
+   * @param {IHalResourceConstructor<T>} type : the resulting HalResource class to use to fetch. If you don't want to write a model, use HalResource
+   * @param {T} resource - an existing resource to be fetched. If undefined or null, a new resource is created
+   * @returns {T} - a resource of type T
+   */
   public fetchInternal<T extends IHalResource>(uri: string, type: IHalResourceConstructor<T>, resource?: T): Promise<T> {
     return new Promise((resolve, reject) => {
       this.axios.get(uri).then((response: AxiosResponse<any, any>) => {
+        // console.log(`requested ${uri}, responsed ${response.request.res.responseUrl}`);
         // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-        resolve(this.jsonParser.objectToHalResource(this, response.data, uri, type, resource, response.config.url));
+        resolve(this.jsonParser.objectToHalResource(this, response.data, uri, type, resource, response.request.res.responseUrl));
       }).catch(reject);
     });
   }

@@ -1,6 +1,7 @@
+import { cache } from './hal-factory';
 import { DefaultSerializer } from './hal-json-serializer';
 import { IJSONSerializer } from './hal-json-serializer.interface';
-import { IHalResource, IHalResourceConstructor } from './hal-resource.interface';
+import { IHalResource, IHalResourceConstructor, IResourceFetchOptions } from './hal-resource.interface';
 import { HalRestClient } from './hal-rest-client';
 import { IHalRestClient } from './hal-rest-client.interface';
 import { IUriData, UriData } from './uri-data';
@@ -52,12 +53,12 @@ export class HalResource implements IHalResource {
   //#endregion
 
   //#region IHalResource methods ----------------------------------------------
-  public fetch(forceOrParams?: boolean | object): Promise<this> {
-    if ((this.isLoaded && !forceOrParams) || this.uri === undefined) {
+  public fetch(options?: IResourceFetchOptions): Promise<this> {
+    if ((this.isLoaded && !options?.force && !options?.params) || this.uri === undefined) {
       return new Promise((resolve) => resolve(this));
     } else {
       return (this.restClient as HalRestClient).fetchInternal(
-        this._uri.fill(forceOrParams as object),
+        this._uri.fill(options?.params),
         this.constructor as IHalResourceConstructor<this>,
         this,
       );
@@ -119,6 +120,9 @@ export class HalResource implements IHalResource {
   }
 
   public create<T extends IHalResource>(type?: IHalResourceConstructor<T>, serializer?: IJSONSerializer): Promise<T | Record<string, any>> {
+    // because the href for create, which is used for caching is not the href of the resource after creation
+    // first remove it from the cache
+    this.removeFromCache();
     const json = this.serialize(Object.keys(this.props), Object.keys(this.links), serializer);
     return this.restClient
       .create(this._uri.href, json, type)
@@ -136,6 +140,16 @@ export class HalResource implements IHalResource {
     // result['settedProps'].push(...this.settedProps);
     result['_isLoaded'] = false;
     result['initEnded'] = false;
+    return result;
+  }
+
+  public removeFromCache(): boolean {
+    let result = false;
+    const myCacheKey = (this.uri as UriData).calculateCacheKey(this.restClient.config.baseURL);
+    if (cache.hasResource(myCacheKey)) {
+      cache.clear('Resource', myCacheKey);
+      result = true;
+    }
     return result;
   }
   //#endregion
@@ -158,9 +172,14 @@ export class HalResource implements IHalResource {
     this.settedProps.length = 0;
   }
 
-  /** @internal */
-  public setUri(uri: UriData): void {
-    this._uri = uri;
+  /**
+   * set the UriData
+   *
+   * @internal
+   * @param {UriData} uriData - the uridata
+   */
+  public setUri(uriData: UriData): void {
+    this._uri = uriData;
   }
 
   /** @internal */
@@ -169,14 +188,19 @@ export class HalResource implements IHalResource {
   }
 
   /** @internal */
-  setLoaded(): void {
+  public setLoaded(): void {
     this._isLoaded = true;
   }
   //#endregion
 
   //#region private methods ---------------------------------------------------
   /**
-   * serialize this object
+   * serialize the requested properties and links of this resource
+   *
+   * @param {Array<string>} props - the names of the properties to be serialized
+   * @param {Array<string>} links - the names of the links to be serialized
+   * @param {IJSONSerializer} serializer - the serializer to use. Defaults to the default serializer of the library
+   * @returns {object} - the serialized resources
    */
   private serialize(props: Array<string>, links: Array<string>, serializer: IJSONSerializer = new DefaultSerializer()): object {
     const tsToHal = Reflect.getMetadata('halClient:tsToHal', this);

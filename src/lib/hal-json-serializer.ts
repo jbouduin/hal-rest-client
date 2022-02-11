@@ -9,14 +9,20 @@ import { IHalResource } from "./hal-resource.interface";
 export class DefaultSerializer implements IJSONSerializer {
 
   /**
-   * parse a prop value to server comprehensible value
+   * parse a prop value to to a server-comprehensible value
+   *
+   * @param {IHalResource} value - the value to serialize
+   * @returns {unknown} - a server-comprehensible value
    */
   public parseProp(value: any): unknown {
     return value === null ? undefined : value;
   }
 
   /**
-   * parse a hal-resource to server comprehensible value
+   * parse a hal-resource to a server-comprehensible value
+   *
+   * @param {IHalResource} value - the value to serialize
+   * @returns {unknown} - a server-comprehensible value
    */
   public parseResource(value: IHalResource): unknown {
     return value ? value.uri.resourceUri : undefined;
