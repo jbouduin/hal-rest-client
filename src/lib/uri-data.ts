@@ -18,7 +18,7 @@ export class UriData implements IUriData {
   //#endregion
 
   //#region public properties -------------------------------------------------
-  public readonly href: string;
+  public href: string;
   public requestedUri: string;
   public receivedUri: string
   public readonly templated: boolean;
@@ -107,6 +107,7 @@ export class UriData implements IUriData {
     }
     return result;
   }
+
   //#endregion
 
   private isAbsolute(href: string): boolean {

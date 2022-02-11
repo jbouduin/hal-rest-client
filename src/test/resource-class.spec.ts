@@ -31,9 +31,9 @@ describe('hal-resource fetching', () => {
       .reply(200, projectList.data);
 
     return createClient()
-      .fetch(projectList.fullUri, HalResource)
+      .fetch(projectList.absoluteUri, HalResource)
       .then((value: HalResource) => {
-        expect(value.uri.resourceUri).toBe<string>(projectList.fullUri);
+        expect(value.uri.resourceUri).toBe<string>(projectList.absoluteUri);
         expect(value.getProp('results')).toHaveLength(2);
         expect(value.getProp('results')[0].getProp('name')).toBe<string>('Project 0');
         expect(value.getProp('results')[0]).toBeInstanceOf(HalResource);
@@ -56,7 +56,7 @@ describe('hal-resource fetching', () => {
       .reply(200, project.data);
 
     return createClient()
-      .fetch(project.fullUri, HalResource)
+      .fetch(project.absoluteUri, HalResource)
       .then((fetched: HalResource) => {
         fetched.setProp('name', 'modified');
         expect(fetched.getProp('name')).toBe<string>('modified');
@@ -78,7 +78,7 @@ describe('hal-resource fetching', () => {
       .reply(200, project.data);
 
     return createClient()
-      .fetch(project.fullUri, HalResource)
+      .fetch(project.absoluteUri, HalResource)
       .then((fetched: HalResource) => {
         fetched.setProp('name', 'modified');
         expect(fetched.getProp('name')).toBe<string>('modified');
@@ -101,12 +101,12 @@ describe('hal-resource fetching', () => {
       .reply(200, project.data);
 
     return client
-      .fetch(project.fullUri, HalResource)
+      .fetch(project.absoluteUri, HalResource)
       .then((fetched: HalResource) => {
         fetched.setProp('name', 'modified');
         expect(fetched.getProp('name')).toBe<string>('modified');
         return client
-          .fetch(project.fullUri, HalResource)
+          .fetch(project.absoluteUri, HalResource)
           .then((refetched) => {
             expect(refetched.getProp('name')).toBe<string>('Project 1');
             expect(fetched.getProp('name')).toBe<string>('Project 1');
@@ -118,7 +118,7 @@ describe('hal-resource fetching', () => {
   test('create Resource by absolute URL and fetch it', () => {
     const simpleFactory = new SimpleFactory(uriBuilder);
     const simple = simpleFactory.createSimpleData();
-    const resource = createResource(createClient(uriBuilder.orgBaseURI), HalResource, simple.fullUri);
+    const resource = createResource(createClient(uriBuilder.orgBaseURI), HalResource, simple.absoluteUri);
     const scope = nock(uriBuilder.orgBaseURI);
     scope
       .get(simple.relativeUri)
@@ -126,7 +126,7 @@ describe('hal-resource fetching', () => {
 
     let cacheKeys = cache.getKeys('Resource');
     expect(cacheKeys).toHaveLength(1);
-    expect(cacheKeys[0]).toBe<string>(simple.fullUri);
+    expect(cacheKeys[0]).toBe<string>(simple.absoluteUri);
     expect(resource.getProp('name')).toBeUndefined();
     return resource
       .fetch()
@@ -134,7 +134,7 @@ describe('hal-resource fetching', () => {
         expect(resource.getProp('name')).toBe<string>(simple.savedName);
         cacheKeys = cache.getKeys('Resource');
         expect(cacheKeys).toHaveLength(1);
-        expect(cacheKeys[0]).toBe<string>(simple.fullUri);
+        expect(cacheKeys[0]).toBe<string>(simple.absoluteUri);
         scope.done();
       });
   });
@@ -150,7 +150,7 @@ describe('hal-resource fetching', () => {
 
     let cacheKeys = cache.getKeys('Resource');
     expect(cacheKeys).toHaveLength(1);
-    expect(cacheKeys[0]).toBe<string>(simple.fullUri);
+    expect(cacheKeys[0]).toBe<string>(simple.absoluteUri);
     expect(resource.getProp('name')).toBeUndefined();
     return resource
       .fetch()
@@ -158,7 +158,7 @@ describe('hal-resource fetching', () => {
         expect(resource.getProp('name')).toBe<string>(simple.savedName);
         cacheKeys = cache.getKeys('Resource');
         expect(cacheKeys).toHaveLength(1);
-        expect(cacheKeys[0]).toBe<string>(simple.fullUri);
+        expect(cacheKeys[0]).toBe<string>(simple.absoluteUri);
         scope.done();
       });
   });
@@ -175,7 +175,7 @@ describe('hal-resource fetching', () => {
       .reply(200, project.data);
 
     return createClient()
-      .fetch(project.fullUri, HalResource)
+      .fetch(project.absoluteUri, HalResource)
       .then((project: HalResource) => {
         const testResource = project.getProp<IHalResource>('test');
         expect(testResource.getProp('name')).toBe<string>('Test 1');
@@ -344,7 +344,7 @@ describe('updating an array of embedded properties', () => {
       .get(person.relativeUri)
       .reply(200, person.data);
     scope
-      .intercept(person.relativeUri, 'PATCH', { 'my-friends': [person.friends[0].fullUri] })
+      .intercept(person.relativeUri, 'PATCH', { 'my-friends': [person.friends[0].absoluteUri] })
       .reply(200);
 
     const client = createClient(uriBuilder.orgBaseURI);
@@ -407,7 +407,7 @@ describe('using hal-resource.create method', () => {
         expect(created.id).toBe<number>(simple.id);
         cacheKeys = cache.getKeys('Resource');
         expect(cacheKeys).toHaveLength(1);
-        expect(cacheKeys[0]).toBe<string>(simple.fullUri);
+        expect(cacheKeys[0]).toBe<string>(simple.absoluteUri);
       });
   });
 
@@ -430,7 +430,7 @@ describe('using hal-resource.create method', () => {
         expect(created.id).toBe<number>(simple.id);
         cacheKeys = cache.getKeys('Resource');
         expect(cacheKeys).toHaveLength(1);
-        expect(cacheKeys[0]).toBe<string>(simple.fullUri);
+        expect(cacheKeys[0]).toBe<string>(simple.absoluteUri);
       });
   });
 });

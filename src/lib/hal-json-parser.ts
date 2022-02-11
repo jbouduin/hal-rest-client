@@ -8,11 +8,12 @@ import { UriData } from "./uri-data";
 export interface IJSONParser {
   /**
    * Convert an object to a HalResource
+   *
    * @param halRestClient - the hal-rest client
    * @param data - the object to convert to a resource
    * @param requestedUri - the requested URI that returned the 'root' resource.
    * @param resourceType - the type of HalResource to be created
-   * @param resource - optional parameter. Only set when following a link
+   * @param resource - optional parameter. Only set when (re-)fetching an existing resource (like following a link)
    * @param receivedUri - the uri fetched from the server. This could be the final uri after a chain of redirections
    * @returns a Halrource of the requested type
    */
@@ -46,7 +47,7 @@ export class JSONParser implements IJSONParser {
     resourceType: IHalResourceConstructor<T>,
     resource?: T,
     receivedURI?: string): T {
-    // let resource:T
+
     if (Array.isArray(json)) {
       throw new JSONParserException(json);
     }
@@ -55,7 +56,17 @@ export class JSONParser implements IJSONParser {
       resource = this.getResource(halRestClient, json, requestedURI, receivedURI, resourceType);
     } else {
       const resourceUri = resource['_uri'] as UriData;
-      if (resource.uri.templated) {
+      if (!resourceUri.templated) {
+        let self: string;
+        if (json._links?.self) {
+          if (typeof json._links.self === "string") {
+            self = json._links.self;
+          } else {
+            self = json._links.self.href;
+          }
+          resourceUri.href = self;
+        }
+      } else {
         resourceUri.setFetchedUri(requestedURI);
       }
       resourceUri.receivedUri = receivedURI;
@@ -84,10 +95,6 @@ export class JSONParser implements IJSONParser {
               resource.setLink(propKey, this.processLink(halRestClient, link, specificType)); // eslint-disable-line
             }
           }
-          // else {
-          //   const uri = this.buildURI(this.tryConvertLink(links.self), receivedURI);
-          //   // resource.setUri(uri);
-          // }
         }
       } else if (key === "_embedded") {
         const embedded: Record<string, unknown> = json._embedded;
@@ -111,8 +118,15 @@ export class JSONParser implements IJSONParser {
 
   //#region private methods ---------------------------------------------------
   private processLink<T extends IHalResource>(halRestClient: IHalRestClient, link: string | IHalLink, type: IHalResourceConstructor<T>): T {
-    const href =  this.buildURI(link);
-    const linkResource = createResourceInternal(halRestClient, type, href);
+    let uriData: UriData;
+    if (typeof link === "string") {
+      uriData = new UriData(link, false);
+    } else {
+      const uri = link.href;
+      const templated = link.templated || false;
+      uriData = new UriData(uri, templated, undefined, undefined, link.type);
+    }
+    const linkResource = createResourceInternal(halRestClient, type, uriData);
     for (const propKey of Object.keys(link)) {
       // TODO 1689 Refactor ProcessLink in json-parser
       // this will still copy and eventually overwrite typical link properties (like title, and name) to the resource!
@@ -155,27 +169,11 @@ export class JSONParser implements IJSONParser {
     }
   }
 
-  private buildURI(link: string | IHalLink, fetchedUri?: string): UriData {
-    let result: UriData;
-    if (typeof link === "string") {
-      result = new UriData(link, false);
-    } else {
-
-      const uri = link.href;
-      const templated = link.templated || false;
-      result = new UriData(uri, templated, undefined, fetchedUri, link.type);
-      if (templated) {
-        result.setFetchedUri(fetchedUri);
-      }
-    }
-    // console.log(result);
-    return result;
-  }
-
   /**
    * Try to convert the input to a Link-alike result
-   * @param value a string or an object
-   * @returns a IHalLink that can be converted to a HalResource
+   *
+   * @param {string | Record} value a string or an object
+   * @returns {IHalLink} a IHalLink that can be converted to a HalResource
    */
   private tryConvertLink(value: string | Record<string, any>): IHalLink {
     let result: IHalLink;

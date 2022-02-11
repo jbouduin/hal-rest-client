@@ -32,13 +32,13 @@ describe('Rest update calls', () => {
       .reply(200, person1.data)
       .get(person2.relativeUri)
       .reply(200, person2.data)
-      .intercept(person1.relativeUri, 'PATCH', { 'name': 'test', 'best-friend': person2.fullUri })
+      .intercept(person1.relativeUri, 'PATCH', { 'name': 'test', 'best-friend': person2.absoluteUri })
       .reply(200);
 
     return Promise
       .all([
-        client.fetch(person1.fullUri, HalResource),
-        client.fetch(person2.fullUri, HalResource)
+        client.fetch(person1.absoluteUri, HalResource),
+        client.fetch(person2.absoluteUri, HalResource)
       ])
       .then((resources: [HalResource, HalResource]) => {
         resources[0].setProp('name', 'test');
@@ -73,7 +73,7 @@ describe('Rest update calls', () => {
 
     const client = createClient();
     return client
-      .fetch(person.fullUri, HalResource)
+      .fetch(person.absoluteUri, HalResource)
       .then((resource: HalResource) => {
         return resource.getProp<IHalResource>('contacts')
           .fetch()
@@ -109,7 +109,7 @@ describe('Rest update calls', () => {
       .get(person.contacts.relativeUri)
       .reply(200, person.contacts.data);
     scope
-      .intercept(person.relativeUri, 'PATCH',{ name: newName, contacts: person.contacts.fullUri } )
+      .intercept(person.relativeUri, 'PATCH',{ name: newName, contacts: person.contacts.absoluteUri } )
       .reply(200);
 
     const client = createClient(uriBuilder.orgBaseURI);
@@ -165,7 +165,7 @@ describe('Rest update calls', () => {
       .reply(200, person1.data)
       .get(person2.relativeUri)
       .reply(200, person2.data)
-      .intercept(person1.relativeUri, 'PATCH', { 'name': `${prefix}${newName}`, 'best-friend': `${prefix}${person2.fullUri}` })
+      .intercept(person1.relativeUri, 'PATCH', { 'name': `${prefix}${newName}`, 'best-friend': `${prefix}${person2.absoluteUri}` })
       .reply(200);
 
     const client = createClient(uriBuilder.orgBaseURI);

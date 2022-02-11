@@ -69,13 +69,13 @@ describe.each([
       .reply(200, dummy.data);
 
     return client
-      .fetch(fetch === 'absolute' ? dummy.fullUri : dummy.relativeUri, HalResource)
+      .fetch(fetch === 'absolute' ? dummy.absoluteUri : dummy.relativeUri, HalResource)
       .then(() => {
         const cacheKeys = cache.getKeys('Resource');
         expect(cacheKeys).toHaveLength(cachedEntries);
         if (cachedEntries > 0) {
-          expect(cacheKeys).toContainEqual<string>(dummy.fullUri);
-          expect(cacheKeys).toContainEqual<string>(embedded.fullUri);
+          expect(cacheKeys).toContainEqual<string>(dummy.absoluteUri);
+          expect(cacheKeys).toContainEqual<string>(embedded.absoluteUri);
         }
         scope.done();
       });
@@ -319,7 +319,7 @@ describe('clear resource cache tests', () => {
 
   test('clear resource cache using a string parameter', () => {
     expect(cache.getKeys('Resource')).toHaveLength(10);
-    const dummy = dummies[0].fullUri;
+    const dummy = dummies[0].absoluteUri;
     const cleared = cache.clear('Resource', dummy);
     expect(cleared).toHaveLength(1);
     expect(cleared[0]).toBe<string>(dummy);
@@ -331,8 +331,8 @@ describe('clear resource cache tests', () => {
 
   test('clear resource cache using an array of strings parameter', () => {
     expect(cache.getKeys('Resource')).toHaveLength(10);
-    const dummy0 = dummies[0].fullUri;
-    const dummy1 = dummies[1].fullUri;
+    const dummy0 = dummies[0].absoluteUri;
+    const dummy1 = dummies[1].absoluteUri;
     const cleared = cache.clear('Resource', [dummy1, dummy0]);
     expect(cleared).toHaveLength(2);
     expect(cleared).toContain<string>(dummy0);
@@ -346,7 +346,7 @@ describe('clear resource cache tests', () => {
 
   test('clear resource cache using an array of strings parameter with double entry', () => {
     expect(cache.getKeys('Resource')).toHaveLength(10);
-    const dummy = dummies[0].fullUri;
+    const dummy = dummies[0].absoluteUri;
     const cleared = cache.clear('Resource', [dummy, dummy]);
     expect(cleared).toHaveLength(1);
     expect(cleared[0]).toBe<string>(dummy);
@@ -399,11 +399,11 @@ describe('using cache', () => {
       .reply(200, [dummy2.data]);
 
     return createClient()
-      .fetchArray(dummy1.fullUri, HalResource)
+      .fetchArray(dummy1.absoluteUri, HalResource)
       .then((dummies: Array<HalResource>) => {
         expect((dummies[0].getProp<IHalResource>('done')).getProp('count')).toBe<number>(1);
         return createClient()
-          .fetchArray(dummy1.fullUri, HalResource)
+          .fetchArray(dummy1.absoluteUri, HalResource)
           .then((dummies2: Array<HalResource>) => {
             expect(dummies2[0].getProp('done')).toBeUndefined();
             expect((dummies2[0].getProp<IHalResource>('testing')).getProp('count')).toBe<number>(1);
@@ -616,10 +616,10 @@ describe.each([
       .reply(200, dummy.data);
 
     return client
-      .fetch(fetchWithRelativeUri ? dummy.relativeUri : dummy.fullUri, HalResource)
+      .fetch(fetchWithRelativeUri ? dummy.relativeUri : dummy.absoluteUri, HalResource)
       .then((fetched: HalResource) => {
         expect(fetched.isLoaded).toBe<boolean>(true);
-        const created = createResource(client, HalResource, clientWithBaseUri ? dummy.relativeUri : dummy.fullUri);
+        const created = createResource(client, HalResource, clientWithBaseUri ? dummy.relativeUri : dummy.absoluteUri);
         expect(created.isLoaded).toBe<boolean>(true);
         expect(created).toBe(fetched);
       });

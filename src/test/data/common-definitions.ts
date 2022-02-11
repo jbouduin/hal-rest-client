@@ -37,11 +37,11 @@ export interface IListData {
 
 export interface IFactoryResult<T extends IData> {
   relativeUri: string;
-  fullUri: string;
+  absoluteUri: string;
   data: T
 }
 
 export interface IFactoryListResult<T extends IData> extends IFactoryResult<T> {
   relativeTemplateUri: string;
-  fullTemplateUri: string;
+  absoluteTemplateUri: string;
 }

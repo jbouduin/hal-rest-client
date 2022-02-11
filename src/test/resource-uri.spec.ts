@@ -51,7 +51,7 @@ describe('uri data when fetching resources', () => {
     expect(uri.resourceUri).toBe<string>(simple.relativeUri);
     let cacheKeys = cache.getKeys('Resource');
     expect(cacheKeys).toHaveLength(1);
-    expect(cacheKeys[0]).toBe<string>(simple.fullUri);
+    expect(cacheKeys[0]).toBe<string>(simple.absoluteUri);
     const scope = nock(uriBuilder.orgBaseURI);
     scope
       .get(simple.relativeUri)
@@ -63,15 +63,15 @@ describe('uri data when fetching resources', () => {
         expect(model.id).toBe<number>(simpleFactory.id);
         expect(model.name).toBe<string>(simpleFactory.savedName);
         expect(model).toBe(resource);
-        expect(uri.href).toBe<string>(simple.relativeUri);
+        expect(uri.href).toBe<string>(simple.absoluteUri);
         expect(uri.templated).toBe<boolean>(false)
-        expect(uri.receivedUri).toBe<string>(simple.fullUri);
+        expect(uri.receivedUri).toBe<string>(simple.absoluteUri);
         expect(uri.requestedUri).toBe<string>(simple.relativeUri);
         expect(uri.type).toBeUndefined();
-        expect(uri.resourceUri).toBe<string>(simple.relativeUri);
+        expect(uri.resourceUri).toBe<string>(simple.absoluteUri);
         cacheKeys = cache.getKeys('Resource');
         expect(cacheKeys).toHaveLength(1);
-        expect(cacheKeys[0]).toBe<string>(simple.fullUri);
+        expect(cacheKeys[0]).toBe<string>(simple.absoluteUri);
         scope.done();
       });
   });
@@ -97,12 +97,12 @@ describe('uri data when fetching resources', () => {
         expect(model.id).toBe<number>(simpleFactory.id);
         expect(model.name).toBe<string>(simpleFactory.savedName);
         const modelUri = model['_uri'];
-        expect(modelUri.href).toBe<string>(simple.relativeUri);
+        expect(modelUri.href).toBe<string>(simple.absoluteUri);
         expect(modelUri.templated).toBe<boolean>(false)
-        expect(modelUri.receivedUri).toBe<string>(simple.fullUri);
+        expect(modelUri.receivedUri).toBe<string>(simple.absoluteUri);
         expect(modelUri.requestedUri).toBe<string>(simple.relativeUri);
         expect(modelUri.type).toBeUndefined();
-        expect(modelUri.resourceUri).toBe<string>(simple.relativeUri);
+        expect(modelUri.resourceUri).toBe<string>(simple.absoluteUri);
         scope.done();
       });
   });
@@ -135,7 +135,7 @@ describe('uri data when fetching resources', () => {
         const listUri = list['_uri'];
         expect(listUri.href).toBe<string>(simpleListData.relativeTemplateUri)
         expect(listUri.templated).toBe<boolean>(true);
-        expect(listUri.receivedUri).toBe<string>(simpleListData.fullUri);
+        expect(listUri.receivedUri).toBe<string>(simpleListData.absoluteUri);
         expect(listUri.requestedUri).toBe<string>(simpleListData.relativeUri);
         expect(listUri.type).toBeUndefined();
         expect(listUri.resourceUri).toBe<string>(simpleListData.relativeUri);
@@ -144,12 +144,12 @@ describe('uri data when fetching resources', () => {
         expect(model.id).toBe<number>(simpleFactory.id);
         expect(model.name).toBe<string>(simpleFactory.savedName);
         const modelUri = model['_uri'];
-        expect(modelUri.href).toBe<string>(simpleData.fullUri)
+        expect(modelUri.href).toBe<string>(simpleData.absoluteUri)
         expect(modelUri.templated).toBe<boolean>(false);
         expect(modelUri.receivedUri).toBeUndefined();
         expect(modelUri.requestedUri).toBe<string>(simpleListData.relativeUri);
         expect(modelUri.type).toBeUndefined();
-        expect(modelUri.resourceUri).toBe<string>(simpleData.fullUri);
+        expect(modelUri.resourceUri).toBe<string>(simpleData.absoluteUri);
         scope.done();
       });
   });
@@ -221,12 +221,12 @@ describe('uri data when fetching resources', () => {
         expect(fetched.id).toBe<number>(simpleFactory.id);
         expect(fetched.name).toBe<string>(simpleFactory.savedName);
         const uri = fetched['_uri'];
-        expect(uri.href).toBe<string>(simple.fullUri);
+        expect(uri.href).toBe<string>(simple.absoluteUri);
         expect(uri.templated).toBe<boolean>(false)
-        expect(uri.receivedUri).toBe<string>(simple.fullUri);
+        expect(uri.receivedUri).toBe<string>(simple.absoluteUri);
         expect(uri.requestedUri).toBe<string>(simple.relativeUri);
         expect(uri.type).toBeUndefined();
-        expect(uri.resourceUri).toBe<string>(simple.fullUri);
+        expect(uri.resourceUri).toBe<string>(simple.absoluteUri);
         scope.done();
       });
   });
@@ -250,12 +250,12 @@ describe('uri data when updating or creating a resource', () => {
         expect(model.id).toBe<number>(simpleFactory.id);
         expect(model.name).toBe<string>(simpleFactory.savedName);
         const uri = model['_uri'];
-        expect(uri.href).toBe<string>(simple.fullUri);
+        expect(uri.href).toBe<string>(simple.absoluteUri);
         expect(uri.templated).toBe<boolean>(false)
         expect(uri.receivedUri).toBe<string>(simple.absoluteCreateUri);
         expect(uri.requestedUri).toBe<string>(simple.relativeCreateUri);
         expect(uri.type).toBeUndefined();
-        expect(uri.resourceUri).toBe<string>(simple.fullUri);
+        expect(uri.resourceUri).toBe<string>(simple.absoluteUri);
         scope.done();
       })
   });
@@ -275,12 +275,12 @@ describe('uri data when updating or creating a resource', () => {
         expect(created.id).toBe<number>(simpleFactory.id);
         expect(created.name).toBe<string>(simpleFactory.savedName);
         const uri = created['_uri'];
-        expect(uri.href).toBe<string>(simple.fullUri);
+        expect(uri.href).toBe<string>(simple.absoluteUri);
         expect(uri.templated).toBe<boolean>(false)
         expect(uri.receivedUri).toBe<string>(simple.absoluteCreateUri);
         expect(uri.requestedUri).toBe<string>(simple.relativeCreateUri);
         expect(uri.type).toBeUndefined();
-        expect(uri.resourceUri).toBe<string>(simple.fullUri);
+        expect(uri.resourceUri).toBe<string>(simple.absoluteUri);
         scope.done();
       });
   });
@@ -298,12 +298,12 @@ describe('uri data when updating or creating a resource', () => {
         expect(model.id).toBe<number>(simpleFactory.id);
         expect(model.name).toBe<string>(simpleFactory.updatedName);
         const uri = model['_uri'];
-        expect(uri.href).toBe<string>(simple.fullUri);
+        expect(uri.href).toBe<string>(simple.absoluteUri);
         expect(uri.templated).toBe<boolean>(false)
-        expect(uri.receivedUri).toBe<string>(simple.fullUri);
+        expect(uri.receivedUri).toBe<string>(simple.absoluteUri);
         expect(uri.requestedUri).toBe<string>(simple.relativeUri);
         expect(uri.type).toBeUndefined();
-        expect(uri.resourceUri).toBe<string>(simple.fullUri);
+        expect(uri.resourceUri).toBe<string>(simple.absoluteUri);
         scope.done();
       });
   });
@@ -330,12 +330,12 @@ describe('uri data when updating or creating a resource', () => {
             expect(updated).toBe(model);
             expect(updated.name).toBe<string>(simpleFactory.updatedName);
             const uri = updated['_uri'];
-            expect(uri.href).toBe<string>(simple.fullUri);
+            expect(uri.href).toBe<string>(simple.absoluteUri);
             expect(uri.templated).toBe<boolean>(false)
-            expect(uri.receivedUri).toBe<string>(simple.fullUri);
-            expect(uri.requestedUri).toBe<string>(simple.relativeUri);
+            expect(uri.receivedUri).toBe<string>(simple.absoluteUri);
+            expect(uri.requestedUri).toBe<string>(simple.absoluteUri);
             expect(uri.type).toBeUndefined();
-            expect(uri.resourceUri).toBe<string>(simple.fullUri);
+            expect(uri.resourceUri).toBe<string>(simple.absoluteUri);
             scope.done();
           });
       });
@@ -368,12 +368,12 @@ describe('redirect on halresource methods', () => {
         expect(created.id).toBe<number>(orgFactory.id);
         expect(created.name).toBe<string>(orgFactory.savedName);
         const uri = created['_uri'];
-        expect(uri.href).toBe<string>(redirectedSimple.fullUri);
+        expect(uri.href).toBe<string>(redirectedSimple.absoluteUri);
         expect(uri.templated).toBe<boolean>(false)
         expect(uri.receivedUri).toBe<string>(redirectedSimple.absoluteCreateUri);
         expect(uri.requestedUri).toBe<string>(simple.relativeCreateUri);
         expect(uri.type).toBeUndefined();
-        expect(uri.resourceUri).toBe<string>(redirectedSimple.fullUri);
+        expect(uri.resourceUri).toBe<string>(redirectedSimple.absoluteUri);
         scope.done();
       });
   });
@@ -398,12 +398,12 @@ describe('redirect on halresource methods', () => {
         expect(created.id).toBe<number>(orgFactory.id);
         expect(created.name).toBe<string>(orgFactory.savedName);
         const uri = created['_uri'];
-        expect(uri.href).toBe<string>(redirectedSimple.fullUri);
+        expect(uri.href).toBe<string>(redirectedSimple.absoluteUri);
         expect(uri.templated).toBe<boolean>(false)
         expect(uri.receivedUri).toBe<string>(redirectedSimple.absoluteCreateUri);
         expect(uri.requestedUri).toBe<string>(simple.relativeCreateUri);
         expect(uri.type).toBeUndefined();
-        expect(uri.resourceUri).toBe<string>(redirectedSimple.fullUri);
+        expect(uri.resourceUri).toBe<string>(redirectedSimple.absoluteUri);
         orgScope.done();
         comScope.done();
       });
@@ -428,14 +428,12 @@ describe('redirect on halresource methods', () => {
         expect(fetched.id).toBe<number>(orgFactory.id);
         expect(fetched.name).toBe<string>(orgFactory.savedName);
         const uri = fetched['_uri'];
-        // TODO #1695 resource.fetch does not overwrite the existing href with the new self value
-        // expect(uri.href).toBe<string>(redirectedSimple.fullUri);
+        expect(uri.href).toBe<string>(redirectedSimple.absoluteUri);
         expect(uri.templated).toBe<boolean>(false)
-        expect(uri.receivedUri).toBe<string>(redirectedSimple.fullUri);
+        expect(uri.receivedUri).toBe<string>(redirectedSimple.absoluteUri);
         expect(uri.requestedUri).toBe<string>(simple.relativeUri);
         expect(uri.type).toBeUndefined();
-        // TODO #1695 resource.fetch does not overwrite the existing href with the new self value
-        // expect(uri.resourceUri).toBe<string>(redirectedSimple.fullUri);
+        expect(uri.resourceUri).toBe<string>(redirectedSimple.absoluteUri);
         scope.done();
       });
   });
@@ -449,7 +447,7 @@ describe('redirect on halresource methods', () => {
     const orgScope = nock(uriBuilder.orgBaseURI);
     orgScope
       .get(simple.relativeUri)
-      .reply(307, undefined, { Location: redirectedSimple.fullUri });
+      .reply(307, undefined, { Location: redirectedSimple.absoluteUri });
     const comScope = nock(uriBuilder.comBaseURI);
     comScope
       .get(redirectedSimple.relativeUri)
@@ -460,14 +458,12 @@ describe('redirect on halresource methods', () => {
         expect(created.id).toBe<number>(orgFactory.id);
         expect(created.name).toBe<string>(orgFactory.savedName);
         const uri = created['_uri'];
-        // TODO #1695 resource.fetch does not overwrite the existing href with the new self value
-        // expect(uri.href).toBe<string>(redirectedSimple.fullUri);
+        expect(uri.href).toBe<string>(redirectedSimple.absoluteUri);
         expect(uri.templated).toBe<boolean>(false)
-        expect(uri.receivedUri).toBe<string>(redirectedSimple.fullUri);
+        expect(uri.receivedUri).toBe<string>(redirectedSimple.absoluteUri);
         expect(uri.requestedUri).toBe<string>(simple.relativeUri);
         expect(uri.type).toBeUndefined();
-        // TODO #1695 resource.fetch does not overwrite the existing href with the new self value
-        // expect(uri.resourceUri).toBe<string>(redirectedSimple.fullUri);
+        expect(uri.resourceUri).toBe<string>(redirectedSimple.absoluteUri);
         orgScope.done();
         comScope.done();
       });
@@ -485,10 +481,10 @@ describe('redirect on halresource methods', () => {
       .reply(200, simple.data);
     scope
       .patch(simple.relativeUri, JSON.stringify(simple.updateNameRequest))
-      .reply(307, undefined, { Location: redirectedSimple.fullUri });
+      .reply(307, undefined, { Location: redirectedSimple.absoluteUri });
     scope
       .patch(redirectedSimple.relativeUri, JSON.stringify(simple.updateNameRequest))
-      .reply(200, simple.updateNameResponse);
+      .reply(200, redirectedSimple.updateNameResponse);
 
     return resource
       .fetch()
@@ -500,14 +496,12 @@ describe('redirect on halresource methods', () => {
           .update(SimpleModel)
           .then((updated: SimpleModel) => {
             const uri = updated['_uri'];
-            // TODO #1695 resource.fetch does not overwrite the existing href with the new self value
-            // expect(uri.href).toBe<string>(redirectedSimple.fullUri);
+            expect(uri.href).toBe<string>(redirectedSimple.absoluteUri);
             expect(uri.templated).toBe<boolean>(false)
-            expect(uri.receivedUri).toBe<string>(redirectedSimple.fullUri);
-            expect(uri.requestedUri).toBe<string>(simple.relativeUri);
+            expect(uri.receivedUri).toBe<string>(redirectedSimple.absoluteUri);
+            expect(uri.requestedUri).toBe<string>(simple.absoluteUri);
             expect(uri.type).toBeUndefined();
-            // TODO #1695 resource.fetch does not overwrite the existing href with the new self value
-            // expect(uri.resourceUri).toBe<string>(redirectedSimple.fullUri);
+            expect(uri.resourceUri).toBe<string>(redirectedSimple.absoluteUri);
             scope.done();
           });
       });
@@ -528,12 +522,12 @@ describe('redirect on halresource methods', () => {
       .reply(200, simple.data);
     orgScope
       .patch(simple.relativeUri, JSON.stringify(simple.updateNameRequest))
-      .reply(307, undefined, { Location: redirectedSimple.fullUri });
+      .reply(307, undefined, { Location: redirectedSimple.absoluteUri });
 
     const comScope = nock(uriBuilder.comBaseURI)
     comScope
       .patch(simple.relativeUri, JSON.stringify(simple.updateNameRequest))
-      .reply(200, simple.updateNameResponse);
+      .reply(200, redirectedSimple.updateNameResponse);
 
     return resource
       .fetch()
@@ -544,14 +538,12 @@ describe('redirect on halresource methods', () => {
           .then((updated: SimpleModel) => {
             expect(updated.name).toBe<string>(orgFactory.updatedName);
             const uri = updated['_uri'];
-            // TODO #1695 resource.fetch does not overwrite the existing href with the new self value
-            //expect(uri.href).toBe<string>(simple.fullUri);
+            expect(uri.href).toBe<string>(redirectedSimple.absoluteUri);
             expect(uri.templated).toBe<boolean>(false)
-            expect(uri.receivedUri).toBe<string>(redirectedSimple.fullUri);
-            expect(uri.requestedUri).toBe<string>(simple.relativeUri);
+            expect(uri.receivedUri).toBe<string>(redirectedSimple.absoluteUri);
+            expect(uri.requestedUri).toBe<string>(simple.absoluteUri);
             expect(uri.type).toBeUndefined();
-            // TODO #1695 resource.fetch does not overwrite the existing href with the new self value
-            // expect(uri.resourceUri).toBe<string>(simple.fullUri);
+            expect(uri.resourceUri).toBe<string>(redirectedSimple.absoluteUri);
             orgScope.done();
             comScope.done();
           });
@@ -581,12 +573,12 @@ describe('redirect on hal-rest-client', () => {
       .create<SimpleModel>(simple.relativeCreateUri, simple.createRequest, SimpleModel)
       .then((model: SimpleModel) => {
         const uri = model['_uri'];
-        expect(uri.href).toBe<string>(redirectedSimple.fullUri);
+        expect(uri.href).toBe<string>(redirectedSimple.absoluteUri);
         expect(uri.templated).toBe<boolean>(false)
         expect(uri.receivedUri).toBe<string>(redirectedSimple.absoluteCreateUri);
         expect(uri.requestedUri).toBe<string>(simple.relativeCreateUri);
         expect(uri.type).toBeUndefined();
-        expect(uri.resourceUri).toBe<string>(redirectedSimple.fullUri);
+        expect(uri.resourceUri).toBe<string>(redirectedSimple.absoluteUri);
         scope.done();
       })
   });
@@ -608,12 +600,12 @@ describe('redirect on hal-rest-client', () => {
       .create<SimpleModel>(simple.relativeCreateUri, simple.createRequest, SimpleModel)
       .then((model: SimpleModel) => {
         const uri = model['_uri'];
-        expect(uri.href).toBe<string>(redirectedSimple.fullUri);
+        expect(uri.href).toBe<string>(redirectedSimple.absoluteUri);
         expect(uri.templated).toBe<boolean>(false)
         expect(uri.receivedUri).toBe<string>(redirectedSimple.absoluteCreateUri);
         expect(uri.requestedUri).toBe<string>(redirectedSimple.relativeCreateUri);
         expect(uri.type).toBeUndefined();
-        expect(uri.resourceUri).toBe<string>(redirectedSimple.fullUri);
+        expect(uri.resourceUri).toBe<string>(redirectedSimple.absoluteUri);
         orgScope.done();
         comScope.done();
       })
@@ -626,7 +618,7 @@ describe('redirect on hal-rest-client', () => {
     const scope = nock(uriBuilder.orgBaseURI);
     scope
       .patch(simple.relativeUri, JSON.stringify(simple.updateNameRequest))
-      .reply(307, undefined, { Location: redirectedSimple.fullUri });
+      .reply(307, undefined, { Location: redirectedSimple.absoluteUri });
     scope
       .patch(redirectedSimple.relativeUri, JSON.stringify(simple.updateNameRequest))
       .reply(200, redirectedSimple.data);
@@ -635,12 +627,12 @@ describe('redirect on hal-rest-client', () => {
       .update<SimpleModel>(simple.relativeUri, simple.updateNameRequest, false, SimpleModel)
       .then((model: SimpleModel) => {
         const uri = model['_uri'];
-        expect(uri.href).toBe<string>(redirectedSimple.fullUri);
+        expect(uri.href).toBe<string>(redirectedSimple.absoluteUri);
         expect(uri.templated).toBe<boolean>(false)
-        expect(uri.receivedUri).toBe<string>(redirectedSimple.fullUri);
+        expect(uri.receivedUri).toBe<string>(redirectedSimple.absoluteUri);
         expect(uri.requestedUri).toBe<string>(simple.relativeUri);
         expect(uri.type).toBeUndefined();
-        expect(uri.resourceUri).toBe<string>(redirectedSimple.fullUri);
+        expect(uri.resourceUri).toBe<string>(redirectedSimple.absoluteUri);
         scope.done();
       });
   });
@@ -654,7 +646,7 @@ describe('redirect on hal-rest-client', () => {
     const orgScope = nock(uriBuilder.orgBaseURI);
     orgScope
       .patch(simple.relativeUri, JSON.stringify(simple.updateNameRequest))
-      .reply(307, undefined, { Location: redirectedSimple.fullUri });
+      .reply(307, undefined, { Location: redirectedSimple.absoluteUri });
     const comScope = nock(uriBuilder.comBaseURI);
     comScope
       .patch(redirectedSimple.relativeUri, JSON.stringify(simple.updateNameRequest))
@@ -664,12 +656,12 @@ describe('redirect on hal-rest-client', () => {
       .update<SimpleModel>(simple.relativeUri, simple.updateNameRequest, false, SimpleModel)
       .then((model: SimpleModel) => {
         const uri = model['_uri'];
-        expect(uri.href).toBe<string>(redirectedSimple.fullUri);
+        expect(uri.href).toBe<string>(redirectedSimple.absoluteUri);
         expect(uri.templated).toBe<boolean>(false)
-        expect(uri.receivedUri).toBe<string>(redirectedSimple.fullUri);
+        expect(uri.receivedUri).toBe<string>(redirectedSimple.absoluteUri);
         expect(uri.requestedUri).toBe<string>(simple.relativeUri);
         expect(uri.type).toBeUndefined();
-        expect(uri.resourceUri).toBe<string>(redirectedSimple.fullUri);
+        expect(uri.resourceUri).toBe<string>(redirectedSimple.absoluteUri);
         orgScope.done();
         comScope.done();
       });
@@ -682,7 +674,7 @@ describe('redirect on hal-rest-client', () => {
     const scope = nock(uriBuilder.orgBaseURI);
     scope
       .get(simple.relativeUri)
-      .reply(307, undefined, { Location: redirectedSimple.fullUri });
+      .reply(307, undefined, { Location: redirectedSimple.absoluteUri });
     scope
       .get(redirectedSimple.relativeUri)
       .reply(200, redirectedSimple.data);
@@ -693,12 +685,12 @@ describe('redirect on hal-rest-client', () => {
         expect(fetched.id).toBe<number>(orgFactory.id);
         expect(fetched.name).toBe<string>(orgFactory.savedName);
         const uri = fetched['_uri'];
-        expect(uri.href).toBe<string>(redirectedSimple.fullUri);
+        expect(uri.href).toBe<string>(redirectedSimple.absoluteUri);
         expect(uri.templated).toBe<boolean>(false)
-        expect(uri.receivedUri).toBe<string>(redirectedSimple.fullUri);
+        expect(uri.receivedUri).toBe<string>(redirectedSimple.absoluteUri);
         expect(uri.requestedUri).toBe<string>(simple.relativeUri);
         expect(uri.type).toBeUndefined();
-        expect(uri.resourceUri).toBe<string>(redirectedSimple.fullUri);
+        expect(uri.resourceUri).toBe<string>(redirectedSimple.absoluteUri);
         scope.done();
       });
   });
@@ -712,7 +704,7 @@ describe('redirect on hal-rest-client', () => {
     const orgScope = nock(uriBuilder.orgBaseURI);
     orgScope
       .get(simple.relativeUri)
-      .reply(307, undefined, { Location: redirectedSimple.fullUri });
+      .reply(307, undefined, { Location: redirectedSimple.absoluteUri });
     const comScope = nock(uriBuilder.comBaseURI);
     comScope
       .get(redirectedSimple.relativeUri)
@@ -723,12 +715,12 @@ describe('redirect on hal-rest-client', () => {
         expect(fetched.id).toBe<number>(orgFactory.id);
         expect(fetched.name).toBe<string>(orgFactory.savedName);
         const uri = fetched['_uri'];
-        expect(uri.href).toBe<string>(redirectedSimple.fullUri);
+        expect(uri.href).toBe<string>(redirectedSimple.absoluteUri);
         expect(uri.templated).toBe<boolean>(false)
-        expect(uri.receivedUri).toBe<string>(redirectedSimple.fullUri);
+        expect(uri.receivedUri).toBe<string>(redirectedSimple.absoluteUri);
         expect(uri.requestedUri).toBe<string>(simple.relativeUri);
         expect(uri.type).toBeUndefined();
-        expect(uri.resourceUri).toBe<string>(redirectedSimple.fullUri);
+        expect(uri.resourceUri).toBe<string>(redirectedSimple.absoluteUri);
         orgScope.done();
         comScope.done();
       });

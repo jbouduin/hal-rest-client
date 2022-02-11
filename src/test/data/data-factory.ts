@@ -45,7 +45,7 @@ export class DataFactory {
     const relative = this.uriBuilder.resourceUri(tld, true, path, id);
     return {
       relativeUri: relative,
-      fullUri: absolute,
+      absoluteUri: absolute,
       data: this.createResource(absolute, relative, selfOption, data, id, links)
     };
   }
@@ -75,9 +75,9 @@ export class DataFactory {
       this.uriBuilder.resourceUri(tld, true, path);
     return {
       relativeUri: relative,
-      fullUri: absolute,
+      absoluteUri: absolute,
       relativeTemplateUri: relativeTemplate,
-      fullTemplateUri: absoluteTemplate,
+      absoluteTemplateUri: absoluteTemplate,
       data: this.createListResource(absolute, relative, selfOption, data, links)
     };
   }

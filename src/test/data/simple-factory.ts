@@ -49,7 +49,7 @@ export class SimpleFactory extends DataFactory {
       createRequest: { name: this.sendName },
       updateNameRequest: { name: this.updatedName },
       relativeUri: this.uriBuilder.resourceUri(this.tld, true, path, this.id),
-      fullUri: fullUri,
+      absoluteUri: fullUri,
       absoluteCreateUri: this.uriBuilder.resourceUri(this.tld, false, path),
       relativeCreateUri: this.uriBuilder.resourceUri(this.tld, true, path),
       queryUri: this.uriBuilder.templatedResourceUri(this.tld, false, path),
