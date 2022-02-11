@@ -35,6 +35,7 @@ export class SimpleFactory extends DataFactory {
   /**
    *
    * @param {string} path - relative path to the simple resource(s). Defaults to 'simple'
+   * @param {SelfOption} selfOption - kind of self link to generate
    * @returns {ISimpleFactoryResult} - the test data
    */
   public createSimpleData(path = 'simple', selfOption: SelfOption = SelfOption.AbsoluteString): ISimpleFactoryResult {
