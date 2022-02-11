@@ -1,52 +1,63 @@
-import { send } from "process";
-import { IData, IFactoryListResult, IFactoryResult, ILinkCollection, IListData } from "./common-definitions";
+import { HostTld, IData, IFactoryListResult, IFactoryResult, ILinkCollection, IListData } from "./common-definitions";
 import { DataFactory, SelfOption } from "./data-factory";
 import { UriBuilder } from "./uri-builder";
 
 export interface ISimpleFactoryResult extends IFactoryResult<IData> {
   id: number;
-  createUri: string;
+  relativeCreateUri: string;
+  absoluteCreateUri: string;
   queryUri: string;
   sendName: string,
   savedName: string,
-  createRequest: any;
-  updateNameRequest: any;
+  updatedName: string,
+  createRequest: object;
+  updateNameRequest: object;
+  updateNameResponse: IData;
 }
 
 export class SimpleFactory extends DataFactory {
 
-  public readonly path: string;
+  private readonly tld: HostTld;
   public readonly id: number;
   public readonly sendName: string;
   public readonly savedName: string;
   public readonly updatedName: string;
 
-  public constructor(uriBuilder: UriBuilder) {
+  public constructor(uriBuilder: UriBuilder, tld: HostTld = 'org') {
     super(uriBuilder);
-    this.path = 'simple';
+    this.tld = tld;
     this.id = 69;
     this.sendName = 'FANNY';
     this.savedName = 'Fanny';
     this.updatedName = 'Lena';
   }
 
-  public getSimpleData(): ISimpleFactoryResult {
+  public getSimpleData(path = 'simple'): ISimpleFactoryResult {
 
-    const fullUri = this.uriBuilder.resourceUri('org', false, this.path, this.id);
+    const fullUri = this.uriBuilder.resourceUri(this.tld, false, path, this.id);
 
     const result: ISimpleFactoryResult = {
       id: this.id,
-      sendName: "FANNY",
-      savedName: "Fanny",
+      sendName: this.sendName,
+      savedName: this.savedName,
+      updatedName: this.updatedName,
       createRequest: { name: this.sendName },
       updateNameRequest: { name: this.updatedName },
-      relativeUri: this.uriBuilder.resourceUri('org', true, this.path, this.id),
+      relativeUri: this.uriBuilder.resourceUri(this.tld, true, path, this.id),
       fullUri: fullUri,
-      createUri: this.uriBuilder.resourceUri('org', false, this.path),
-      queryUri: this.uriBuilder.templatedResourceUri('org', false, this.path),
+      absoluteCreateUri: this.uriBuilder.resourceUri(this.tld, false, path),
+      relativeCreateUri: this.uriBuilder.resourceUri(this.tld, true, path),
+      queryUri: this.uriBuilder.templatedResourceUri(this.tld, false, path),
       data: {
         id: this.id,
         name: this.savedName,
+        _links: {
+          self: { href: fullUri }
+        }
+      },
+      updateNameResponse: {
+        id: this.id,
+        name: this.updatedName,
         _links: {
           self: { href: fullUri }
         }
@@ -55,11 +66,11 @@ export class SimpleFactory extends DataFactory {
     return result;
   }
 
-  public getJumpToTemplate(relative: boolean, offset?: number) {
+  public getJumpToTemplate(relative: boolean, path = 'simple', offset?: number) {
     return this.uriBuilder.filledTemplatedResourceUri(
-      'org',
+      this.tld,
       relative,
-      this.path,
+      path,
       {
         offset: offset ? offset : '{jumpTo}',
         sort: 'id',
@@ -67,7 +78,8 @@ export class SimpleFactory extends DataFactory {
       }
     );
   }
-  public getSimpleListData(offset = 0): IFactoryListResult<IData> {
+
+  public getSimpleListData(offset = 0, path = 'simple'): IFactoryListResult<IData> {
 
     const links: ILinkCollection = {
       jumpTo: { href: this.getJumpToTemplate(false), templated: true }
@@ -80,10 +92,10 @@ export class SimpleFactory extends DataFactory {
         id: this.id,
         name: this.savedName,
         _links: {
-          self: { href: this.uriBuilder.resourceUri('org', false, this.path, this.id) }
+          self: { href: this.uriBuilder.resourceUri(this.tld, false, path, this.id) }
         }
       }]
     };
-    return this.createResourceListData('org', this.path, listData, links, SelfOption.AbsoluteLink);
+    return this.createResourceListData(this.tld, path, listData, links, SelfOption.AbsoluteLink);
   }
 }
