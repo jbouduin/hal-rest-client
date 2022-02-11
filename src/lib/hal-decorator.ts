@@ -6,15 +6,12 @@ import { IHalResource, IHalResourceConstructor, INewable } from './hal-resource.
  */
 export type IHalPropertyOptions<T extends IHalResource> = {
   /**
-   * the property name as found in the hal+json
-   *
-   * @type {string}
+   * @type {string} - the property name as found in the hal+json
    */
   name?: string;
   /**
-   * the type of class the data should be mapped to. It must be a class with a HalResource constructor signature or with a parameterless constructor.
-   *
-   * @type {IHalResourceConstructor<T> | INewable}
+   * @template T - a class having the HalResource construcor signature
+   * @type {IHalResourceConstructor<T> | INewable} - the type of class the data should be mapped to. It must be a class with a HalResource constructor signature or with a parameterless constructor.
    */
   resourceType?: IHalResourceConstructor<T> | INewable
 }

@@ -236,7 +236,7 @@ describe('Resources with no \'self\'', () => {
       .fetch(resourceWithoutSelf.relativeUri, HalResource)
       .then((resource: HalResource) => {
         return resource
-          .fetch(true)
+          .fetch({ force: true })
           .then((fetched: HalResource) => {
             expect(fetched.uri.resourceUri).toBeNull();
             expect(fetched.getProp('id')).toBe<number>(1);
@@ -320,9 +320,9 @@ describe('Templated links', () => {
         expect(resource.getProp('results')).toHaveLength(2);
         const resourceUri = resource.uri.resourceUri;
         const fill = {
-          offset:0,
+          offset: 0,
           sort: 'LastModified',
-          pageSize:20
+          pageSize: 20
         };
         expect(resource['_uri'].fill(fill)).toBe<string>(resourceUri);
         scope.done();
@@ -347,7 +347,7 @@ describe('Templated links', () => {
         expect(findLink.uri.templated).toBe<boolean>(true);
         expect(findLink.uri.resourceUri).toBeUndefined();
         return findLink
-          .fetch({ jumpTo: jump })
+          .fetch({ params: { jumpTo: jump } })
           .then((found: HalResource) => {
             expect(found.getProp('results')[0].getProp('id')).toBe<number>(jump * 10);
             expect(found.uri.resourceUri).toBe<string>(projectList1.absoluteUri);
@@ -400,7 +400,7 @@ describe('Templated links', () => {
       .then((resource: HalResource) => {
         return resource
           .getLink<IHalResource>('jumpTo')
-          .fetch({ jumpTo: 1 })
+          .fetch({params: { jumpTo: 1 }})
           .then((fetched: HalResource) => {
             expect(fetched.getProp('results')[0].getProp('id')).toBe<number>(10);
             scope.done();

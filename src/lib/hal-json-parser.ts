@@ -58,13 +58,17 @@ export class JSONParser implements IJSONParser {
       const resourceUri = resource['_uri'] as UriData;
       if (!resourceUri.templated) {
         let self: string;
-        if (json._links?.self) {
-          if (typeof json._links.self === "string") {
-            self = json._links.self;
+        if (json._links) {
+          if (json._links.self) {
+            if (typeof json._links.self === 'string') {
+              self = json._links.self;
+            } else {
+              self = json._links.self.href;
+            }
+            resourceUri.href = self;
           } else {
-            self = json._links.self.href;
+            resourceUri.href = null;
           }
-          resourceUri.href = self;
         }
       } else {
         resourceUri.setFetchedUri(requestedURI);
@@ -117,15 +121,11 @@ export class JSONParser implements IJSONParser {
   //#endregion
 
   //#region private methods ---------------------------------------------------
-  private processLink<T extends IHalResource>(halRestClient: IHalRestClient, link: string | IHalLink, type: IHalResourceConstructor<T>): T {
-    let uriData: UriData;
-    if (typeof link === "string") {
-      uriData = new UriData(link, false);
-    } else {
-      const uri = link.href;
-      const templated = link.templated || false;
-      uriData = new UriData(uri, templated, undefined, undefined, link.type);
-    }
+  private processLink<T extends IHalResource>(halRestClient: IHalRestClient, link: IHalLink, type: IHalResourceConstructor<T>): T {
+    const uri = link.href;
+    const templated = link.templated || false;
+    const uriData = new UriData(uri, templated, undefined, undefined, link.type);
+
     const linkResource = createResourceInternal(halRestClient, type, uriData);
     for (const propKey of Object.keys(link)) {
       // TODO 1689 Refactor ProcessLink in json-parser

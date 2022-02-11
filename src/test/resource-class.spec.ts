@@ -83,7 +83,7 @@ describe('hal-resource fetching', () => {
         fetched.setProp('name', 'modified');
         expect(fetched.getProp('name')).toBe<string>('modified');
         return fetched
-          .fetch(true)
+          .fetch({force: true})
           .then((refetched: HalResource) => {
             expect(refetched.getProp('name')).toBe<string>('Project 1');
             scope.done();

@@ -63,11 +63,10 @@ export interface IHalResource {
   /**
    * sends a get request to the server
    *
-   * @param {boolean | object} forceOrParams - if uri is a templated link you can use object to set template parameters.
-   * if uri is non a template link you can use true to force fetch to be done (refersh resource)
+   * @param {IResourceFetchOptions} options - the options when fetching. See {@link IResourceFetchOptions}.
    * @returns the fetched or refetched resource
    */
-  fetch(forceOrParams?: boolean | object): Promise<this>;
+  fetch(options?: IResourceFetchOptions): Promise<this>;
 
   /**
    * send a patch request to the server
@@ -136,6 +135,20 @@ export interface IHalResourceConstructor<T extends IHalResource> {
 
 export interface INewable {
   new(): object;
+}
+
+/**
+ * The options for calling the fetch method on a resource
+ */
+export type IResourceFetchOptions = {
+  /**
+   * @type {boolean=} - Force fetching, even if the resource has been fetched before
+   */
+  force?: boolean;
+  /**
+   * @type {object=} - The object containing the query parameters for a templated resource URI.
+   */
+  params?: object;
 }
 
 

@@ -37,9 +37,35 @@ export class SimpleFactory extends DataFactory {
    * @param {string} path - relative path to the simple resource(s). Defaults to 'simple'
    * @returns {ISimpleFactoryResult} - the test data
    */
-  public createSimpleData(path = 'simple'): ISimpleFactoryResult {
+  public createSimpleData(path = 'simple', selfOption: SelfOption = SelfOption.AbsoluteString): ISimpleFactoryResult {
 
     const fullUri = this.uriBuilder.resourceUri(this.tld, false, path, this.id);
+    const relativeUri = this.uriBuilder.resourceUri(this.tld, true, path, this.id);
+
+    let links: ILinkCollection;
+    switch (selfOption) {
+      case SelfOption.AbsoluteLink:
+        links = { self: { href: fullUri } };
+        break;
+      case SelfOption.AbsoluteString:
+        links = { self: fullUri };
+        break;
+      case SelfOption.NoSelf:
+        links = {};
+        break;
+      case SelfOption.NullLink:
+        links = { self: { href: null } };
+        break;
+      case SelfOption.NullString:
+        links = { self: null };
+        break;
+      case SelfOption.RelativeLink:
+        links = { self: { href: relativeUri } };
+        break;
+      case SelfOption.RelativeString:
+        links = { self: relativeUri };
+        break;
+    }
 
     const result: ISimpleFactoryResult = {
       id: this.id,
@@ -48,7 +74,7 @@ export class SimpleFactory extends DataFactory {
       updatedName: this.updatedName,
       createRequest: { name: this.sendName },
       updateNameRequest: { name: this.updatedName },
-      relativeUri: this.uriBuilder.resourceUri(this.tld, true, path, this.id),
+      relativeUri: relativeUri,
       absoluteUri: fullUri,
       absoluteCreateUri: this.uriBuilder.resourceUri(this.tld, false, path),
       relativeCreateUri: this.uriBuilder.resourceUri(this.tld, true, path),
@@ -56,16 +82,12 @@ export class SimpleFactory extends DataFactory {
       data: {
         id: this.id,
         name: this.savedName,
-        _links: {
-          self: { href: fullUri }
-        }
+        _links: links
       },
       updateNameResponse: {
         id: this.id,
         name: this.updatedName,
-        _links: {
-          self: { href: fullUri }
-        }
+        _links: links
       }
     };
     return result;

@@ -1,5 +1,6 @@
 import * as nock from 'nock';
 import { cache, createClient, createResource } from '..';
+import { SelfOption } from './data/data-factory';
 import { SimpleFactory } from './data/simple-factory';
 
 import { UriBuilder } from './data/uri-builder';
@@ -126,7 +127,7 @@ describe('uri data when fetching resources', () => {
       .reply(200, simpleListData.data)
 
     return resource
-      .fetch(defaultParameters)
+      .fetch({params: defaultParameters})
       .then((list: SimpleListModel) => {
         expect(list.count).toBe<number>(1);
         expect(list.offset).toBe<number>(0);
@@ -176,7 +177,7 @@ describe('uri data when fetching resources', () => {
       .reply(200, offsetListData.data);
 
     return resource
-      .fetch(defaultParameters)
+      .fetch({params: defaultParameters})
       .then((list: SimpleListModel) => {
         const jumpTo = list.jumpTo
         const jumpToUri = jumpTo['_uri'];
@@ -188,7 +189,7 @@ describe('uri data when fetching resources', () => {
         expect(jumpToUri.resourceUri).toBeUndefined();
 
         return jumpTo
-          .fetch({ jumpTo: 666 })
+          .fetch({ params: { jumpTo: 666 } })
           .then((jumped: SimpleListModel) => {
             expect(jumpTo).toBe(jumped);
             expect(jumped.count).toBe<number>(1);
@@ -378,6 +379,36 @@ describe('redirect on halresource methods', () => {
       });
   });
 
+  test('redirect to same host on halresource create, self link is a string', () => {
+    const simple = orgFactory.createSimpleData(undefined, SelfOption.AbsoluteString);
+    const redirectedSimple = orgFactory.createSimpleData('new-simple', SelfOption.AbsoluteString);
+    const client = createClient(uriBuilder.orgBaseURI);
+    const resource = createResource(client, SimpleModel, simple.relativeCreateUri);
+    resource.name = orgFactory.sendName;
+    const scope = nock(uriBuilder.orgBaseURI);
+    scope
+      .post(simple.relativeCreateUri, JSON.stringify(simple.createRequest))
+      .reply(307, undefined, { Location: redirectedSimple.absoluteCreateUri });
+    scope
+      .post(redirectedSimple.relativeCreateUri, JSON.stringify(simple.createRequest))
+      .reply(200, redirectedSimple.data);
+
+    return resource
+      .create(SimpleModel)
+      .then((created: SimpleModel) => {
+        expect(created.id).toBe<number>(orgFactory.id);
+        expect(created.name).toBe<string>(orgFactory.savedName);
+        const uri = created['_uri'];
+        expect(uri.href).toBe<string>(redirectedSimple.absoluteUri);
+        expect(uri.templated).toBe<boolean>(false)
+        expect(uri.receivedUri).toBe<string>(redirectedSimple.absoluteCreateUri);
+        expect(uri.requestedUri).toBe<string>(simple.relativeCreateUri);
+        expect(uri.type).toBeUndefined();
+        expect(uri.resourceUri).toBe<string>(redirectedSimple.absoluteUri);
+        scope.done();
+      });
+  });
+
   test('redirect to different host on halresource create', () => {
     const simple = orgFactory.createSimpleData();
     const redirectedSimple = comFactory.createSimpleData();
@@ -469,9 +500,9 @@ describe('redirect on halresource methods', () => {
       });
   });
 
-  test('redirect to same host on halresource update', () => {
+  test('redirect to same host on halresource update, redirected self-link is a string', () => {
     const simple = orgFactory.createSimpleData();
-    const redirectedSimple = orgFactory.createSimpleData('new-simple');
+    const redirectedSimple = orgFactory.createSimpleData('new-simple', SelfOption.AbsoluteString);
     const client = createClient(uriBuilder.orgBaseURI);
     const resource = createResource(client, SimpleModel, simple.relativeUri);
 
@@ -502,6 +533,197 @@ describe('redirect on halresource methods', () => {
             expect(uri.requestedUri).toBe<string>(simple.absoluteUri);
             expect(uri.type).toBeUndefined();
             expect(uri.resourceUri).toBe<string>(redirectedSimple.absoluteUri);
+            scope.done();
+          });
+      });
+  });
+
+  test('redirect to same host on halresource update, redirected self-link is a link', () => {
+    const simple = orgFactory.createSimpleData();
+    const redirectedSimple = orgFactory.createSimpleData('new-simple', SelfOption.AbsoluteLink);
+    const client = createClient(uriBuilder.orgBaseURI);
+    const resource = createResource(client, SimpleModel, simple.relativeUri);
+
+    const scope = nock(uriBuilder.orgBaseURI);
+    scope
+      .get(simple.relativeUri)
+      .reply(200, simple.data);
+    scope
+      .patch(simple.relativeUri, JSON.stringify(simple.updateNameRequest))
+      .reply(307, undefined, { Location: redirectedSimple.absoluteUri });
+    scope
+      .patch(redirectedSimple.relativeUri, JSON.stringify(simple.updateNameRequest))
+      .reply(200, redirectedSimple.updateNameResponse);
+
+    return resource
+      .fetch()
+      .then((fetched: SimpleModel) => {
+        expect(fetched.id).toBe<number>(orgFactory.id);
+        expect(fetched.name).toBe<string>(orgFactory.savedName);
+        fetched.name = orgFactory.updatedName;
+        return fetched
+          .update(SimpleModel)
+          .then((updated: SimpleModel) => {
+            const uri = updated['_uri'];
+            expect(uri.href).toBe<string>(redirectedSimple.absoluteUri);
+            expect(uri.templated).toBe<boolean>(false)
+            expect(uri.receivedUri).toBe<string>(redirectedSimple.absoluteUri);
+            expect(uri.requestedUri).toBe<string>(simple.absoluteUri);
+            expect(uri.type).toBeUndefined();
+            expect(uri.resourceUri).toBe<string>(redirectedSimple.absoluteUri);
+            scope.done();
+          });
+      });
+  });
+
+  test('redirect to same host on halresource update, redirected self-link is a null-link', () => {
+    const simple = orgFactory.createSimpleData();
+    const redirectedSimple = orgFactory.createSimpleData('new-simple', SelfOption.NullLink);
+    const client = createClient(uriBuilder.orgBaseURI);
+    const resource = createResource(client, SimpleModel, simple.relativeUri);
+
+    const scope = nock(uriBuilder.orgBaseURI);
+    scope
+      .get(simple.relativeUri)
+      .reply(200, simple.data);
+    scope
+      .patch(simple.relativeUri, JSON.stringify(simple.updateNameRequest))
+      .reply(307, undefined, { Location: redirectedSimple.absoluteUri });
+    scope
+      .patch(redirectedSimple.relativeUri, JSON.stringify(simple.updateNameRequest))
+      .reply(200, redirectedSimple.updateNameResponse);
+
+    return resource
+      .fetch()
+      .then((fetched: SimpleModel) => {
+        expect(fetched.id).toBe<number>(orgFactory.id);
+        expect(fetched.name).toBe<string>(orgFactory.savedName);
+        fetched.name = orgFactory.updatedName;
+        return fetched
+          .update(SimpleModel)
+          .then((updated: SimpleModel) => {
+            const uri = updated['_uri'];
+            expect(uri.href).toBeNull();
+            expect(uri.templated).toBe<boolean>(false)
+            expect(uri.receivedUri).toBe<string>(redirectedSimple.absoluteUri);
+            expect(uri.requestedUri).toBe<string>(simple.absoluteUri);
+            expect(uri.type).toBeUndefined();
+            expect(uri.resourceUri).toBeNull();
+            scope.done();
+          });
+      });
+  });
+
+  test('redirect to same host on halresource update, redirected self-link is a null-string', () => {
+    const simple = orgFactory.createSimpleData();
+    const redirectedSimple = orgFactory.createSimpleData('new-simple', SelfOption.NullString);
+    const client = createClient(uriBuilder.orgBaseURI);
+    const resource = createResource(client, SimpleModel, simple.relativeUri);
+
+    const scope = nock(uriBuilder.orgBaseURI);
+    scope
+      .get(simple.relativeUri)
+      .reply(200, simple.data);
+    scope
+      .patch(simple.relativeUri, JSON.stringify(simple.updateNameRequest))
+      .reply(307, undefined, { Location: redirectedSimple.absoluteUri });
+    scope
+      .patch(redirectedSimple.relativeUri, JSON.stringify(simple.updateNameRequest))
+      .reply(200, redirectedSimple.updateNameResponse);
+
+    return resource
+      .fetch()
+      .then((fetched: SimpleModel) => {
+        expect(fetched.id).toBe<number>(orgFactory.id);
+        expect(fetched.name).toBe<string>(orgFactory.savedName);
+        fetched.name = orgFactory.updatedName;
+        return fetched
+          .update(SimpleModel)
+          .then((updated: SimpleModel) => {
+            const uri = updated['_uri'];
+            expect(uri.href).toBeNull();
+            expect(uri.templated).toBe<boolean>(false)
+            expect(uri.receivedUri).toBe<string>(redirectedSimple.absoluteUri);
+            expect(uri.requestedUri).toBe<string>(simple.absoluteUri);
+            expect(uri.type).toBeUndefined();
+            expect(uri.resourceUri).toBeNull();
+            scope.done();
+          });
+      });
+  });
+
+  test('redirect to same host on halresource update, redirected self-link is missing', () => {
+    const simple = orgFactory.createSimpleData();
+    const redirectedSimple = orgFactory.createSimpleData('new-simple', SelfOption.NoSelf);
+    const client = createClient(uriBuilder.orgBaseURI);
+    const resource = createResource(client, SimpleModel, simple.relativeUri);
+
+    const scope = nock(uriBuilder.orgBaseURI);
+    scope
+      .get(simple.relativeUri)
+      .reply(200, simple.data);
+    scope
+      .patch(simple.relativeUri, JSON.stringify(simple.updateNameRequest))
+      .reply(307, undefined, { Location: redirectedSimple.absoluteUri });
+    scope
+      .patch(redirectedSimple.relativeUri, JSON.stringify(simple.updateNameRequest))
+      .reply(200, redirectedSimple.updateNameResponse);
+
+    return resource
+      .fetch()
+      .then((fetched: SimpleModel) => {
+        expect(fetched.id).toBe<number>(orgFactory.id);
+        expect(fetched.name).toBe<string>(orgFactory.savedName);
+        fetched.name = orgFactory.updatedName;
+        return fetched
+          .update(SimpleModel)
+          .then((updated: SimpleModel) => {
+            const uri = updated['_uri'];
+            expect(uri.href).toBeNull();
+            expect(uri.templated).toBe<boolean>(false)
+            expect(uri.receivedUri).toBe<string>(redirectedSimple.absoluteUri);
+            expect(uri.requestedUri).toBe<string>(simple.absoluteUri);
+            expect(uri.type).toBeUndefined();
+            expect(uri.resourceUri).toBeNull();
+            scope.done();
+          });
+      });
+  });
+
+  test('redirect to same host on halresource update, redirected has no links at all', () => {
+    const simple = orgFactory.createSimpleData();
+    const redirectedSimple = orgFactory.createSimpleData('new-simple', SelfOption.NoSelf);
+    delete redirectedSimple.updateNameResponse._links;
+    const client = createClient(uriBuilder.orgBaseURI);
+    const resource = createResource(client, SimpleModel, simple.relativeUri);
+
+    const scope = nock(uriBuilder.orgBaseURI);
+    scope
+      .get(simple.relativeUri)
+      .reply(200, simple.data);
+    scope
+      .patch(simple.relativeUri, JSON.stringify(simple.updateNameRequest))
+      .reply(307, undefined, { Location: redirectedSimple.absoluteUri });
+    scope
+      .patch(redirectedSimple.relativeUri, JSON.stringify(simple.updateNameRequest))
+      .reply(200, redirectedSimple.updateNameResponse);
+
+    return resource
+      .fetch()
+      .then((fetched: SimpleModel) => {
+        expect(fetched.id).toBe<number>(orgFactory.id);
+        expect(fetched.name).toBe<string>(orgFactory.savedName);
+        fetched.name = orgFactory.updatedName;
+        return fetched
+          .update(SimpleModel)
+          .then((updated: SimpleModel) => {
+            const uri = updated['_uri'];
+            expect(uri.href).toBeNull();
+            expect(uri.templated).toBe<boolean>(false)
+            expect(uri.receivedUri).toBe<string>(redirectedSimple.absoluteUri);
+            expect(uri.requestedUri).toBe<string>(simple.absoluteUri);
+            expect(uri.type).toBeUndefined();
+            expect(uri.resourceUri).toBeNull();
             scope.done();
           });
       });

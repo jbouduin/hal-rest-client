@@ -1,7 +1,7 @@
 import { cache } from './hal-factory';
 import { DefaultSerializer } from './hal-json-serializer';
 import { IJSONSerializer } from './hal-json-serializer.interface';
-import { IHalResource, IHalResourceConstructor } from './hal-resource.interface';
+import { IHalResource, IHalResourceConstructor, IResourceFetchOptions } from './hal-resource.interface';
 import { HalRestClient } from './hal-rest-client';
 import { IHalRestClient } from './hal-rest-client.interface';
 import { IUriData, UriData } from './uri-data';
@@ -53,12 +53,12 @@ export class HalResource implements IHalResource {
   //#endregion
 
   //#region IHalResource methods ----------------------------------------------
-  public fetch(forceOrParams?: boolean | object): Promise<this> {
-    if ((this.isLoaded && !forceOrParams) || this.uri === undefined) {
+  public fetch(options?: IResourceFetchOptions): Promise<this> {
+    if ((this.isLoaded && !options?.force && !options?.params) || this.uri === undefined) {
       return new Promise((resolve) => resolve(this));
     } else {
       return (this.restClient as HalRestClient).fetchInternal(
-        this._uri.fill(forceOrParams as object),
+        this._uri.fill(options?.params),
         this.constructor as IHalResourceConstructor<this>,
         this,
       );
