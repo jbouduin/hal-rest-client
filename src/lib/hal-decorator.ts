@@ -1,12 +1,17 @@
 import 'reflect-metadata';
 import { IHalResource, IHalResourceConstructor, INewable } from './hal-resource.interface';
 
+// TODO 1696 implement IHalPropertyOptions
+// export interface IHalPropertyOptions<T extends IHalResource> {
+//   name?: string; resourceType?: IHalResourceConstructor<T> | INewable
+// }
+
 /**
  * get or create the MetaData
  *
- * @param metaDataKey
- * @param target
- * @returns
+ * @param {string} metaDataKey - the key of the metadata
+ * @param {object} target - the object for which to get or create the metadata
+ * @returns {object} - the newly created or existing metadata
  */
 function getOrCreateMetaData(metaDataKey: string, target: object): object {
 
@@ -18,8 +23,12 @@ function getOrCreateMetaData(metaDataKey: string, target: object): object {
   return result;
 }
 
+/**
+ * @template T - a IHalResource extender
+ * @param {{string, T}} param - the options
+ * @returns {Function} -
+ */
 export function HalProperty<T extends IHalResource>(
-
   { name, resourceType }: { name?: string; resourceType?: IHalResourceConstructor<T> | INewable } =  { }):
   (targetHalResource: object, propertyName: string) => void {
 

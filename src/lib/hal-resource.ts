@@ -172,9 +172,14 @@ export class HalResource implements IHalResource {
     this.settedProps.length = 0;
   }
 
-  /** @internal */
-  public setUri(uri: UriData): void {
-    this._uri = uri;
+  /**
+   * set the UriData
+   *
+   * @internal
+   * @param {UriData} uriData - the uridata
+   */
+  public setUri(uriData: UriData): void {
+    this._uri = uriData;
   }
 
   /** @internal */
@@ -190,7 +195,12 @@ export class HalResource implements IHalResource {
 
   //#region private methods ---------------------------------------------------
   /**
-   * serialize this object
+   * serialize the requested properties and links of this resource
+   *
+   * @param {Array<string>} props - the names of the properties to be serialized
+   * @param {Array<string>} links - the names of the links to be serialized
+   * @param {IJSONSerializer} serializer - the serializer to use. Defaults to the default serializer of the library
+   * @returns {object} - the serialized resources
    */
   private serialize(props: Array<string>, links: Array<string>, serializer: IJSONSerializer = new DefaultSerializer()): object {
     const tsToHal = Reflect.getMetadata('halClient:tsToHal', this);

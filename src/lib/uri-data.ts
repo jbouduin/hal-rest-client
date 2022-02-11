@@ -33,11 +33,11 @@ export class UriData implements IUriData {
 
   //#region Constructor & C° --------------------------------------------------
   /**
-   * Creates a URI
-   * @param href usually the self link of a resource,
-   * @param templated defaults to false
-   * @param requestedUri
-   * @param receivedUri
+   * @param {string} uri - the uri of the resources this UriDate belongs to.
+   * @param {boolean} templated - indicates if the href uri is a templated uri. Defaults to false
+   * @param {string} requestedUri - the relative or absolute uri that was used to call the server
+   * @param {string} receivedUri - The aboslute uri where Axios got the data from. This can be the end of a redirection chain.
+   * @param {string} type - in case of a link, this is the link type (e.g. application/pdf)
    */
   constructor(uri: string, templated = false, requestedUri?: string, receivedUri?: string, type?: string) {
     this.href = uri;

@@ -146,12 +146,14 @@ export class HalRestClient implements IHalRestClient {
 
   //#region methods for internal use in the library ---------------------------
   /**
-  * call an URI to fetch a resource
-  *
-  * @param uri : the uri of resource to fetch
-  * @param type : the class to use to fetch. If you don't want to write you model, use HalResource or @{see fetchResource}
-  * @param resource
-  */
+   * internal method to send a get request to the server
+   *
+   * @template T - a resource type extending {IHalResource}
+   * @param {string} uri - the uri of resource to fetch
+   * @param {IHalResourceConstructor<T>} type : the resulting HalResource class to use to fetch. If you don't want to write a model, use HalResource
+   * @param {T} resource - an existing resource to be fetched. If undefined or null, a new resource is created
+   * @returns {T} - a resource of type T
+   */
   public fetchInternal<T extends IHalResource>(uri: string, type: IHalResourceConstructor<T>, resource?: T): Promise<T> {
     return new Promise((resolve, reject) => {
       this.axios.get(uri).then((response: AxiosResponse<any, any>) => {

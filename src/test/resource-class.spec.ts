@@ -117,7 +117,7 @@ describe('hal-resource fetching', () => {
 
   test('create Resource by absolute URL and fetch it', () => {
     const simpleFactory = new SimpleFactory(uriBuilder);
-    const simple = simpleFactory.getSimpleData();
+    const simple = simpleFactory.createSimpleData();
     const resource = createResource(createClient(uriBuilder.orgBaseURI), HalResource, simple.fullUri);
     const scope = nock(uriBuilder.orgBaseURI);
     scope
@@ -141,7 +141,7 @@ describe('hal-resource fetching', () => {
 
   test('create Resource by absolute URL and fetch it', () => {
     const simpleFactory = new SimpleFactory(uriBuilder);
-    const simple = simpleFactory.getSimpleData();
+    const simple = simpleFactory.createSimpleData();
     const resource = createResource(createClient(uriBuilder.orgBaseURI), HalResource, simple.relativeUri);
     const scope = nock(uriBuilder.orgBaseURI);
     scope
@@ -386,7 +386,7 @@ describe('using hal-resource.create method', () => {
   const uriBuilder = new UriBuilder();
   const simpleFactory = new SimpleFactory(uriBuilder);
   const client = createClient(uriBuilder.orgBaseURI);
-  const simple = simpleFactory.getSimpleData();
+  const simple = simpleFactory.createSimpleData();
 
   test('create using relative creation uri', () => {
     const resource = createResource(client, SimpleModel, simple.relativeCreateUri);

@@ -40,7 +40,7 @@ describe('uri data when fetching resources', () => {
   });
 
   test('create with non-templated uri (templated: undefined) and fetch', () => {
-    const simple = simpleFactory.getSimpleData();
+    const simple = simpleFactory.createSimpleData();
     const resource = createResource(client, SimpleModel, simple.relativeUri);
     const uri = resource['_uri'];
     expect(uri.href).toBe<string>(simple.relativeUri);
@@ -77,7 +77,7 @@ describe('uri data when fetching resources', () => {
   });
 
   test('create with non-templated uri (templated: false) and fetch', () => {
-    const simple = simpleFactory.getSimpleData();
+    const simple = simpleFactory.createSimpleData();
     const resource = createResource(client, SimpleModel, simple.relativeUri, false);
     const uri = resource['_uri'];
     expect(uri.href).toBe<string>(simple.relativeUri);
@@ -109,7 +109,7 @@ describe('uri data when fetching resources', () => {
 
   test('create with templated uri and fetch', () => {
     const simpleListData = simpleFactory.getSimpleListData();
-    const simpleData = simpleFactory.getSimpleData();
+    const simpleData = simpleFactory.createSimpleData();
     const defaultParameters = uriBuilder.getDefaultQueryParameters();
 
     const resource = createResource(client, SimpleListModel, simpleListData.relativeTemplateUri, true);
@@ -208,7 +208,7 @@ describe('uri data when fetching resources', () => {
   });
 
   test('fetch using hal-rest-client', () => {
-    const simple = simpleFactory.getSimpleData();
+    const simple = simpleFactory.createSimpleData();
     const client = createClient(uriBuilder.orgBaseURI);
     const scope = nock(uriBuilder.orgBaseURI);
     scope
@@ -238,7 +238,7 @@ describe('uri data when updating or creating a resource', () => {
   const simpleFactory = new SimpleFactory(uriBuilder);
 
   test('create using client', () => {
-    const simple = simpleFactory.getSimpleData();
+    const simple = simpleFactory.createSimpleData();
     const scope = nock(uriBuilder.orgBaseURI);
     scope
       .post(simple.relativeCreateUri, JSON.stringify(simple.createRequest))
@@ -261,7 +261,7 @@ describe('uri data when updating or creating a resource', () => {
   });
 
   test('create using resource.create', () => {
-    const simple = simpleFactory.getSimpleData();
+    const simple = simpleFactory.createSimpleData();
     const client = createClient(uriBuilder.orgBaseURI);
     const resource = createResource(client, SimpleModel, simple.relativeCreateUri);
     resource.name = simpleFactory.sendName;
@@ -286,7 +286,7 @@ describe('uri data when updating or creating a resource', () => {
   });
 
   test('update using client.update method', () => {
-    const simple = simpleFactory.getSimpleData();
+    const simple = simpleFactory.createSimpleData();
     const scope = nock(uriBuilder.orgBaseURI);
     scope
       .patch(simple.relativeUri, JSON.stringify(simple.updateNameRequest))
@@ -309,7 +309,7 @@ describe('uri data when updating or creating a resource', () => {
   });
 
   test('update using resource.update method', () => {
-    const simple = simpleFactory.getSimpleData();
+    const simple = simpleFactory.createSimpleData();
     const resource = createResource(client, SimpleModel, simple.relativeUri);
 
     const scope = nock(uriBuilder.orgBaseURI);
@@ -349,8 +349,8 @@ describe('redirect on halresource methods', () => {
   const comFactory = new SimpleFactory(uriBuilder, 'com');
 
   test('redirect to same host on halresource create', () => {
-    const simple = orgFactory.getSimpleData();
-    const redirectedSimple = orgFactory.getSimpleData('new-simple');
+    const simple = orgFactory.createSimpleData();
+    const redirectedSimple = orgFactory.createSimpleData('new-simple');
     const client = createClient(uriBuilder.orgBaseURI);
     const resource = createResource(client, SimpleModel, simple.relativeCreateUri);
     resource.name = orgFactory.sendName;
@@ -379,8 +379,8 @@ describe('redirect on halresource methods', () => {
   });
 
   test('redirect to different host on halresource create', () => {
-    const simple = orgFactory.getSimpleData();
-    const redirectedSimple = comFactory.getSimpleData();
+    const simple = orgFactory.createSimpleData();
+    const redirectedSimple = comFactory.createSimpleData();
     const client = createClient(uriBuilder.orgBaseURI);
     const resource = createResource(client, SimpleModel, simple.relativeCreateUri);
     resource.name = orgFactory.sendName;
@@ -410,8 +410,8 @@ describe('redirect on halresource methods', () => {
   });
 
   test('redirect to same host on halresource fetch', () => {
-    const simple = orgFactory.getSimpleData();
-    const redirectedSimple = orgFactory.getSimpleData('new-simple');
+    const simple = orgFactory.createSimpleData();
+    const redirectedSimple = orgFactory.createSimpleData('new-simple');
     const client = createClient(uriBuilder.orgBaseURI);
     const resource = createResource(client, SimpleModel, simple.relativeUri);
 
@@ -441,8 +441,8 @@ describe('redirect on halresource methods', () => {
   });
 
   test('redirect to different host on halresource fetch', () => {
-    const simple = orgFactory.getSimpleData();
-    const redirectedSimple = comFactory.getSimpleData();
+    const simple = orgFactory.createSimpleData();
+    const redirectedSimple = comFactory.createSimpleData();
     const client = createClient(uriBuilder.orgBaseURI);
     const resource = createResource(client, SimpleModel, simple.relativeUri);
     resource.name = orgFactory.sendName;
@@ -474,8 +474,8 @@ describe('redirect on halresource methods', () => {
   });
 
   test('redirect to same host on halresource update', () => {
-    const simple = orgFactory.getSimpleData();
-    const redirectedSimple = orgFactory.getSimpleData('new-simple');
+    const simple = orgFactory.createSimpleData();
+    const redirectedSimple = orgFactory.createSimpleData('new-simple');
     const client = createClient(uriBuilder.orgBaseURI);
     const resource = createResource(client, SimpleModel, simple.relativeUri);
 
@@ -517,8 +517,8 @@ describe('redirect on halresource methods', () => {
     const uriBuilder = new UriBuilder();
     const orgFactory = new SimpleFactory(uriBuilder, 'org');
     const comFactory = new SimpleFactory(uriBuilder, 'com');
-    const simple = orgFactory.getSimpleData();
-    const redirectedSimple = comFactory.getSimpleData();
+    const simple = orgFactory.createSimpleData();
+    const redirectedSimple = comFactory.createSimpleData();
     const client = createClient(uriBuilder.orgBaseURI);
     const resource = createResource(client, SimpleModel, simple.relativeUri);
 
@@ -565,8 +565,8 @@ describe('redirect on hal-rest-client', () => {
   const comFactory = new SimpleFactory(uriBuilder, 'com');
 
   test('redirect to same host on hal-rest-client create', () => {
-    const simple = orgFactory.getSimpleData();
-    const redirectedSimple = orgFactory.getSimpleData('new-simple');
+    const simple = orgFactory.createSimpleData();
+    const redirectedSimple = orgFactory.createSimpleData('new-simple');
     const client = createClient(uriBuilder.orgBaseURI);
 
     const scope = nock(uriBuilder.orgBaseURI);
@@ -592,8 +592,8 @@ describe('redirect on hal-rest-client', () => {
   });
 
   test('redirect to different host on hal-rest-client create', () => {
-    const simple = orgFactory.getSimpleData();
-    const redirectedSimple = comFactory.getSimpleData();
+    const simple = orgFactory.createSimpleData();
+    const redirectedSimple = comFactory.createSimpleData();
     const client = createClient(uriBuilder.orgBaseURI);
     const orgScope = nock(uriBuilder.orgBaseURI);
     orgScope
@@ -620,8 +620,8 @@ describe('redirect on hal-rest-client', () => {
   });
 
   test('redirect to same host on hal-rest-client update', () => {
-    const simple = orgFactory.getSimpleData();
-    const redirectedSimple = orgFactory.getSimpleData('new-simple');
+    const simple = orgFactory.createSimpleData();
+    const redirectedSimple = orgFactory.createSimpleData('new-simple');
     const client = createClient(uriBuilder.orgBaseURI);
     const scope = nock(uriBuilder.orgBaseURI);
     scope
@@ -646,8 +646,8 @@ describe('redirect on hal-rest-client', () => {
   });
 
   test('redirect to different host on hal-rest-client update', () => {
-    const simple = orgFactory.getSimpleData();
-    const redirectedSimple = comFactory.getSimpleData();
+    const simple = orgFactory.createSimpleData();
+    const redirectedSimple = comFactory.createSimpleData();
     const client = createClient(uriBuilder.orgBaseURI);
     const resource = createResource(client, SimpleModel, simple.relativeCreateUri);
     resource.name = orgFactory.sendName;
@@ -676,8 +676,8 @@ describe('redirect on hal-rest-client', () => {
   });
 
   test('redirect to same host on hal-rest-client fetch', () => {
-    const simple = orgFactory.getSimpleData();
-    const redirectedSimple = orgFactory.getSimpleData('new-simple');
+    const simple = orgFactory.createSimpleData();
+    const redirectedSimple = orgFactory.createSimpleData('new-simple');
     const client = createClient(uriBuilder.orgBaseURI);
     const scope = nock(uriBuilder.orgBaseURI);
     scope
@@ -704,8 +704,8 @@ describe('redirect on hal-rest-client', () => {
   });
 
   test('redirect to different host on hal-rest-client fetch', () => {
-    const simple = orgFactory.getSimpleData();
-    const redirectedSimple = comFactory.getSimpleData();
+    const simple = orgFactory.createSimpleData();
+    const redirectedSimple = comFactory.createSimpleData();
     const client = createClient(uriBuilder.orgBaseURI);
     const resource = createResource(client, SimpleModel, simple.relativeCreateUri);
     resource.name = orgFactory.sendName;

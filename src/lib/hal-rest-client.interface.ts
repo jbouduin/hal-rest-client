@@ -9,19 +9,21 @@ export interface IHalRestClient {
   /**
    * Get axios config for customization
    *
-   * @return {AxiosDefaults}
+   * @returns {AxiosDefaults}
    */
   readonly config: AxiosDefaults<any>;
 
   /**
    * get axios request interceptor
-   * @return {AxiosInterceptorManager}
+   *
+   * @returns {AxiosInterceptorManager}
    */
   readonly requestInterceptors: AxiosInterceptorManager<AxiosRequestConfig<any>>;
 
   /**
    * get axions response interceptor
-   * @return {AxiosInterceptorManager}
+   *
+   * @returns {AxiosInterceptorManager}
    */
   readonly responseInterceptors: AxiosInterceptorManager<AxiosResponse<any, any>>;
   //#endregion
@@ -30,10 +32,10 @@ export interface IHalRestClient {
 
   /**
    * add a header to the default configuration to the Axios Http-client
-   * @param header {string} the header name
-   * @param value {string} the header value
    *
-   * @return {HalRestClient} this
+   * @param {string} header - the header name
+   * @param {string} value - the header value
+   * @returns {IHalRestClient} - this
    */
   addHeader(header: string, value: string): IHalRestClient;
 
@@ -94,9 +96,10 @@ export interface IHalRestClient {
   /**
    * sends a get request to the server
    *
-   * @param uri the uri of the resource to fetch
-   * @param type the type of hal resource returned by the server. If no model has been defined, you can use HalResource
-   * @returns the requested HalResource model
+   * @template T - a resource type extending {IHalResource}
+   * @param {string} uri - the relative or absolute resource url to update
+   * @param {IHalResourceConstructor<T>} type - the type of hal resource returned by the server. If no model has been defined, you can use HalResource
+   * @returns {T} - the requested HalResource model
    */
   fetch<T extends IHalResource>(uri: string, type: IHalResourceConstructor<T>): Promise<T>;
 
@@ -104,35 +107,41 @@ export interface IHalRestClient {
    * fetch an array by URI. Rest result can be a simple array of hal resources, or a hal resource whos first
    * property of _embedded is an array of hal resources
    *
-   * @deprecated The method is not HAL compliant and will be removed in future versions
-   * @param resourceURI the uri of resource to fetch
-   * @param type model class to map result (array items). if you don't write your model, use HalResource class
+   * @deprecated - The method is not HAL compliant and will be removed in future versions
+   * @template T - a resource type extending {IHalResource}
+   * @param {string} uri - the relative or absolute resource url to update
+   * @param {IHalResourceConstructor<T>} type - the type of hal resource returned by the server. If no model has been defined, you can use HalResource
+   * @returns {Array<T>} - an array containing models of the requested type
    */
-  fetchArray<T extends IHalResource>(resourceURI: string, type: IHalResourceConstructor<T>): Promise<Array<T>>;
+  fetchArray<T extends IHalResource>(uri: string, type: IHalResourceConstructor<T>): Promise<Array<T>>;
 
   /**
    * set the json parser of the HalRestClient
-   * @param parser the new json parser
+   *
+   * @param {IJSONParser} parser - the json parser that will convert server responses into HalResources
    * @returns IHalRestclient: this
    */
   setJsonParser(parser: IJSONParser): IHalRestClient;
 
   update: {
     /**
-     * sends a put or a patch request to the server
-     * @param uri the resource url to update
-     * @param data the request body to send
-     * @param full Set true to send put, false to send patch. Defaults to false
-     * @returns a record.If the response from the server contains a body, this will be returned.If not the response will be returned.
+     * sends a put or a patch request to the server, expecting a non hal-json answer back.
+     *
+     * @param {string} uri - the relative or absolute resource url to update
+     * @param {object} data - the request body to send
+     * @param {boolean} full - Set true to send a put request, false to send a patch request. Defaults to false.
+     * @returns {Record} - if the response from the server contains a body, this will be returned.If not the response will be returned.
      */
     (uri: string, data: object, full?: boolean): Promise<Record<string, unknown>>;
     /**
-     * sends a put or a patch request to the server
-     * @param uri the resource url to update
-     * @param data the request body to send
-     * @param full Set true to send put, false to send patch. Defaults to false
-     * @param type: the type of hal resource returned by the server. If no model has been defined, you can use HalResource
-     * @returns the requested HalResource model
+     * sends a put or a patch request to the server, expecting a hal-json answer back.
+     *
+     * @template T - a resource type extending {IHalResource}
+     * @param {string} uri - the relative or absolute resource url to update
+     * @param {object} data - the request body to send
+     * @param {boolean} full - Set true to send a put request, false to send a patch request. Defaults to false.
+     * @param {IHalResourceConstructor<T>} type - the type of hal resource returned by the server. If no model has been defined, you can use HalResource
+     * @returns {T} - the requested HalResource model
      */
     <T extends IHalResource>(url: string, data: object, full?: boolean, type?: IHalResourceConstructor<T>): Promise<T>;
   }

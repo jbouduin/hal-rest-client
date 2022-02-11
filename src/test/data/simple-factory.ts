@@ -32,7 +32,12 @@ export class SimpleFactory extends DataFactory {
     this.updatedName = 'Lena';
   }
 
-  public getSimpleData(path = 'simple'): ISimpleFactoryResult {
+  /**
+   *
+   * @param {string} path - relative path to the simple resource(s). Defaults to 'simple'
+   * @returns {ISimpleFactoryResult} - the test data
+   */
+  public createSimpleData(path = 'simple'): ISimpleFactoryResult {
 
     const fullUri = this.uriBuilder.resourceUri(this.tld, false, path, this.id);
 
