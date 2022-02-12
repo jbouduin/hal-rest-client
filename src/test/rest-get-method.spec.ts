@@ -1,5 +1,5 @@
 import * as nock from 'nock';
-import { createClient, HalResource, cache } from '..';
+import { createClient, HalResource, cache, IHalResource } from '..';
 import { IFactoryResult, IData, ILinkCollection, HostTld } from './data/common-definitions';
 import { DataFactory } from './data/data-factory';
 import { PersonFactory } from './data/person-factory';
@@ -47,7 +47,7 @@ describe('fetch resources', () => {
       .reply(200, dashboard.data);
 
     return client
-      .fetch(dashboard.fullUri, DashboardInfo)
+      .fetch(dashboard.absoluteUri, DashboardInfo)
       .then((dashboardInfo: DashboardInfo) => {
         expect(dashboardInfo).toBeInstanceOf(DashboardInfo);
         expect(dashboardInfo.name).toBe<string>('test');
@@ -82,11 +82,11 @@ describe('fetch resources', () => {
       .reply(200, dashboardOnCom.data);
 
     return client
-      .fetch(dashboardOnCom.fullUri, DashboardInfo)
+      .fetch(dashboardOnCom.absoluteUri, DashboardInfo)
       .then((dashboardInfo: DashboardInfo) => {
         expect(dashboardInfo).toBeInstanceOf(DashboardInfo);
         expect(dashboardInfo.name).toBe<string>('test');
-        expect(dashboardInfo.uri.resourceURI).toBe<string>(dashboardOnCom.fullUri);
+        expect(dashboardInfo.uri.resourceUri).toBe<string>(dashboardOnCom.absoluteUri);
         scope.done();
       });
   });
@@ -105,11 +105,11 @@ describe('fetch resources', () => {
       .fetch(spa.relativeUri, HalResource)
       .then((spa: HalResource) => {
         return client
-          .fetch(dashboard.fullUri, DashboardInfo)
+          .fetch(dashboard.absoluteUri, DashboardInfo)
           .then((dashboardInfo: DashboardInfo) => {
             expect(dashboardInfo).toBeInstanceOf(DashboardInfo);
             expect(dashboardInfo.name).toBe<string>('test');
-            spa.link(linkKey).prop('name', 'updated');
+            (spa.getLink<IHalResource>(linkKey)).setProperty('name', 'updated');
             expect(dashboardInfo.name).toBe<string>('updated');
             scope.done();
           });

@@ -9,7 +9,8 @@
       "moduleResolution": "node",
       "sourceMap": true,
       "target": "es6",
-      "outDir":"dist"
+      "outDir":"dist",
+      "stripInternal": true
     },
     "include": [
         "src/**/*"

@@ -5,7 +5,9 @@ import { UriBuilder } from "./uri-builder";
 export interface IPersonFactoryResult extends IFactoryResult<IData> {
   work: IFactoryResult<IData>,
   home: IFactoryResult<IData>,
-  contacts: IFactoryResult<IData>
+  contacts: IFactoryResult<IData>,
+  friends: Array<IFactoryResult<IData>>,
+  colleagues: Array<string>
 }
 
 export class PersonFactory extends DataFactory {
@@ -52,8 +54,14 @@ export class PersonFactory extends DataFactory {
     this.AddEmbeddedPerson(result.data._embedded, 'father', newId++, this.myFathersName);
     this.AddEmbeddedPerson(result.data._embedded, 'mother', newId++, this.myMothersName);
     result.data._embedded['my-friends'] = [];
-    this.AddEmbeddedPerson(result.data._embedded['my-friends'], '', newId++, this.firstFriendsName);
-    this.AddEmbeddedPerson(result.data._embedded['my-friends'], '', newId++, this.secondFriendsName);
+    result.friends = new Array<IFactoryResult<IData>>(
+      this.AddEmbeddedPerson(result.data._embedded['my-friends'], '', newId++, this.firstFriendsName),
+      this.AddEmbeddedPerson(result.data._embedded['my-friends'], '', newId++, this.secondFriendsName)
+    );
+    result.colleagues = new Array<string>(
+      this.uriBuilder.resourceUri(this.tld, false, this.personsPath, id, 'colleagues/1'),
+      this.uriBuilder.resourceUri(this.tld, false, this.personsPath, id, 'colleagues/2')
+    );
     // fill _links
     this.addLinkToFactoredData(
       result.data,
@@ -62,23 +70,30 @@ export class PersonFactory extends DataFactory {
     this.addLinkToFactoredData(
       result.data,
       'home',
-      result.home.fullUri);
+      result.home.absoluteUri);
     this.addLinkToFactoredData(
       result.data,
       'place-of-employment',
-      result.work.fullUri);
+      result.work.absoluteUri);
+    this.addArrayOfLinksToFactoredData(
+      result.data,
+      'colleagues',
+      result.colleagues
+    );
+
     result.data['name'] = 'me';
     return result;
   }
 
-  public AddEmbeddedPerson(parent: any, key: string, id: number, name: string): void {
-    const result = this.createResourceData(this.tld, 'person', id).data;
-    result['name'] = name;
+  public AddEmbeddedPerson(parent: any, key: string, id: number, name: string): IFactoryResult<IData> {
+    const result = this.createResourceData(this.tld, 'person', id);
+    result.data['name'] = name;
     if (Array.isArray(parent)) {
-      parent.push(result);
+      parent.push(result.data);
     } else {
-      parent[key] = result;
+      parent[key] = result.data;
     }
+    return result;
   }
 
   public createContacts(id: number): IFactoryResult<IData> {

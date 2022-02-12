@@ -38,14 +38,24 @@ export class UriBuilder {
     return this.buildUri(tld, relative, undefined, resource, id, ...subResource);
   }
 
-  public templatedResourceUri(tld: HostTld, relative: boolean,resource: string, queryParameters: IQueryParameters): string {
-    const queryString = `{?${Object.keys(queryParameters).join(',')}}`;
+  public templatedResourceUri(tld: HostTld, relative: boolean,resource: string, queryParameters?: IQueryParameters): string {
+    const queryString = `{?${Object.keys(queryParameters || this.getDefaultQueryParameters()).join(',')}}`;
     return this.buildUri(tld, relative, queryString, resource);
   }
 
   public filledTemplatedResourceUri(tld: HostTld, relative: boolean,resource: string, queryParameters: IQueryParameters): string {
     const queryString = '?' + Array.from(Object.keys(queryParameters)).map((key: string) => `${key}=${queryParameters[key]}`).join('&');
     return this.buildUri(tld, relative, queryString, resource);
+  }
+
+
+  public getDefaultQueryParameters(offset = 0): IQueryParameters {
+    const queryParameters: IQueryParameters = {
+      sort: 'id',
+      offset: offset,
+      pageSize: 20,
+    };
+    return queryParameters;
   }
   //#endregion
 

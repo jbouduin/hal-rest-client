@@ -28,7 +28,7 @@ describe('Rest Delete calls', () => {
       .reply(204);
 
     return createClient()
-      .delete(person.fullUri)
+      .delete(person.absoluteUri)
       .then((result: Record<string, string>) => {
         expect(result.status).toBe<number>(204);
         scope.done();
@@ -37,7 +37,7 @@ describe('Rest Delete calls', () => {
 
   test('delete using a HalResource', () => {
     const client = createClient();
-    const resource = createResource(client, HalResource, person.fullUri);
+    const resource = createResource(client, HalResource, person.absoluteUri);
     const scope = nock(uriBuilder.orgBaseURI);
     scope
       .delete(person.relativeUri)
@@ -53,7 +53,7 @@ describe('Rest Delete calls', () => {
 
   test('delete returning a json response', () => {
     const client = createClient();
-    const resource = createResource(client, HalResource, person.fullUri);
+    const resource = createResource(client, HalResource, person.absoluteUri);
     const scope = nock(uriBuilder.orgBaseURI);
     scope
       .delete(person.relativeUri)
@@ -70,7 +70,7 @@ describe('Rest Delete calls', () => {
   test('read generic halResource response returned by server', () => {
     const contact = personFactory.createContacts(1);
     const client = createClient();
-    const resource = createResource(client, HalResource, contact.fullUri);
+    const resource = createResource(client, HalResource, contact.absoluteUri);
     const scope = nock(uriBuilder.orgBaseURI);
     scope
       .delete(contact.relativeUri)
@@ -79,8 +79,8 @@ describe('Rest Delete calls', () => {
     return client
       .delete(resource, HalResource)
       .then((result: HalResource) => {
-        expect(result.prop('phone')).toBe<string>('1234567890');
-        expect(result.uri.uri).toBe<string>(contact.fullUri);
+        expect(result.getProperty('phone')).toBe<string>('1234567890');
+        expect(result['_uri'].href).toBe<string>(contact.absoluteUri);
         scope.done();
       });
   });
@@ -88,7 +88,7 @@ describe('Rest Delete calls', () => {
   test('read model response returned by server', () => {
     const contact = personFactory.createContacts(1);
     const client = createClient();
-    const resource = createResource(client, Contacts, contact.fullUri);
+    const resource = createResource(client, Contacts, contact.absoluteUri);
     const scope = nock(uriBuilder.orgBaseURI);
     scope
       .delete(contact.relativeUri)
@@ -98,8 +98,8 @@ describe('Rest Delete calls', () => {
       .delete(Contacts)
       .then((result: Contacts) => {
         expect(result).toBeInstanceOf(Contacts);
-        expect(result.prop('phone')).toBe<string>('1234567890');
-        expect(result.uri.uri).toBe<string>(contact.fullUri);
+        expect(result.getProperty('phone')).toBe<string>('1234567890');
+        expect(result['_uri'].href).toBe<string>(contact.absoluteUri);
       });
   });
 });

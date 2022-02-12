@@ -1,5 +1,5 @@
 import * as nock from 'nock';
-import { createClient, HalResource, cache } from '..';
+import { createClient, HalResource, cache, IHalResource } from '..';
 import { HostTld, IData, IEmbeddedCollection, IFactoryResult, ILink, ILinkCollection } from './data/common-definitions';
 import { DataFactory } from './data/data-factory';
 import { ProjectFactory } from './data/project-factory';
@@ -25,9 +25,9 @@ describe('Array of links of Halresources', () => {
       .reply(200, project.data);
 
     return createClient()
-      .fetch(project.fullUri, HalResource)
+      .fetch(project.absoluteUri, HalResource)
       .then((project: HalResource) => {
-        const related = project.link('children');
+        const related = project.getLink<Array<IHalResource>>('children');
         expect(related).toBeInstanceOf(Array);
         related.forEach((item: any) => expect(item).toBeInstanceOf(HalResource));
         scope.done();
@@ -47,13 +47,13 @@ describe('Array of links of Halresources', () => {
       .reply(200, firstChild.data);
 
     return createClient()
-      .fetch(project.fullUri, HalResource)
+      .fetch(project.absoluteUri, HalResource)
       .then((project: HalResource) => {
-        const related = project.link('children');
+        const related = project.getLink<Array<IHalResource>>('children');
         return related[0]
           .fetch()
           .then((fetched: HalResource) => {
-            expect(fetched.prop('id')).toBe<number>(2);
+            expect(fetched.getProperty('id')).toBe<number>(2);
             scope.done();
           });
       });
@@ -78,14 +78,14 @@ describe('following links', () => {
       .reply(200, parent.data);
 
     return createClient()
-      .fetch(project.fullUri, HalResource)
+      .fetch(project.absoluteUri, HalResource)
       .then((value: HalResource) => {
-        const subResource = value.link('parent');
-        expect(subResource.prop('name')).toBeUndefined();
+        const subResource = value.getLink<IHalResource>('parent');
+        expect(subResource.getProperty('name')).toBeUndefined();
         return subResource
           .fetch()
           .then(() => {
-            expect(subResource.prop('name')).toBe<string>('Project 5');
+            expect(subResource.getProperty('name')).toBe<string>('Project 5');
             scope.done();
           });
       });
@@ -105,14 +105,14 @@ describe('following links', () => {
       .reply(200, parent.data);
 
     return createClient()
-      .fetch(project.fullUri, HalResource)
+      .fetch(project.absoluteUri, HalResource)
       .then((value: HalResource) => {
-        const subResource = value.prop('parent');
-        expect(subResource.prop('name')).toBeUndefined();
+        const subResource = value.getProperty<IHalResource>('parent');
+        expect(subResource.getProperty('name')).toBeUndefined();
         return subResource
           .fetch()
           .then(() => {
-            expect(subResource.prop('name')).toBe<string>('Project 5');
+            expect(subResource.getProperty('name')).toBe<string>('Project 5');
             scope.done();
           });
       });
@@ -127,9 +127,9 @@ describe('following links', () => {
       .reply(200, project.data);
 
     return createClient()
-      .fetch(project.fullUri, HalResource)
+      .fetch(project.absoluteUri, HalResource)
       .then((project: HalResource) => {
-        expect(project.link('versions').uri.fill()).toBe<string>(versions);
+        expect((project.getLink<IHalResource>('versions')).uri.resourceUri).toBe<string>(versions);
       });
   });
 });
@@ -159,7 +159,7 @@ describe('additional properties on links', () => {
     return createClient(uriBuilder.orgBaseURI)
       .fetch(data.relativeUri, HalResource)
       .then((resource: HalResource) => {
-        expect(resource.link('other').prop('type')).toBe<string>('application/json');
+        expect((resource.getLink<IHalResource>('other')).getProperty('type')).toBe<string>('application/json');
         scope.done();
       });
   });
@@ -176,11 +176,11 @@ describe('additional properties on links', () => {
     return createClient(uriBuilder.orgBaseURI)
       .fetch(data.relativeUri, HalResource)
       .then((resource: HalResource) => {
-        return resource.link('other')
+        return (resource.getLink<IHalResource>('other') as HalResource)
           .fetch()
           .then((link: HalResource) => {
-            expect(link.prop('type')).toBe<string>('application/json');
-            expect(link.prop('name')).toBe<string>('other');
+            expect(link.getProperty('type')).toBe<string>('application/json');
+            expect(link.getProperty('name')).toBe<string>('other');
             scope.done();
           });
       });
@@ -215,9 +215,9 @@ describe('Resources with no \'self\'', () => {
     return createClient(uriBuilder.orgBaseURI)
       .fetch(resourceWithoutSelf.relativeUri, HalResource)
       .then((resource: HalResource) => {
-        expect(resource.uri).toBeUndefined();
-        expect(resource.prop('id')).toBe<number>(1);
-        expect(resource.prop('name')).toBe<string>('test');
+        expect(resource.uri.resourceUri).toBeNull();
+        expect(resource.getProperty('id')).toBe<number>(1);
+        expect(resource.getProperty('name')).toBe<string>('test');
         const cacheKeys = cache.getKeys('Resource');
         expect(cacheKeys).toHaveLength(1);
         expect(cacheKeys[0]).toBe<string>(otherLinkAbsolute);
@@ -229,17 +229,18 @@ describe('Resources with no \'self\'', () => {
     const scope = nock(uriBuilder.orgBaseURI);
     scope
       .get(resourceWithoutSelf.relativeUri)
+      .twice()
       .reply(200, resourceWithoutSelf.data);
 
     return createClient(uriBuilder.orgBaseURI)
       .fetch(resourceWithoutSelf.relativeUri, HalResource)
       .then((resource: HalResource) => {
         return resource
-          .fetch(true)
+          .fetch({ force: true })
           .then((fetched: HalResource) => {
-            expect(fetched.uri).toBeUndefined();
-            expect(fetched.prop('id')).toBe<number>(1);
-            expect(fetched.prop('name')).toBe<string>('test');
+            expect(fetched.uri.resourceUri).toBeNull();
+            expect(fetched.getProperty('id')).toBe<number>(1);
+            expect(fetched.getProperty('name')).toBe<string>('test');
             const cacheKeys = cache.getKeys('Resource');
             expect(cacheKeys).toHaveLength(1);
             expect(cacheKeys[0]).toBe<string>(otherLinkAbsolute);
@@ -267,12 +268,12 @@ describe('Resources with no \'self\'', () => {
     return createClient(uriBuilder.orgBaseURI)
       .fetch(resourceWithSubResourceWithoutSelf.relativeUri, HalResource)
       .then((resource: HalResource) => {
-        const subResourceWithoutSelf = resource.prop('child');
-        expect(subResourceWithoutSelf.uri).toBeUndefined();
+        const subResourceWithoutSelf = resource.getProperty<IHalResource>('child');
+        expect(subResourceWithoutSelf.uri.resourceUri).toBeNull();
         const cacheKeys = cache.getKeys('Resource');
         expect(cacheKeys).toHaveLength(2);
         expect(cacheKeys).toContain<string>(otherLinkAbsolute);
-        expect(cacheKeys).toContain<string>(resourceWithSubResourceWithoutSelf.fullUri);
+        expect(cacheKeys).toContain<string>(resourceWithSubResourceWithoutSelf.absoluteUri);
         scope.done();
       });
   });
@@ -294,7 +295,7 @@ describe('Templated links', () => {
       .reply(200, projectList.data);
 
     return createClient()
-      .fetch(projectList.fullUri, HalResource)
+      .fetch(projectList.absoluteUri, HalResource)
       .then(() => {
         expect(cache.getKeys('Resource')).not.toContain(templatedUriString);
         scope.done();
@@ -312,25 +313,26 @@ describe('Templated links', () => {
       .reply(200, projectList.data);
 
     return createClient()
-      .fetch(projectList.fullUri, HalResource)
+      .fetch(projectList.absoluteUri, HalResource)
       .then((resource: HalResource) => {
-        expect(resource.uri.uri).toBe<string>(templatedUriString);
+        expect(resource['_uri'].href).toBe<string>(templatedUriString);
         expect(resource.uri.templated).toBe<boolean>(true);
-        expect(resource.prop('results')).toHaveLength(2);
-        const resourceUri = resource.uri.resourceURI;
+        expect(resource.getProperty('results')).toHaveLength(2);
+        const resourceUri = resource.uri.resourceUri;
         const fill = {
-          offset:0,
+          offset: 0,
           sort: 'LastModified',
-          pageSize:20
+          pageSize: 20
         };
-        expect(resource.uri.fill(fill)).toBe<string>(resourceUri);
+        expect(resource['_uri'].fill(fill)).toBe<string>(resourceUri);
         scope.done();
       });
   });
 
   test('fetch templated link using parameter', () => {
+    const jump = 666;
     const projectList0 = projectFactory.createProjectList(0);
-    const projectList1 = projectFactory.createProjectList(1);
+    const projectList1 = projectFactory.createProjectList(jump);
     const scope = nock(uriBuilder.orgBaseURI);
     scope
       .get(projectList0.relativeUri)
@@ -339,16 +341,18 @@ describe('Templated links', () => {
       .get(projectList1.relativeUri)
       .reply(200, projectList1.data)
     return createClient(uriBuilder.orgBaseURI)
-      .fetch(projectList0.fullUri, HalResource)
+      .fetch(projectList0.absoluteUri, HalResource)
       .then((resource: HalResource) => {
-        const findLink = resource.link('jumpTo');
+        const findLink = resource.getLink<IHalResource>('jumpTo');
         expect(findLink.uri.templated).toBe<boolean>(true);
-        expect(findLink.uri.resourceURI).toBe<string>('');
+        expect(findLink.uri.resourceUri).toBeUndefined();
         return findLink
-          .fetch({ jumpTo: 1 })
+          .fetch({ params: { jumpTo: jump } })
           .then((found: HalResource) => {
-            expect(found.prop('results')[0].prop('id')).toBe<number>(10);
-            expect(found.uri.resourceURI).toBe<string>(projectList1.fullUri);
+            expect(found.getProperty('results')[0].getProperty('id')).toBe<number>(jump * 10);
+            expect(found.uri.resourceUri).toBe<string>(projectList1.absoluteUri);
+            expect(findLink.getProperty('results')[0].getProperty('id')).toBe<number>(jump * 10);
+            expect(findLink.uri.resourceUri).toBe<string>(projectList1.absoluteUri);
             scope.done();
           });
       });
@@ -369,13 +373,13 @@ describe('Templated links', () => {
     return createClient(uriBuilder.orgBaseURI)
       .fetch(projectList.relativeUri, HalResource)
       .then((resource: HalResource) => {
-        const findLink = resource.link('templated');
+        const findLink = resource.getLink<IHalResource>('templated');
         return findLink
           .fetch()
           .then((found: HalResource) => {
-            expect(found.prop('offset')).toBe<number>(0);
-            expect(found.prop('pageSize')).toBe<number>(20);
-            expect(found.uri.resourceURI).toBe<string>(rootProjectList.fullUri);
+            expect(found.getProperty('offset')).toBe<number>(0);
+            expect(found.getProperty('pageSize')).toBe<number>(20);
+            expect(found.uri.resourceUri).toBe<string>(rootProjectList.absoluteUri);
             scope.done();
           });
       });
@@ -392,13 +396,13 @@ describe('Templated links', () => {
       .get(projectList1.relativeUri)
       .reply(200, projectList1.data)
     return createClient(uriBuilder.orgBaseURI)
-      .fetch(projectList0.fullUri, HalResource)
+      .fetch(projectList0.absoluteUri, HalResource)
       .then((resource: HalResource) => {
         return resource
-          .link('jumpTo')
-          .fetch({ jumpTo: 1 })
+          .getLink<IHalResource>('jumpTo')
+          .fetch({params: { jumpTo: 1 }})
           .then((fetched: HalResource) => {
-            expect(fetched.prop('results')[0].prop('id')).toBe<number>(10);
+            expect(fetched.getProperty('results')[0].getProperty('id')).toBe<number>(10);
             scope.done();
           });
       });
@@ -415,6 +419,7 @@ describe.each([
   const contextTld: HostTld = 'org';
   const uriBuilder = new UriBuilder();
   const projectFactory = new ProjectFactory(contextTld, uriBuilder);
+
   test(`self-link was ${relativeSelfLink ? 'relative' : 'absolute'} - link is ${relativeLink ? 'relative' : 'absolute'}`, () => {
     const client = createClient(uriBuilder.baseUri(contextTld));
     const projectList = projectFactory.createProjectList(1, relativeSelfLink);
@@ -432,19 +437,19 @@ describe.each([
     return client
       .fetch(project.relativeUri, HalResource)
       .then((fetchedProject: HalResource) => {
-        expect(fetchedProject.prop('id')).toBe<number>(24);
+        expect(fetchedProject.getProperty('id')).toBe<number>(24);
         expect(fetchedProject.isLoaded).toBe<boolean>(true);
-        expect(cache.getKeys('Resource')).toContainEqual(project.fullUri);
+        expect(cache.getKeys('Resource')).toContainEqual(project.absoluteUri);
         return client
           .fetch(projectList.relativeUri, HalResource)
           .then((list: HalResource) => {
-            const project24 = list.prop('results')[1].link('parent') as HalResource;
+            const project24 = list.getProperty<Array<IHalResource>>('results')[1].getLink<IHalResource>('parent') as HalResource;
             expect(project24.isLoaded).toBe<boolean>(true);
             expect(project24).toBe(fetchedProject);
             // still the best way to see if this is the same instance from cache
-            fetchedProject.prop('name', 'new name');
-            expect(fetchedProject.prop('name')).toBe<string>('new name');
-            expect(project24.prop('name')).toBe<string>('new name');
+            fetchedProject.setProperty('name', 'new name');
+            expect(fetchedProject.getProperty('name')).toBe<string>('new name');
+            expect(project24.getProperty('name')).toBe<string>('new name');
           })
       })
   });

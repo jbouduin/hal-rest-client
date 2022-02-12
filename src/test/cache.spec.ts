@@ -1,5 +1,6 @@
 import * as nock from 'nock';
-import { createClient, HalResource, cache, HalRestClient, createResource } from '..';
+import { HalRestClient } from '../lib/hal-rest-client';
+import { createClient, cache, createResource, IHalResource, HalResource } from '..';
 import { IFactoryResult, IData, HostTld } from './data/common-definitions';
 import { DataFactory, SelfOption } from './data/data-factory';
 import { UriBuilder } from './data/uri-builder';
@@ -40,9 +41,6 @@ describe.each([
   [true, 'org', 'absolute', SelfOption.AbsoluteString, 2],
   [true, 'com', 'absolute', SelfOption.AbsoluteLink, 2],
   [true, 'com', 'absolute', SelfOption.AbsoluteString, 2],
-  // rest client has no base URI and self-link is relative => no caching
-  [false, 'org', 'absolute', SelfOption.RelativeLink, 0],
-  [false, 'org', 'absolute', SelfOption.RelativeString, 0],
   // rest client has a base URI and self-link resource was fetched with an absolute URL on a different server => no caching
   [true, 'com', 'absolute', SelfOption.RelativeLink, 0],
   [true, 'com', 'absolute', SelfOption.RelativeString, 0],
@@ -50,7 +48,12 @@ describe.each([
   [true, 'org', 'relative', SelfOption.RelativeLink, 2],
   [true, 'org', 'relative', SelfOption.RelativeString, 2],
   [true, 'org', 'absolute', SelfOption.RelativeLink, 2],
-  [true, 'org', 'absolute', SelfOption.RelativeString, 2]
+  [true, 'org', 'absolute', SelfOption.RelativeString, 2],
+  // rest client has no base URI and self-link is relative => no caching
+  [false, 'org', 'absolute', SelfOption.RelativeLink, 0],
+  [false, 'org', 'absolute', SelfOption.RelativeString, 0],
+  [false, 'com', 'absolute', SelfOption.RelativeLink, 0],
+  [false, 'com', 'absolute', SelfOption.RelativeString, 0]
 ])('Caching resources', (clientWithBaseURI: boolean, dummyTld: HostTld, fetch: FetchType, selfOption: SelfOption, cachedEntries: number) => {
   const uriBuilder = new UriBuilder();
   const dummyFactory = new DataFactory(uriBuilder);
@@ -66,16 +69,36 @@ describe.each([
       .reply(200, dummy.data);
 
     return client
-      .fetch(fetch === 'absolute' ? dummy.fullUri : dummy.relativeUri, HalResource)
+      .fetch(fetch === 'absolute' ? dummy.absoluteUri : dummy.relativeUri, HalResource)
       .then(() => {
         const cacheKeys = cache.getKeys('Resource');
         expect(cacheKeys).toHaveLength(cachedEntries);
         if (cachedEntries > 0) {
-          expect(cacheKeys).toContainEqual<string>(dummy.fullUri);
-          expect(cacheKeys).toContainEqual<string>(embedded.fullUri);
+          expect(cacheKeys).toContainEqual<string>(dummy.absoluteUri);
+          expect(cacheKeys).toContainEqual<string>(embedded.absoluteUri);
         }
         scope.done();
       });
+  });
+});
+
+describe('creating a resource once with full and one with relative uri', () => {
+  const uriBuilder = new UriBuilder();
+  const client = createClient(uriBuilder.orgBaseURI);
+  const full = uriBuilder.resourceUri('org', false, 'test', 69);
+  const relative = uriBuilder.resourceUri('org', true, 'test', 69);
+  test('full uri first', () => {
+    createResource(client, HalResource, full);
+    expect(cache.getKeys('Resource')).toHaveLength(1);
+    createResource(client, HalResource, relative);
+    expect(cache.getKeys('Resource')).toHaveLength(1);
+  });
+
+  test('relative uri first', () => {
+    createResource(client, HalResource, relative);
+    expect(cache.getKeys('Resource')).toHaveLength(1);
+    createResource(client, HalResource, full);
+    expect(cache.getKeys('Resource')).toHaveLength(1);
   });
 });
 
@@ -246,6 +269,28 @@ describe('clear client cache tests', () => {
   });
 });
 
+describe('resource.removeFromCache method' , () => {
+  const uriBuilder = new UriBuilder();
+  const client = createClient(uriBuilder.orgBaseURI);
+  test('call remove from cache on a cached entry', () => {
+    const full = uriBuilder.resourceUri('org', false, 'test', 69);
+    const resource = createResource(client, HalResource, full);
+    expect(cache.getKeys('Resource')).toHaveLength(1);
+    const result = resource.removeFromCache();
+    expect(result).toBe<boolean>(true);
+    expect(cache.getKeys('Resource')).toHaveLength(0);
+  });
+
+  test('call remove from cache on non a cached entry', () => {
+    const full = uriBuilder.resourceUri('org', false, 'test', 69);
+    const resource = createResource(client, HalResource, full, true);
+    expect(cache.getKeys('Resource')).toHaveLength(0);
+    const result = resource.removeFromCache();
+    expect(result).toBe<boolean>(false);
+    expect(cache.getKeys('Resource')).toHaveLength(0);
+  });
+});
+
 describe('clear resource cache tests', () => {
   const uriBuilder = new UriBuilder();
   const dummyFactory = new DataFactory(uriBuilder);
@@ -274,7 +319,7 @@ describe('clear resource cache tests', () => {
 
   test('clear resource cache using a string parameter', () => {
     expect(cache.getKeys('Resource')).toHaveLength(10);
-    const dummy = dummies[0].fullUri;
+    const dummy = dummies[0].absoluteUri;
     const cleared = cache.clear('Resource', dummy);
     expect(cleared).toHaveLength(1);
     expect(cleared[0]).toBe<string>(dummy);
@@ -286,8 +331,8 @@ describe('clear resource cache tests', () => {
 
   test('clear resource cache using an array of strings parameter', () => {
     expect(cache.getKeys('Resource')).toHaveLength(10);
-    const dummy0 = dummies[0].fullUri;
-    const dummy1 = dummies[1].fullUri;
+    const dummy0 = dummies[0].absoluteUri;
+    const dummy1 = dummies[1].absoluteUri;
     const cleared = cache.clear('Resource', [dummy1, dummy0]);
     expect(cleared).toHaveLength(2);
     expect(cleared).toContain<string>(dummy0);
@@ -301,7 +346,7 @@ describe('clear resource cache tests', () => {
 
   test('clear resource cache using an array of strings parameter with double entry', () => {
     expect(cache.getKeys('Resource')).toHaveLength(10);
-    const dummy = dummies[0].fullUri;
+    const dummy = dummies[0].absoluteUri;
     const cleared = cache.clear('Resource', [dummy, dummy]);
     expect(cleared).toHaveLength(1);
     expect(cleared[0]).toBe<string>(dummy);
@@ -354,14 +399,14 @@ describe('using cache', () => {
       .reply(200, [dummy2.data]);
 
     return createClient()
-      .fetchArray(dummy1.fullUri, HalResource)
+      .fetchArray(dummy1.absoluteUri, HalResource)
       .then((dummies: Array<HalResource>) => {
-        expect(dummies[0].prop('done').prop('count')).toBe<number>(1);
+        expect((dummies[0].getProperty<IHalResource>('done')).getProperty('count')).toBe<number>(1);
         return createClient()
-          .fetchArray(dummy1.fullUri, HalResource)
+          .fetchArray(dummy1.absoluteUri, HalResource)
           .then((dummies2: Array<HalResource>) => {
-            expect(dummies2[0].prop('done')).toBeUndefined();
-            expect(dummies2[0].prop('testing').prop('count')).toBe<number>(1);
+            expect(dummies2[0].getProperty('done')).toBeUndefined();
+            expect((dummies2[0].getProperty<IHalResource>('testing')).getProperty('count')).toBe<number>(1);
             scope.done();
           });
       });
@@ -386,6 +431,174 @@ describe('using cache', () => {
 });
 
 describe.each([
+  [undefined, undefined, false],
+  [undefined, false, false],
+  [undefined, true, false],
+  ['test', undefined, true],
+  ['test', false, true],
+  ['test', true, false]
+])('caching of resources created using the factory', (uri: string, templated: boolean, isCached: boolean) => {
+  const uriBuilder = new UriBuilder();
+  const logAs = templated ? 'true' : templated === false ? 'false' : 'undefined'
+  test(`resource created ${uri ? 'with' : 'without'} uri, templated = ${logAs}`, () => {
+    createResource(createClient(uriBuilder.orgBaseURI), HalResource, uri, templated);
+    expect(cache.getKeys('Resource')).toHaveLength(isCached ? 1 : 0);
+  });
+});
+
+
+describe('things not to be cached', () => {
+  const uriBuilder = new UriBuilder();
+  test('null href in _links', () => {
+    const client = createClient(uriBuilder.orgBaseURI);
+    const scope = nock(uriBuilder.orgBaseURI);
+    const dummyUri = uriBuilder.resourceUri('org', true, 'dummy');
+    const noNullUri = uriBuilder.resourceUri('org', false, 'no-null');
+    const dummyReply = {
+      _links: {
+        withNull: { href: null },
+        noNull: { href: noNullUri }
+      }
+    };
+
+    scope
+      .get(dummyUri)
+      .reply(200, dummyReply);
+
+    return client
+      .fetch(dummyUri, HalResource)
+      .then((result: HalResource) => {
+        expect(result.getLink('withNull')).toBeInstanceOf(HalResource);
+        expect(result.getLink('noNull')).toBeInstanceOf(HalResource);
+        const cacheKeys = cache.getKeys('Resource');
+        expect(cacheKeys).toHaveLength(1);
+        expect(cacheKeys[0]).toBe<string>(noNullUri);
+      })
+  });
+
+  test('empty href in _links', () => {
+    const client = createClient(uriBuilder.orgBaseURI);
+    const scope = nock(uriBuilder.orgBaseURI);
+    const dummyUri = uriBuilder.resourceUri('org', true, 'dummy');
+    const noNullUri = uriBuilder.resourceUri('org', false, 'no-null');
+    const dummyReply = {
+      _links: {
+        withNull: { href: '' },
+        noNull: { href: noNullUri }
+      }
+    };
+
+    scope
+      .get(dummyUri)
+      .reply(200, dummyReply);
+
+    return client
+      .fetch(dummyUri, HalResource)
+      .then((result: HalResource) => {
+        expect(result.getLink('withNull')).toBeInstanceOf(HalResource);
+        expect(result.getLink('noNull')).toBeInstanceOf(HalResource);
+        const cacheKeys = cache.getKeys('Resource');
+        expect(cacheKeys).toHaveLength(1);
+        expect(cacheKeys[0]).toBe<string>(noNullUri);
+      })
+  });
+
+  test('null string in _links', () => {
+    const client = createClient(uriBuilder.orgBaseURI);
+    const scope = nock(uriBuilder.orgBaseURI);
+    const dummyUri = uriBuilder.resourceUri('org', true, 'dummy');
+    const noNullUri = uriBuilder.resourceUri('org', false, 'no-null');
+    const dummyReply = {
+      _links: {
+        withNull: null,
+        noNull: noNullUri
+      }
+    };
+
+    scope
+      .get(dummyUri)
+      .reply(200, dummyReply);
+
+    return client
+      .fetch(dummyUri, HalResource)
+      .then((result: HalResource) => {
+        expect(result.getLink('withNull')).toBeInstanceOf(HalResource);
+        expect(result.getLink('noNull')).toBeInstanceOf(HalResource);
+        const cacheKeys = cache.getKeys('Resource');
+        expect(cacheKeys).toHaveLength(1);
+        expect(cacheKeys[0]).toBe<string>(noNullUri);
+      })
+  });
+
+  test('empty string in _links', () => {
+    const client = createClient(uriBuilder.orgBaseURI);
+    const scope = nock(uriBuilder.orgBaseURI);
+    const dummyUri = uriBuilder.resourceUri('org', true, 'dummy');
+    const noNullUri = uriBuilder.resourceUri('org', false, 'no-null');
+    const dummyReply = {
+      _links: {
+        withNull: '',
+        noNull: noNullUri
+      }
+    };
+
+    scope
+      .get(dummyUri)
+      .reply(200, dummyReply);
+
+    return client
+      .fetch(dummyUri, HalResource)
+      .then((result: HalResource) => {
+        expect(result.getLink('withNull')).toBeInstanceOf(HalResource);
+        expect(result.getLink('noNull')).toBeInstanceOf(HalResource);
+        const cacheKeys = cache.getKeys('Resource');
+        expect(cacheKeys).toHaveLength(1);
+        expect(cacheKeys[0]).toBe<string>(noNullUri);
+      })
+  });
+
+  test('links which have a type which is not hal-json', () => {
+    const client = createClient(uriBuilder.orgBaseURI);
+    const scope = nock(uriBuilder.orgBaseURI);
+    const dummyUri = uriBuilder.resourceUri('org', true, 'dummy');
+    const htmlUri = uriBuilder.resourceUri('org', false, 'html');
+    const typedResourceUri = uriBuilder.resourceUri('org', false, 'typedResource');
+    const nonTypedResourceUri = uriBuilder.resourceUri('org', false, 'nontypedResource');
+    const dummyReply = {
+      _links: {
+        htmlLink: {
+          href: htmlUri,
+          type: 'text/html'
+        },
+        typed: {
+          href: typedResourceUri,
+          type: 'application/hal+json'
+        },
+        nontyped: {
+          href: nonTypedResourceUri
+        }
+      }
+    };
+
+    scope
+      .get(dummyUri)
+      .reply(200, dummyReply);
+
+    return client
+      .fetch(dummyUri, HalResource)
+      .then((result: HalResource) => {
+        expect(result.getLink('typed')).toBeInstanceOf(HalResource);
+        expect(result.getLink('nontyped')).toBeInstanceOf(HalResource);
+        expect(result.getLink('htmlLink')).toBeInstanceOf(HalResource);
+        const cacheKeys = cache.getKeys('Resource');
+        expect(cacheKeys).toHaveLength(2);
+        expect(cacheKeys).toContainEqual(nonTypedResourceUri);
+        expect(cacheKeys).toContainEqual(typedResourceUri);
+      })
+  })
+});
+
+describe.each([
   [true, true],
   [true, false],
   [false, false]
@@ -403,10 +616,10 @@ describe.each([
       .reply(200, dummy.data);
 
     return client
-      .fetch(fetchWithRelativeUri ? dummy.relativeUri : dummy.fullUri, HalResource)
+      .fetch(fetchWithRelativeUri ? dummy.relativeUri : dummy.absoluteUri, HalResource)
       .then((fetched: HalResource) => {
         expect(fetched.isLoaded).toBe<boolean>(true);
-        const created = createResource(client, HalResource, clientWithBaseUri ? dummy.relativeUri : dummy.fullUri);
+        const created = createResource(client, HalResource, clientWithBaseUri ? dummy.relativeUri : dummy.absoluteUri);
         expect(created.isLoaded).toBe<boolean>(true);
         expect(created).toBe(fetched);
       });

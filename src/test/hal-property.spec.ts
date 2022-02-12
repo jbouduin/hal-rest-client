@@ -100,8 +100,8 @@ describe('@HalProperty', () => {
       .intercept(relativeUri, 'POST', { name: 'name', jsonProperty: 'value' })
       .reply(200);
     const resource = createResource(createClient(baseUri), TestModel, relativeUri);
-    resource.prop('name', 'name');
-    resource.prop('typeScriptProperty', 'value');
+    resource.setProperty('name', 'name');
+    resource.setProperty('typeScriptProperty', 'value');
     return resource.create()
       .then((result: any) => {
         expect(result.status).toBe<number>(200);

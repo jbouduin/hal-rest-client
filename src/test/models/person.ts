@@ -27,4 +27,7 @@ export class Person extends HalResource {
 
   @HalProperty({ name: 'place-of-employment', resourceType: Location })
   public work: Location;
+
+  @HalProperty({ resourceType: HalResource})
+  public colleagues: Array<HalResource>;
 }

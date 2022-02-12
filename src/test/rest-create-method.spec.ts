@@ -23,25 +23,25 @@ describe('Test Rest create api', () => {
   const jsonResponse = { status: 'OK' };
 
   const testHalResource = (resource: HalResource) => {
-    expect(resource.prop('name')).toBe<string>(nameSaved);
-    expect(resource.prop('id')).toBe<number>(id);
-    expect(resource.uri.resourceURI).toBe<string>(personUri);
-    expect(resource.uri.uri).toBe<string>(personUri);
+    expect(resource.getProperty('name')).toBe<string>(nameSaved);
+    expect(resource.getProperty('id')).toBe<number>(id);
+    expect(resource.uri.resourceUri).toBe<string>(personUri);
+    expect(resource['_uri'].href).toBe<string>(personUri);
   };
 
   const testModel = (model: SimpleModel) => {
-    expect(model.prop('name')).toBe<string>(nameSaved);
+    expect(model.getProperty('name')).toBe<string>(nameSaved);
     expect(model.name).toBe<string>(nameSaved);
-    expect(model.prop('id')).toBe<number>(id);
+    expect(model.getProperty('id')).toBe<number>(id);
     expect(model.id).toBe<number>(id);
-    expect(model.uri.resourceURI).toBe<string>(personUri);
-    expect(model.uri.uri).toBe<string>(personUri);
+    expect(model.uri.resourceUri).toBe<string>(personUri);
+    expect(model['_uri'].href).toBe<string>(personUri);
   };
 
   test('create person using Halresource and receive halresource back', () => {
     const client = createClient(uriBuilder.orgBaseURI);
     const resource = createResource(client, HalResource, endpoint);
-    resource.prop('name', nameSubmitted);
+    resource.setProperty('name', nameSubmitted);
     const scope = nock(uriBuilder.orgBaseURI)
       .post(endpoint, { name: nameSubmitted })
       .reply(200, resourceResponse);
@@ -55,7 +55,7 @@ describe('Test Rest create api', () => {
   test('create person using Halresource and receive personmodel back', () => {
     const client = createClient(uriBuilder.orgBaseURI);
     const resource = createResource(client, HalResource, endpoint);
-    resource.prop('name', nameSubmitted);
+    resource.setProperty('name', nameSubmitted);
     const scope = nock(uriBuilder.orgBaseURI)
       .post(endpoint, { name: nameSubmitted })
       .reply(200, resourceResponse);
@@ -69,7 +69,7 @@ describe('Test Rest create api', () => {
   test('create person using Halresource and receive json back', () => {
     const client = createClient(uriBuilder.orgBaseURI);
     const resource = createResource(client, HalResource, endpoint);
-    resource.prop('name', nameSubmitted);
+    resource.setProperty('name', nameSubmitted);
     const scope = nock(uriBuilder.orgBaseURI)
       .post(endpoint, { name: nameSubmitted })
       .reply(200, jsonResponse);
@@ -83,7 +83,7 @@ describe('Test Rest create api', () => {
   test('create person using Halresource and receive status back', () => {
     const client = createClient(uriBuilder.orgBaseURI);
     const resource = createResource(client, HalResource, endpoint);
-    resource.prop('name', nameSubmitted);
+    resource.setProperty('name', nameSubmitted);
     const scope = nock(uriBuilder.orgBaseURI)
       .post(endpoint, { name: nameSubmitted })
       .reply(200);

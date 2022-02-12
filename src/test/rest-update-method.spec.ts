@@ -1,4 +1,4 @@
-import { createClient, HalResource, cache } from '..';
+import { createClient, HalResource, cache, IHalResource } from '..';
 import * as nock from 'nock';
 import { UriBuilder } from './data/uri-builder';
 import { PersonFactory } from './data/person-factory';
@@ -17,7 +17,6 @@ afterEach(() => {
 });
 //#endregion
 
-// TODO 1670 Add missing tests to rest-update-method.spec.ts
 describe('Rest update calls', () => {
   const uriBuilder = new UriBuilder();
   const personFactory = new PersonFactory('org', uriBuilder);
@@ -33,17 +32,17 @@ describe('Rest update calls', () => {
       .reply(200, person1.data)
       .get(person2.relativeUri)
       .reply(200, person2.data)
-      .intercept(person1.relativeUri, 'PATCH', { 'name': 'test', 'best-friend': person2.fullUri })
+      .intercept(person1.relativeUri, 'PATCH', { 'name': 'test', 'best-friend': person2.absoluteUri })
       .reply(200);
 
     return Promise
       .all([
-        client.fetch(person1.fullUri, HalResource),
-        client.fetch(person2.fullUri, HalResource)
+        client.fetch(person1.absoluteUri, HalResource),
+        client.fetch(person2.absoluteUri, HalResource)
       ])
       .then((resources: [HalResource, HalResource]) => {
-        resources[0].prop('name', 'test');
-        resources[0].prop('best-friend', resources[1]);
+        resources[0].setProperty('name', 'test');
+        resources[0].setProperty('best-friend', resources[1]);
         return resources[0]
           .update()
           .then((result: Record<string, any>) => {
@@ -74,20 +73,20 @@ describe('Rest update calls', () => {
 
     const client = createClient();
     return client
-      .fetch(person.fullUri, HalResource)
+      .fetch(person.absoluteUri, HalResource)
       .then((resource: HalResource) => {
-        return resource.prop('contacts')
+        return resource.getProperty<IHalResource>('contacts')
           .fetch()
           .then(() => resource);
       })
       .then((resource: HalResource) => {
-        resource.prop('name', newName);
-        resource.prop('contacts').prop('phone', newPhone);
+        resource.setProperty('name', newName);
+        resource.getProperty<IHalResource>('contacts').setProperty('phone', newPhone);
 
         return Promise
           .all([
             resource.update(),
-            resource.prop('contacts').update()
+            resource.getProperty<IHalResource>('contacts').update()
           ])
           .then((result: [Record<string, any>, Record<string, any>]) => {
             expect(result[0].status).toBe<number>(200);
@@ -110,7 +109,7 @@ describe('Rest update calls', () => {
       .get(person.contacts.relativeUri)
       .reply(200, person.contacts.data);
     scope
-      .intercept(person.relativeUri, 'PATCH',{ name: newName, contacts: person.contacts.fullUri } )
+      .intercept(person.relativeUri, 'PATCH',{ name: newName, contacts: person.contacts.absoluteUri } )
       .reply(200);
 
     const client = createClient(uriBuilder.orgBaseURI);
@@ -120,8 +119,8 @@ describe('Rest update calls', () => {
         client.fetch(person.contacts.relativeUri, HalResource)
       ])
       .then((resources: [HalResource, HalResource]) => {
-        resources[0].prop('name', newName);
-        resources[0].prop('contacts', resources[1]);
+        resources[0].setProperty('name', newName);
+        resources[0].setProperty('contacts', resources[1]);
         return resources[0].update()
           .then((result: Record<string, any>) => {
             expect(result.status).toBe<number>(200);
@@ -144,8 +143,8 @@ describe('Rest update calls', () => {
     return client
       .fetch(person.relativeUri, HalResource)
       .then((resource: HalResource) => {
-        resource.prop('name', null);
-        resource.prop('home', null);
+        resource.setProperty('name', null);
+        resource.setProperty('home', null);
         return resource.update()
           .then((result: Record<string, any>) => {
             expect(result.status).toBe<number>(200);
@@ -166,7 +165,7 @@ describe('Rest update calls', () => {
       .reply(200, person1.data)
       .get(person2.relativeUri)
       .reply(200, person2.data)
-      .intercept(person1.relativeUri, 'PATCH', { 'name': `${prefix}${newName}`, 'best-friend': `${prefix}${person2.fullUri}` })
+      .intercept(person1.relativeUri, 'PATCH', { 'name': `${prefix}${newName}`, 'best-friend': `${prefix}${person2.absoluteUri}` })
       .reply(200);
 
     const client = createClient(uriBuilder.orgBaseURI);
@@ -176,13 +175,14 @@ describe('Rest update calls', () => {
         client.fetch(person2.relativeUri, HalResource)
       ])
       .then((result: [HalResource, HalResource]) => {
-        result[0].prop('name', newName);
-        result[0].prop('best-friend', result[1]);
+        result[0].setProperty('name', newName);
+        result[0].setProperty('best-friend', result[1]);
 
         return result[0]
           .update(undefined, {
             parseProp: (value: string) => `${prefix}${value}`,
-            parseResource: (value: { uri: { uri: string; }; }) => `${prefix}${value.uri.uri}`,
+            //eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+            parseResource: (value: IHalResource) => `${prefix}${value['_uri'].href}`,
           })
           .then((result2: Record<string, any>) => {
             expect(result2.status).toBe<number>(200);
@@ -305,7 +305,7 @@ describe('Different return values of calling update', () => {
     return client
       .update(fullUri, updateRequest, true, HalResource)
       .then((result: HalResource) => {
-        expect(result.prop('name')).toBe<string>(newName);
+        expect(result.getProperty('name')).toBe<string>(newName);
         scope.done();
       });
   });
