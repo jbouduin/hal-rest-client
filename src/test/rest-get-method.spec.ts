@@ -109,7 +109,7 @@ describe('fetch resources', () => {
           .then((dashboardInfo: DashboardInfo) => {
             expect(dashboardInfo).toBeInstanceOf(DashboardInfo);
             expect(dashboardInfo.name).toBe<string>('test');
-            (spa.getLink<IHalResource>(linkKey)).setProp('name', 'updated');
+            (spa.getLink<IHalResource>(linkKey)).setProperty('name', 'updated');
             expect(dashboardInfo.name).toBe<string>('updated');
             scope.done();
           });

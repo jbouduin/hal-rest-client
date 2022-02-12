@@ -91,6 +91,14 @@ export class DataFactory {
       link
     data._links[key] = toUse;
   }
+
+  public addArrayOfLinksToFactoredData(data: IData, key: string, links: Array<string>): void {
+    if (!data._links) {
+      data._links = {};
+    }
+    const toUse: Array<ILink> = links.map((link: string) => { return { href: link } });
+    data._links[key] = toUse;
+  }
   //#endregion
 
   //#region private methods ---------------------------------------------------

@@ -401,12 +401,12 @@ describe('using cache', () => {
     return createClient()
       .fetchArray(dummy1.absoluteUri, HalResource)
       .then((dummies: Array<HalResource>) => {
-        expect((dummies[0].getProp<IHalResource>('done')).getProp('count')).toBe<number>(1);
+        expect((dummies[0].getProperty<IHalResource>('done')).getProperty('count')).toBe<number>(1);
         return createClient()
           .fetchArray(dummy1.absoluteUri, HalResource)
           .then((dummies2: Array<HalResource>) => {
-            expect(dummies2[0].getProp('done')).toBeUndefined();
-            expect((dummies2[0].getProp<IHalResource>('testing')).getProp('count')).toBe<number>(1);
+            expect(dummies2[0].getProperty('done')).toBeUndefined();
+            expect((dummies2[0].getProperty<IHalResource>('testing')).getProperty('count')).toBe<number>(1);
             scope.done();
           });
       });

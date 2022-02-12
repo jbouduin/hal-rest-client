@@ -36,6 +36,13 @@ export class HalResource implements IHalResource {
     return this._uri;
   }
 
+  public get propertyKeys(): Array<string> {
+    return Object.keys(this.props);
+  }
+
+  public get linkKeys(): Array<string> {
+    return Object.keys(this.links);
+  }
   //#endregion
 
   //#region Constructor & C° --------------------------------------------------
@@ -54,7 +61,7 @@ export class HalResource implements IHalResource {
 
   //#region IHalResource methods ----------------------------------------------
   public fetch(options?: IResourceFetchOptions): Promise<this> {
-    if ((this.isLoaded && !options?.force && !options?.params) || this.uri === undefined) {
+    if ((this.isLoaded && !options?.force && !options?.params) || this.uri.href === undefined) {
       return new Promise((resolve) => resolve(this));
     } else {
       return (this.restClient as HalRestClient).fetchInternal(
@@ -65,7 +72,7 @@ export class HalResource implements IHalResource {
     }
   }
 
-  public setProp<T>(name: string, value?: T): void {
+  public setProperty<T>(name: string, value?: T): void {
     if (this.links[name]) {
       if (Array.isArray(value)) {
         this.setLink(name, value)
@@ -82,7 +89,7 @@ export class HalResource implements IHalResource {
     }
   }
 
-  public getProp<T>(name: string): T {
+  public getProperty<T>(name: string): T {
     if (this.props[name] !== undefined) {
       return this.props[name] as T;
     } else if (this.links[name]) {

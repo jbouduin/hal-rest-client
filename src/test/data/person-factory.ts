@@ -5,8 +5,9 @@ import { UriBuilder } from "./uri-builder";
 export interface IPersonFactoryResult extends IFactoryResult<IData> {
   work: IFactoryResult<IData>,
   home: IFactoryResult<IData>,
-  contacts: IFactoryResult<IData>
-  friends: Array<IFactoryResult<IData>>
+  contacts: IFactoryResult<IData>,
+  friends: Array<IFactoryResult<IData>>,
+  colleagues: Array<string>
 }
 
 export class PersonFactory extends DataFactory {
@@ -57,6 +58,10 @@ export class PersonFactory extends DataFactory {
       this.AddEmbeddedPerson(result.data._embedded['my-friends'], '', newId++, this.firstFriendsName),
       this.AddEmbeddedPerson(result.data._embedded['my-friends'], '', newId++, this.secondFriendsName)
     );
+    result.colleagues = new Array<string>(
+      this.uriBuilder.resourceUri(this.tld, false, this.personsPath, id, 'colleagues/1'),
+      this.uriBuilder.resourceUri(this.tld, false, this.personsPath, id, 'colleagues/2')
+    );
     // fill _links
     this.addLinkToFactoredData(
       result.data,
@@ -70,6 +75,12 @@ export class PersonFactory extends DataFactory {
       result.data,
       'place-of-employment',
       result.work.absoluteUri);
+    this.addArrayOfLinksToFactoredData(
+      result.data,
+      'colleagues',
+      result.colleagues
+    );
+
     result.data['name'] = 'me';
     return result;
   }

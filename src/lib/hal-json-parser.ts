@@ -105,12 +105,12 @@ export class JSONParser implements IJSONParser {
         for (const prop of Object.keys(embedded)) {
           const propKey = halToTs[prop] || prop;
           // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-          resource.setProp(propKey, this.parseJson(halRestClient, embedded[prop], true, requestedURI, resourceType.prototype, propKey));
+          resource.setProperty(propKey, this.parseJson(halRestClient, embedded[prop], true, requestedURI, resourceType.prototype, propKey));
         }
       } else {
         const propKey = halToTs[key] || key;
         // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-        resource.setProp(propKey, this.parseJson(halRestClient, json[key], false, requestedURI, resourceType.prototype, propKey));
+        resource.setProperty(propKey, this.parseJson(halRestClient, json[key], false, requestedURI, resourceType.prototype, propKey));
       }
     }
 
@@ -130,7 +130,7 @@ export class JSONParser implements IJSONParser {
     for (const propKey of Object.keys(link)) {
       // TODO 1689 Refactor ProcessLink in json-parser
       // this will still copy and eventually overwrite typical link properties (like title, and name) to the resource!
-      linkResource.setProp(propKey, link[propKey]);
+      linkResource.setProperty(propKey, link[propKey]);
     }
     return linkResource;
   }

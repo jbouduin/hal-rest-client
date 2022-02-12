@@ -79,7 +79,7 @@ describe('Rest Delete calls', () => {
     return client
       .delete(resource, HalResource)
       .then((result: HalResource) => {
-        expect(result.getProp('phone')).toBe<string>('1234567890');
+        expect(result.getProperty('phone')).toBe<string>('1234567890');
         expect(result['_uri'].href).toBe<string>(contact.absoluteUri);
         scope.done();
       });
@@ -98,7 +98,7 @@ describe('Rest Delete calls', () => {
       .delete(Contacts)
       .then((result: Contacts) => {
         expect(result).toBeInstanceOf(Contacts);
-        expect(result.getProp('phone')).toBe<string>('1234567890');
+        expect(result.getProperty('phone')).toBe<string>('1234567890');
         expect(result['_uri'].href).toBe<string>(contact.absoluteUri);
       });
   });

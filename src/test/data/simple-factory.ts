@@ -107,10 +107,24 @@ export class SimpleFactory extends DataFactory {
     );
   }
 
-  public getSimpleListData(offset = 0, path = 'simple'): IFactoryListResult<IData> {
+  public getChangeSizeTemplate(relative: boolean, offset: number, path = 'simple', pageSize?: number) {
+    return this.uriBuilder.filledTemplatedResourceUri(
+      this.tld,
+      relative,
+      path,
+      {
+        offset: offset,
+        sort: 'id',
+        pageSize:  pageSize ? pageSize : '{pageSize}'
+      }
+    );
+  }
+
+  public createSimpleListData(offset = 0, path = 'simple'): IFactoryListResult<IData> {
 
     const links: ILinkCollection = {
-      jumpTo: { href: this.getJumpToTemplate(false), templated: true }
+      jumpTo: { href: this.getJumpToTemplate(false), templated: true },
+      changeSize: { href: this.getChangeSizeTemplate(false, offset)}
     };
 
     const listData: IListData = {

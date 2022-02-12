@@ -11,19 +11,29 @@ export interface IHalResource {
   readonly isLoaded: boolean;
 
   /**
-   * the uri of the resource
+   * @type {IUriData} - the uri of the resource
    */
   readonly uri: IUriData;
 
   /**
-   * the hal-rest client
+   * @type {IHalRestClient} - the hal-rest client
    */
   readonly restClient: IHalRestClient;
 
   /**
-   * returns true if the resources has changed properties and/or links
+   * @type {boolean} - true if the resources has changed properties and/or links
    */
   readonly hasChanges: boolean;
+
+  /**
+   * @type {Array<string>} - names of all properties (embedded and non-embedded)
+   */
+  readonly propertyKeys: Array<string>;
+
+  /**
+   * @type {Array<string>} - names of all links, the self link excluded
+   */
+  readonly linkKeys: Array<string>;
   //#endregion
 
   //#region property and link methods -----------------------------------------
@@ -33,14 +43,14 @@ export interface IHalResource {
    * @param name : the prop/link name
    * @param value : the value to set.
    */
-  setProp(name: string, value?: unknown): void;
+  setProperty(name: string, value?: unknown): void;
 
   /**
    * get a property or link value
    *
    * @param name the property/link name
    */
-  getProp<T>(name: string): T;
+  getProperty<T>(name: string): T;
 
   /**
    * set a link.
@@ -53,8 +63,9 @@ export interface IHalResource {
   /**
    * get a link
    *
-   * @param name : the prop/link name
-   * @param value : the value to set.
+   * @template T - an IHalResource or an array of them
+   * @param name - the prop/link name
+   * @param value - the value to set.
    */
   getLink<T = IHalResource | Array<IHalResource>>(name: string): T;
   //#endregion

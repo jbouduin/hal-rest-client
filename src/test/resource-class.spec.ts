@@ -34,15 +34,15 @@ describe('hal-resource fetching', () => {
       .fetch(projectList.absoluteUri, HalResource)
       .then((value: HalResource) => {
         expect(value.uri.resourceUri).toBe<string>(projectList.absoluteUri);
-        expect(value.getProp('results')).toHaveLength(2);
-        expect(value.getProp('results')[0].getProp('name')).toBe<string>('Project 0');
-        expect(value.getProp('results')[0]).toBeInstanceOf(HalResource);
-        expect(typeof value.getProp('results')[0].fetch).toBe<string>('function');
-        expect(value.getProp('results')[0].uri.href)
+        expect(value.getProperty('results')).toHaveLength(2);
+        expect(value.getProperty('results')[0].getProperty('name')).toBe<string>('Project 0');
+        expect(value.getProperty('results')[0]).toBeInstanceOf(HalResource);
+        expect(typeof value.getProperty('results')[0].fetch).toBe<string>('function');
+        expect(value.getProperty('results')[0].uri.href)
           .toBe<string>(uriBuilder.resourceUri('org', false, projectFactory.projectsPath, 0));
-        expect(value.getProp('results')[1].getProp('name')).toBe<string>('Project 10');
-        expect(typeof value.getProp('results')[0].fetch).toBe<string>('function');
-        expect(value.getProp('results')[1].uri.href)
+        expect(value.getProperty('results')[1].getProperty('name')).toBe<string>('Project 10');
+        expect(typeof value.getProperty('results')[0].fetch).toBe<string>('function');
+        expect(value.getProperty('results')[1].uri.href)
           .toBe<string>(uriBuilder.resourceUri('org', false, projectFactory.projectsPath, 10));
       });
   });
@@ -58,12 +58,12 @@ describe('hal-resource fetching', () => {
     return createClient()
       .fetch(project.absoluteUri, HalResource)
       .then((fetched: HalResource) => {
-        fetched.setProp('name', 'modified');
-        expect(fetched.getProp('name')).toBe<string>('modified');
+        fetched.setProperty('name', 'modified');
+        expect(fetched.getProperty('name')).toBe<string>('modified');
         return fetched
           .fetch()
           .then((refetched) => {
-            expect(refetched.getProp('name')).toBe<string>('modified');
+            expect(refetched.getProperty('name')).toBe<string>('modified');
             scope.done();
           });
       });
@@ -80,12 +80,12 @@ describe('hal-resource fetching', () => {
     return createClient()
       .fetch(project.absoluteUri, HalResource)
       .then((fetched: HalResource) => {
-        fetched.setProp('name', 'modified');
-        expect(fetched.getProp('name')).toBe<string>('modified');
+        fetched.setProperty('name', 'modified');
+        expect(fetched.getProperty('name')).toBe<string>('modified');
         return fetched
           .fetch({force: true})
           .then((refetched: HalResource) => {
-            expect(refetched.getProp('name')).toBe<string>('Project 1');
+            expect(refetched.getProperty('name')).toBe<string>('Project 1');
             scope.done();
           });
       });
@@ -103,13 +103,13 @@ describe('hal-resource fetching', () => {
     return client
       .fetch(project.absoluteUri, HalResource)
       .then((fetched: HalResource) => {
-        fetched.setProp('name', 'modified');
-        expect(fetched.getProp('name')).toBe<string>('modified');
+        fetched.setProperty('name', 'modified');
+        expect(fetched.getProperty('name')).toBe<string>('modified');
         return client
           .fetch(project.absoluteUri, HalResource)
           .then((refetched) => {
-            expect(refetched.getProp('name')).toBe<string>('Project 1');
-            expect(fetched.getProp('name')).toBe<string>('Project 1');
+            expect(refetched.getProperty('name')).toBe<string>('Project 1');
+            expect(fetched.getProperty('name')).toBe<string>('Project 1');
             scope.done();
           });
       });
@@ -127,11 +127,11 @@ describe('hal-resource fetching', () => {
     let cacheKeys = cache.getKeys('Resource');
     expect(cacheKeys).toHaveLength(1);
     expect(cacheKeys[0]).toBe<string>(simple.absoluteUri);
-    expect(resource.getProp('name')).toBeUndefined();
+    expect(resource.getProperty('name')).toBeUndefined();
     return resource
       .fetch()
       .then(() => {
-        expect(resource.getProp('name')).toBe<string>(simple.savedName);
+        expect(resource.getProperty('name')).toBe<string>(simple.savedName);
         cacheKeys = cache.getKeys('Resource');
         expect(cacheKeys).toHaveLength(1);
         expect(cacheKeys[0]).toBe<string>(simple.absoluteUri);
@@ -151,11 +151,11 @@ describe('hal-resource fetching', () => {
     let cacheKeys = cache.getKeys('Resource');
     expect(cacheKeys).toHaveLength(1);
     expect(cacheKeys[0]).toBe<string>(simple.absoluteUri);
-    expect(resource.getProp('name')).toBeUndefined();
+    expect(resource.getProperty('name')).toBeUndefined();
     return resource
       .fetch()
       .then(() => {
-        expect(resource.getProp('name')).toBe<string>(simple.savedName);
+        expect(resource.getProperty('name')).toBe<string>(simple.savedName);
         cacheKeys = cache.getKeys('Resource');
         expect(cacheKeys).toHaveLength(1);
         expect(cacheKeys[0]).toBe<string>(simple.absoluteUri);
@@ -177,8 +177,8 @@ describe('hal-resource fetching', () => {
     return createClient()
       .fetch(project.absoluteUri, HalResource)
       .then((project: HalResource) => {
-        const testResource = project.getProp<IHalResource>('test');
-        expect(testResource.getProp('name')).toBe<string>('Test 1');
+        const testResource = project.getProperty<IHalResource>('test');
+        expect(testResource.getProperty('name')).toBe<string>('Test 1');
       });
   });
 
@@ -192,7 +192,7 @@ describe('hal-resource fetching', () => {
     return createClient(`${uriBuilder.orgBaseURI}/`)
       .fetch(project.relativeUri, HalResource)
       .then((project: HalResource) => {
-        expect(project.getProp('name')).toBe<string>('Project 1');
+        expect(project.getProperty('name')).toBe<string>('Project 1');
         scope.done();
       });
   });
@@ -207,7 +207,7 @@ describe('hal-resource fetching', () => {
     return createClient(uriBuilder.orgBaseURI)
       .fetch(project.relativeUri, HalResource)
       .then((project: HalResource) => {
-        expect(project.getProp('name')).toBe<string>('Project 1');
+        expect(project.getProperty('name')).toBe<string>('Project 1');
       });
   });
 
@@ -221,13 +221,20 @@ describe('hal-resource fetching', () => {
     return createClient(uriBuilder.orgBaseURI)
       .fetch(project.relativeUri.substring(1), HalResource)
       .then((project: HalResource) => {
-        expect(project.getProp('name')).toBe<string>('Project 1');
+        expect(project.getProperty('name')).toBe<string>('Project 1');
       });
   });
 
   test('construct hal-resource without URI', () => {
     const resource = createResource(createClient(uriBuilder.orgBaseURI), HalResource);
     expect(resource).toBeDefined();
+    return resource
+      .fetch()
+      .then((fetched: HalResource) => {
+        expect(fetched).toBeDefined();
+        expect(fetched).toBe(resource);
+        expect(resource.isLoaded).toBe<boolean>(false);
+    })
   });
 });
 
@@ -235,7 +242,7 @@ describe('Resource class properties', () => {
   const uriBuilder = new UriBuilder();
   const personFactory = new PersonFactory('org', uriBuilder);
 
-  test('reading properties', () => {
+  test('reading properties using a model', () => {
     const person = personFactory.createPerson(1);
     const scope = nock(uriBuilder.orgBaseURI);
     scope
@@ -294,7 +301,7 @@ describe('Resource class properties', () => {
       });
   });
 
-  test('writing properties', () => {
+  test('writing properties using a model', () => {
     const person = personFactory.createPerson(1);
     const scope = nock(uriBuilder.orgBaseURI);
     scope
@@ -303,13 +310,14 @@ describe('Resource class properties', () => {
     const client = createClient(uriBuilder.orgBaseURI);
     return client
       .fetch(person.relativeUri, Person)
-      .then((person: Person) => {
-        expect(person.name).toBe<string>('me');
-        person.name = 'test';
-        expect(person.name).toBe<string>('test');
+      .then((fetched: Person) => {
+        expect(fetched.name).toBe<string>('me');
+        fetched.name = 'test';
+        expect(fetched.name).toBe<string>('test');
         const contacts = createResource(client, Contacts, '/contacInfos/3');
-        person.contacts = contacts;
-        expect(person.contacts).toBe<Contacts>(contacts);
+        fetched.contacts = contacts;
+        expect(fetched.contacts).toBe<Contacts>(contacts);
+        expect(fetched.hasChanges).toBe<boolean>(true);
       });
   });
 
@@ -329,6 +337,50 @@ describe('Resource class properties', () => {
         scope.done()
       });
   });
+
+  test('propertyKeys', () => {
+    const simpleFactory = new SimpleFactory(uriBuilder);
+    const simple = simpleFactory.createSimpleData();
+    const client = createClient(uriBuilder.orgBaseURI);
+    const scope = nock(uriBuilder.orgBaseURI);
+    scope
+      .get(simple.relativeUri)
+      .reply(200, simple.data);
+
+    return client
+      .fetch(simple.relativeUri, SimpleModel)
+      .then((model: SimpleModel) => {
+        const keys = model.propertyKeys;
+        expect(keys).toHaveLength(2);
+        expect(keys).toContainEqual<string>('id');
+        expect(keys).toContainEqual<string>('name');
+        scope.done();
+      });
+  });
+
+  test('linkKeys', () => {
+    const simpleFactory = new SimpleFactory(uriBuilder);
+    const simple = simpleFactory.createSimpleListData();
+    const client = createClient(uriBuilder.orgBaseURI);
+    const scope = nock(uriBuilder.orgBaseURI);
+    scope
+      .get(simple.relativeUri)
+      .reply(200, simple.data);
+
+    return client
+      .fetch(simple.relativeUri, SimpleModel)
+      .then((model: SimpleModel) => {
+        const keys = model.linkKeys;
+        expect(keys).toHaveLength(2);
+        expect(keys).toContainEqual<string>('jumpTo');
+        expect(keys).toContainEqual<string>('changeSize');
+        expect(keys).not.toContainEqual<string>('self');
+        scope.done();
+      });
+  });
+
+  test.todo('reading properties using a Halresource');
+  test.todo('writing properties using a Halresource');
 
 });
 
@@ -350,10 +402,11 @@ describe('updating an array of embedded properties', () => {
     const client = createClient(uriBuilder.orgBaseURI);
     return client
       .fetch(person.relativeUri, Person)
-      .then((person: Person) => {
-        person.myFriends = [person.myFriends[0]];
-        expect(person.getProp('myFriends')).toHaveLength(1);
-        return person.update().then(() => scope.done());
+      .then((fetched: Person) => {
+        fetched.myFriends = [fetched.myFriends[0]];
+        expect(fetched.getProperty('myFriends')).toHaveLength(1);
+        expect(fetched.hasChanges).toBe<boolean>(true);
+        return fetched.update().then(() => scope.done());
       });
   });
 
@@ -372,14 +425,34 @@ describe('updating an array of embedded properties', () => {
       .fetch(person.relativeUri, Person)
       .then((person: Person) => {
         person.myFriends = [];
-        expect(person.getProp('myFriends')).toHaveLength(0);
+        expect(person.getProperty('myFriends')).toHaveLength(0);
         return person.update().then(() => scope.done());
       });
   });
 
-  test.todo('Adding 1 entry to an array');
+  test.todo('Adding 1 new entry to an array');
 
-  test.todo('assigning a complete new array');
+  test('assigning a complete new array', () => {
+    const person = personFactory.createPerson(1);
+    const scope = nock(uriBuilder.orgBaseURI);
+
+    scope
+      .get(person.relativeUri)
+      .reply(200, person.data);
+    scope
+      .intercept(person.relativeUri, 'PATCH', { 'my-friends': [person.friends[1].absoluteUri, person.friends[0].absoluteUri] })
+      .reply(200);
+
+    const client = createClient(uriBuilder.orgBaseURI);
+    return client
+      .fetch(person.relativeUri, Person)
+      .then((fetched: Person) => {
+        fetched.myFriends = [fetched.myFriends[1], fetched.myFriends[0]];
+        expect(fetched.hasChanges).toBe<boolean>(true);
+        expect(fetched.getProperty('myFriends')).toHaveLength(2);
+        return fetched.update().then(() => scope.done());
+      });
+  });
 });
 
 describe('using hal-resource.create method', () => {
@@ -436,10 +509,70 @@ describe('using hal-resource.create method', () => {
 });
 
 describe('updating an array of links', () => {
-  test.todo('Removing 1 entry from an array');
-  test.todo('clearing an array');
-  test.todo('Adding 1 entry to an array');
-  test.todo('assigning a complete new array');
+  const uriBuilder = new UriBuilder();
+  const personFactory = new PersonFactory('org', uriBuilder);
+
+  test('Removing 1 entry from an array', () => {
+    const person = personFactory.createPerson(1);
+    const scope = nock(uriBuilder.orgBaseURI);
+    scope
+      .get(person.relativeUri)
+      .reply(200, person.data);
+    scope
+      .intercept(person.relativeUri, 'PATCH', { 'colleagues': [person.colleagues[0]] })
+      .reply(200);
+
+    const client = createClient(uriBuilder.orgBaseURI);
+    return client
+      .fetch(person.relativeUri, Person)
+      .then((fetched: Person) => {
+        fetched.colleagues = [fetched.colleagues[0]];
+        expect(fetched.getLink<Array<IHalResource>>('colleagues')).toHaveLength(1);
+        return fetched.update().then(() => scope.done());
+      });
+  });
+
+  test('clearing an array', () => {
+    const person = personFactory.createPerson(1);
+    const scope = nock(uriBuilder.orgBaseURI);
+    scope
+      .get(person.relativeUri)
+      .reply(200, person.data);
+    scope
+      .intercept(person.relativeUri, 'PATCH', { 'colleagues': [] })
+      .reply(200);
+
+    const client = createClient(uriBuilder.orgBaseURI);
+    return client
+      .fetch(person.relativeUri, Person)
+      .then((person: Person) => {
+        person.colleagues = [];
+        expect(person.getLink<Array<IHalResource>>('colleagues')).toHaveLength(0);
+        return person.update().then(() => scope.done());
+      });
+  });
+
+  test.todo('Adding 1 new entry to an array');
+
+  test('assigning a complete new array', () => {
+    const person = personFactory.createPerson(1);
+    const scope = nock(uriBuilder.orgBaseURI);
+    scope
+      .get(person.relativeUri)
+      .reply(200, person.data);
+    scope
+      .intercept(person.relativeUri, 'PATCH', { 'colleagues': [person.colleagues[1], person.colleagues[0]] })
+      .reply(200);
+
+    const client = createClient(uriBuilder.orgBaseURI);
+    return client
+      .fetch(person.relativeUri, Person)
+      .then((fetched: Person) => {
+        fetched.colleagues = [fetched.colleagues[1], fetched.colleagues[0]];
+        expect(fetched.getLink<Array<IHalResource>>('colleagues')).toHaveLength(2);
+        return fetched.update().then(() => scope.done());
+      });
+  });
 })
 
 describe('hasChanges and ClearChanges', () => {

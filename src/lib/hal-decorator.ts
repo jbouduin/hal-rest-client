@@ -77,8 +77,8 @@ export function HalProperty<T extends IHalResource>(
     if (delete targetHalResource[propertyName]) {
       // Create new property with getter and setter
       Object.defineProperty(targetHalResource, propertyName, {
-        get() { return this.getProp(propertyName); },
-        set(value) { this.setProp(propertyName, value); },
+        get() { return this.getProperty(propertyName); },
+        set(value) { this.setProperty(propertyName, value); },
         configurable: true,
         enumerable: true,
       });
