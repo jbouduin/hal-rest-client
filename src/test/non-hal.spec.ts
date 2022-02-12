@@ -24,10 +24,10 @@ describe('Handling non-hal data', () => {
   }
 
   const checkHalresource = (config: HalResource, which: lookFor) => {
-    expect(config.getProp('category')).toBe<string>(notificationFactory.categoryValues[which]);
-    expect(config.getProp('subcategory')).toBe<string>(notificationFactory.subCategoryValues[which]);
-    expect(config.getProp('notificationDescription')).toBe<string>(notificationFactory.descriptionValues[which]);
-    const email = config.getProp<NotificationEmail>('email');
+    expect(config.getProperty('category')).toBe<string>(notificationFactory.categoryValues[which]);
+    expect(config.getProperty('subcategory')).toBe<string>(notificationFactory.subCategoryValues[which]);
+    expect(config.getProperty('notificationDescription')).toBe<string>(notificationFactory.descriptionValues[which]);
+    const email = config.getProperty<NotificationEmail>('email');
     expect(email).not.toBeInstanceOf(HalResource);
     expect(email.enabled).toBe<boolean>(notificationFactory.emailEnabledValues[which]);
     expect(email.id).toBe<number>(notificationFactory.emailIdValues[which]);
@@ -148,7 +148,7 @@ describe('Handling non-hal data', () => {
     return client
       .fetch(notification.relativeUri, HalResource)
       .then((result: HalResource) => {
-        const toCheck = result.getProp(notificationFactory.nonEmbeddedObject);
+        const toCheck = result.getProperty(notificationFactory.nonEmbeddedObject);
         expect(toCheck).not.toBeInstanceOf(HalResource);
         checkObject(toCheck, 'nonEmbeddedObject');
       });
@@ -167,7 +167,7 @@ describe('Handling non-hal data', () => {
     return client
       .fetch(notification.relativeUri, HalResource)
       .then((result: HalResource) => {
-        const toCheck = result.getProp(notificationFactory.embeddedObject);
+        const toCheck = result.getProperty(notificationFactory.embeddedObject);
         expect(toCheck).toBeInstanceOf(HalResource);
         if (toCheck instanceof HalResource) {
           checkHalresource(toCheck, 'embeddedObject');
@@ -187,7 +187,7 @@ describe('Handling non-hal data', () => {
     return client
       .fetch(notification.relativeUri, HalResource)
       .then((result: HalResource) => {
-        const array = result.getProp(notificationFactory.nonEmbeddedArray);
+        const array = result.getProperty(notificationFactory.nonEmbeddedArray);
         expect(array).toHaveLength(1);
         const toCheck = array[0];
         expect(toCheck).not.toBeInstanceOf(HalResource);
@@ -208,7 +208,7 @@ describe('Handling non-hal data', () => {
     return client
       .fetch(notification.relativeUri, HalResource)
       .then((result: HalResource) => {
-        const array = result.getProp(notificationFactory.embeddedArray);
+        const array = result.getProperty(notificationFactory.embeddedArray);
         expect(array).toHaveLength(1);
         const toCheck = array[0];
         expect(toCheck).toBeInstanceOf(HalResource);

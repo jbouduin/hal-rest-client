@@ -1,5 +1,5 @@
 import * as nock from 'nock';
-import { cache, createClient, createResource } from '..';
+import { cache, createClient, createResource, IResourceFetchOptions } from '..';
 import { SelfOption } from './data/data-factory';
 import { SimpleFactory } from './data/simple-factory';
 
@@ -18,15 +18,31 @@ afterEach(() => {
 });
 //#endregion
 
-describe('uri data when fetching resources', () => {
+describe.each([
+  undefined,
+  {},
+  { force: true },
+  { force: false },
+  { force: undefined },
+  { force: true, params: { test: 15 } },
+  { force: false, params: { test: 15 }  },
+  { force: undefined, params: { test: 15 }  },
+  { force: true, params: {} },
+  { force: false, params: {} },
+  { force: undefined, params: {} },
+  { force: true, params: undefined },
+  { force: false, params: undefined },
+  { force: undefined, params: undefined },
+  { params: { test: 15 } },
+  { params: {} },
+  { params: undefined }
+])('fetching resources without uri', (fetchOptions: IResourceFetchOptions) => {
   const uriBuilder = new UriBuilder();
   const client = createClient(uriBuilder.orgBaseURI);
-  const simpleFactory = new SimpleFactory(uriBuilder);
 
-  test('create without uri and fetch', () => {
-    expect.assertions(7);
+  test(`create without uri and fetch with options: ${JSON.stringify(fetchOptions)}` , () => {
     const resource = createResource(client, SimpleModel);
-    const uri = resource['_uri'];
+    let uri = resource['_uri'];
     expect(uri.href).toBeUndefined();
     expect(uri.templated).toBe<boolean>(false)
     expect(uri.receivedUri).toBeUndefined();
@@ -34,11 +50,23 @@ describe('uri data when fetching resources', () => {
     expect(uri.type).toBeUndefined();
     expect(uri.resourceUri).toBeUndefined();
     return resource
-      .fetch()
-      .catch((e) => {
-        expect(e.message).toBeDefined();
+      .fetch(fetchOptions)
+      .then((fetched: SimpleModel) => {
+        uri = fetched['_uri'];
+        expect(uri.href).toBeUndefined();
+        expect(uri.templated).toBe<boolean>(false)
+        expect(uri.receivedUri).toBeUndefined();
+        expect(uri.requestedUri).toBeUndefined();
+        expect(uri.type).toBeUndefined();
+        expect(uri.resourceUri).toBeUndefined();
       });
   });
+})
+
+describe('uri data when fetching resources', () => {
+  const uriBuilder = new UriBuilder();
+  const client = createClient(uriBuilder.orgBaseURI);
+  const simpleFactory = new SimpleFactory(uriBuilder);
 
   test('create with non-templated uri (templated: undefined) and fetch', () => {
     const simple = simpleFactory.createSimpleData();
@@ -109,7 +137,7 @@ describe('uri data when fetching resources', () => {
   });
 
   test('create with templated uri and fetch', () => {
-    const simpleListData = simpleFactory.getSimpleListData();
+    const simpleListData = simpleFactory.createSimpleListData();
     const simpleData = simpleFactory.createSimpleData();
     const defaultParameters = uriBuilder.getDefaultQueryParameters();
 
@@ -127,7 +155,7 @@ describe('uri data when fetching resources', () => {
       .reply(200, simpleListData.data)
 
     return resource
-      .fetch({params: defaultParameters})
+      .fetch({ params: defaultParameters })
       .then((list: SimpleListModel) => {
         expect(list.count).toBe<number>(1);
         expect(list.offset).toBe<number>(0);
@@ -156,8 +184,8 @@ describe('uri data when fetching resources', () => {
   });
 
   test('jumpTo link fetching', () => {
-    const startListData = simpleFactory.getSimpleListData(0);
-    const offsetListData = simpleFactory.getSimpleListData(666);
+    const startListData = simpleFactory.createSimpleListData(0);
+    const offsetListData = simpleFactory.createSimpleListData(666);
     const defaultParameters = uriBuilder.getDefaultQueryParameters();
     const simplePath = 'simple';
     const resource = createResource(client, SimpleListModel, startListData.relativeTemplateUri, true);
@@ -177,7 +205,7 @@ describe('uri data when fetching resources', () => {
       .reply(200, offsetListData.data);
 
     return resource
-      .fetch({params: defaultParameters})
+      .fetch({ params: defaultParameters })
       .then((list: SimpleListModel) => {
         const jumpTo = list.jumpTo
         const jumpToUri = jumpTo['_uri'];

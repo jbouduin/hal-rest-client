@@ -41,8 +41,8 @@ describe('Rest update calls', () => {
         client.fetch(person2.absoluteUri, HalResource)
       ])
       .then((resources: [HalResource, HalResource]) => {
-        resources[0].setProp('name', 'test');
-        resources[0].setProp('best-friend', resources[1]);
+        resources[0].setProperty('name', 'test');
+        resources[0].setProperty('best-friend', resources[1]);
         return resources[0]
           .update()
           .then((result: Record<string, any>) => {
@@ -75,18 +75,18 @@ describe('Rest update calls', () => {
     return client
       .fetch(person.absoluteUri, HalResource)
       .then((resource: HalResource) => {
-        return resource.getProp<IHalResource>('contacts')
+        return resource.getProperty<IHalResource>('contacts')
           .fetch()
           .then(() => resource);
       })
       .then((resource: HalResource) => {
-        resource.setProp('name', newName);
-        resource.getProp<IHalResource>('contacts').setProp('phone', newPhone);
+        resource.setProperty('name', newName);
+        resource.getProperty<IHalResource>('contacts').setProperty('phone', newPhone);
 
         return Promise
           .all([
             resource.update(),
-            resource.getProp<IHalResource>('contacts').update()
+            resource.getProperty<IHalResource>('contacts').update()
           ])
           .then((result: [Record<string, any>, Record<string, any>]) => {
             expect(result[0].status).toBe<number>(200);
@@ -119,8 +119,8 @@ describe('Rest update calls', () => {
         client.fetch(person.contacts.relativeUri, HalResource)
       ])
       .then((resources: [HalResource, HalResource]) => {
-        resources[0].setProp('name', newName);
-        resources[0].setProp('contacts', resources[1]);
+        resources[0].setProperty('name', newName);
+        resources[0].setProperty('contacts', resources[1]);
         return resources[0].update()
           .then((result: Record<string, any>) => {
             expect(result.status).toBe<number>(200);
@@ -143,8 +143,8 @@ describe('Rest update calls', () => {
     return client
       .fetch(person.relativeUri, HalResource)
       .then((resource: HalResource) => {
-        resource.setProp('name', null);
-        resource.setProp('home', null);
+        resource.setProperty('name', null);
+        resource.setProperty('home', null);
         return resource.update()
           .then((result: Record<string, any>) => {
             expect(result.status).toBe<number>(200);
@@ -175,8 +175,8 @@ describe('Rest update calls', () => {
         client.fetch(person2.relativeUri, HalResource)
       ])
       .then((result: [HalResource, HalResource]) => {
-        result[0].setProp('name', newName);
-        result[0].setProp('best-friend', result[1]);
+        result[0].setProperty('name', newName);
+        result[0].setProperty('best-friend', result[1]);
 
         return result[0]
           .update(undefined, {
@@ -305,7 +305,7 @@ describe('Different return values of calling update', () => {
     return client
       .update(fullUri, updateRequest, true, HalResource)
       .then((result: HalResource) => {
-        expect(result.getProp('name')).toBe<string>(newName);
+        expect(result.getProperty('name')).toBe<string>(newName);
         scope.done();
       });
   });
