@@ -11,8 +11,8 @@ beforeAll(() => {
   cache.reset();
 });
 
+afterEach(() => { cache.reset(); })
 afterAll(() => nock.restore());
-
 //#endregion
 
 describe('Cyclical ojbects', () => {
@@ -60,7 +60,7 @@ describe('Cyclical ojbects', () => {
             expect(level2.refresh).toBeInstanceOf(CyclicalList);
             expect(level2.cyclicals).toBeInstanceOf(Array);
             expect(level2.cyclicals[0].property).toBe<string>('name');
-            return cyclicals.refresh
+            return level2.refresh
               .fetch()
               .then((level3: CyclicalList) => {
                 expect(level3).toBeInstanceOf(CyclicalList);
@@ -72,4 +72,5 @@ describe('Cyclical ojbects', () => {
           });
       });
   });
+
 });

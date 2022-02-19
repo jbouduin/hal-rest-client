@@ -11,7 +11,7 @@ export class HalResource implements IHalResource {
   //#region Private properties ------------------------------------------------
   private _isLoaded: boolean;
   private _restClient: IHalRestClient;
-  private _uri?: UriData;
+  private _uri: UriData;
   private readonly settedProps: Array<string>;
   private readonly settedLinks: Array<string>;
   private initEnded: boolean;
@@ -46,7 +46,7 @@ export class HalResource implements IHalResource {
   //#endregion
 
   //#region Constructor & C° --------------------------------------------------
-  public constructor(restClient: IHalRestClient, uri?: UriData) {
+  public constructor(restClient: IHalRestClient, uri: UriData) {
     this._restClient = restClient;
     this._uri = uri;
     this._isLoaded = false;
@@ -242,6 +242,40 @@ export class HalResource implements IHalResource {
     } else {
       result = serializer.parseProp(theProp);
     }
+    return result;
+  }
+  //#endregion
+
+  //#region toJSON ------------------------------------------------------------
+  private toJSON(): Record<string, string> {
+    const result = {};
+    result['restClient'] = this._restClient;
+    result['uri'] = this._uri;
+    result['cacheKey'] = this._uri.calculateCacheKey(this._restClient.config.baseURL);
+    result['links'] = {};
+    this.linkKeys.forEach((linkKey: string) => {
+      const linkInstance = this.getLink(linkKey);
+      if (Array.isArray(linkInstance)) {
+        result['links'][linkKey] = linkInstance.map((l: IHalResource) => this.linkToJson(l))
+      } else {
+        result['links'][linkKey] = this.linkToJson(linkInstance)
+      }
+    });
+    result['properties'] = {};
+    this.propertyKeys.forEach((propertyKey: string) => {
+      result['properties'][propertyKey] = this.getProperty(propertyKey);
+    });
+    return result;
+  }
+
+  private linkToJson(link: IHalResource): Record<string, string> {
+    const result = {};
+    result['uri'] = link.uri;
+    result['cacheKey'] = link['_uri'].calculateCacheKey(this._restClient.config.baseURL);
+    result['type'] = link['type'];
+    result['name'] = link['name'];
+    result['title'] = link['title'];
+    result['isLoaded'] = link.isLoaded;
     return result;
   }
   //#endregion
