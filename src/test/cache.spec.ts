@@ -14,6 +14,7 @@ beforeAll(() => {
 afterAll(() => nock.restore());
 afterEach(() => {
   cache.reset();
+  cache.enable();
   nock.cleanAll();
 
 });
@@ -628,7 +629,6 @@ describe.each([
 
 describe('Enable and disabling the cache', () => {
   const uriBuilder = new UriBuilder();
-  const dummyFactory = new DataFactory(uriBuilder);
 
   test('cache is enabled by default', () => {
     expect(cache.isEnabled).toBe<boolean>(true);
@@ -694,4 +694,25 @@ describe('Enable and disabling the cache', () => {
     expect(cache.getKeys('Resource')).toHaveLength(0);
   });
 
-})
+});
+
+describe('creating a client with cached parameter', () => {
+  const uriBuilder = new UriBuilder();
+  test('cached parameter not provided', () => {
+    createClient(uriBuilder.orgBaseURI);
+    expect(cache.getClient(uriBuilder.orgBaseURI)).toBeDefined();
+    expect(cache.getKeys('Client')).toHaveLength(1);
+  });
+
+  test('cached parameter set to true', () => {
+    createClient(uriBuilder.orgBaseURI, undefined, true);
+    expect(cache.getClient(uriBuilder.orgBaseURI)).toBeDefined();
+    expect(cache.getKeys('Client')).toHaveLength(1);
+  });
+
+  test('cached parameter set to false', () => {
+    createClient(uriBuilder.orgBaseURI, undefined, false);
+    expect(cache.getClient(uriBuilder.orgBaseURI)).toBeUndefined();
+    expect(cache.getKeys('Client')).toHaveLength(0);
+  });
+});

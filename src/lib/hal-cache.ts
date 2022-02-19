@@ -1,5 +1,3 @@
-
-import { timeStamp } from "console";
 import { HalCacheType, IHalCache } from "./hal-cache.interface";
 import { IHalResource } from "./hal-resource.interface";
 import { IHalRestClient } from "./hal-rest-client.interface";
@@ -27,7 +25,7 @@ export class HalCache implements IHalCache {
 
   //#region IHalCach interface methods ----------------------------------------
   public enable(): void {
-    this._isEnabled = true;;
+    this._isEnabled = true;
   }
 
   public disable(): void {
