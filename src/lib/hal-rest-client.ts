@@ -164,4 +164,14 @@ export class HalRestClient implements IHalRestClient {
     });
   }
   //#endregion
+
+  //#region toJSON ------------------------------------------------------------
+  private toJSON(): any {
+    return {
+      baseUrl: this.config.baseURL,
+      headers: this.config.headers,
+      requestInterceptors: this.requestInterceptors,
+      responseInterceptors: this.responseInterceptors
+    };
+  }
 }

@@ -47,6 +47,7 @@ describe('Rest update calls', () => {
           .update()
           .then((result: Record<string, any>) => {
             expect(result.status).toBe<number>(200);
+            expect(resources[0].hasChanges).toBe<boolean>(false);
             scope.done();
           });
       });

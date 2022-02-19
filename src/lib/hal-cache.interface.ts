@@ -4,7 +4,25 @@ import { IHalRestClient } from "./hal-rest-client.interface";
 
 export type HalCacheType = 'Client' | 'Resource';
 
+/**
+ * a function that accepts the calculated cachekey and returns true if the resource or client may be cached
+ */
+export type KeyValidatorFn = (key: string) => boolean;
+
 export interface IHalCache {
+
+  readonly isEnabled: boolean;
+
+  /**
+   * Enables the cache
+   */
+  enable(): void;
+
+  /**
+   * Disables the cache and clears all the contents
+   */
+  disable(): void;
+
   /**
    * Selective purge of a cache. To clear the cache completely use reset.
    *
@@ -36,5 +54,8 @@ export interface IHalCache {
   getResource(uri: string): IHalResource;
   hasResource(uri: string): boolean;
   setResource(uri: string, value: IHalResource): void;
+
+  setClientKeyValidator(validator: KeyValidatorFn): void;
+  setResourceKeyValidator(validator: KeyValidatorFn): void;
 }
 
