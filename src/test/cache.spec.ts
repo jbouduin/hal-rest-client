@@ -625,3 +625,73 @@ describe.each([
       });
   });
 });
+
+describe('Enable and disabling the cache', () => {
+  const uriBuilder = new UriBuilder();
+  const dummyFactory = new DataFactory(uriBuilder);
+
+  test('cache is enabled by default', () => {
+    expect(cache.isEnabled).toBe<boolean>(true);
+  });
+
+  test('disabling the cache sets the isEnabled property', () => {
+    cache.disable();
+    expect(cache.isEnabled).toBe<boolean>(false);
+  });
+
+  test('re-enabling the cache sets the isEnabled property', () => {
+    cache.disable();
+    cache.enable();
+    expect(cache.isEnabled).toBe<boolean>(true);
+  });
+
+  test('a disabled cache does not cache clients', () => {
+    cache.disable();
+    createClient(uriBuilder.orgBaseURI);
+    expect(cache.getClient(uriBuilder.orgBaseURI)).toBeUndefined();
+    expect(cache.getKeys('Client')).toHaveLength(0);
+  });
+
+  test('a disabled cache does not cache resources', () => {
+    cache.disable();
+    const resourceUri = uriBuilder.resourceUri('org', false, '/resource');
+    const client = createClient(uriBuilder.orgBaseURI);
+    createResource(client, HalResource, resourceUri);
+    expect(cache.getResource(resourceUri)).toBeUndefined();
+    expect(cache.getKeys('Resource')).toHaveLength(0);
+  });
+
+  test('a re-enabled cache caches clients', () => {
+    cache.disable();
+    cache.enable();
+    createClient(uriBuilder.orgBaseURI);
+    expect(cache.getClient(uriBuilder.orgBaseURI)).toBeDefined();
+    expect(cache.getKeys('Client')).toHaveLength(1);
+  });
+
+  test('a re-enabled cache caches resources', () => {
+    cache.disable();
+    cache.enable();
+    const resourceUri = uriBuilder.resourceUri('org', false, '/resource');
+    const client = createClient(uriBuilder.orgBaseURI);
+    createResource(client, HalResource, resourceUri);
+    expect(cache.getResource(resourceUri)).toBeDefined();
+    expect(cache.getKeys('Resource')).toHaveLength(1);
+  });
+
+  test('disabling the cache empties the cache', () => {
+    const resourceUri = uriBuilder.resourceUri('org', false, '/resource');
+    const client = createClient(uriBuilder.orgBaseURI);
+    createResource(client, HalResource, resourceUri);
+    expect(cache.getClient(uriBuilder.orgBaseURI)).toBeDefined();
+    expect(cache.getKeys('Client')).toHaveLength(1);
+    expect(cache.getResource(resourceUri)).toBeDefined();
+    expect(cache.getKeys('Resource')).toHaveLength(1);
+    cache.disable();
+    expect(cache.getClient(uriBuilder.orgBaseURI)).toBeUndefined();
+    expect(cache.getKeys('Client')).toHaveLength(0);
+    expect(cache.getResource(resourceUri)).toBeUndefined();
+    expect(cache.getKeys('Resource')).toHaveLength(0);
+  });
+
+})

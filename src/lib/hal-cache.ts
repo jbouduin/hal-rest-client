@@ -1,16 +1,38 @@
 
+import { timeStamp } from "console";
 import { HalCacheType, IHalCache } from "./hal-cache.interface";
 import { IHalResource } from "./hal-resource.interface";
 import { IHalRestClient } from "./hal-rest-client.interface";
 
 /** @internal */
 export class HalCache implements IHalCache {
+  //#region private properties ------------------------------------------------
   private clientCache: Map<string, IHalRestClient>;
   private resourceCache: Map<string, IHalResource>;
+  private _isEnabled: boolean;
+  //#endregion
 
+  //#region IHalCache properties ----------------------------------------------
+  public get isEnabled(): boolean {
+    return this._isEnabled;
+  }
+  //#endregion
+  //#region Constructor & C° --------------------------------------------------
   constructor() {
     this.clientCache = new Map<string, IHalRestClient>();
     this.resourceCache = new Map<string, IHalResource>();
+    this._isEnabled = true;
+  }
+  //#endregion
+
+  //#region IHalCach interface methods ----------------------------------------
+  public enable(): void {
+    this._isEnabled = true;;
+  }
+
+  public disable(): void {
+    this._isEnabled = false;
+    this.reset();
   }
 
   public reset(type?: HalCacheType): void {
@@ -61,7 +83,9 @@ export class HalCache implements IHalCache {
   }
 
   public setClient(uri: string, value: IHalRestClient): void {
-    this.clientCache.set(uri, value);
+    if (this._isEnabled) {
+      this.clientCache.set(uri, value);
+    }
   }
 
   public hasResource(uri: string): boolean {
@@ -73,6 +97,9 @@ export class HalCache implements IHalCache {
   }
 
   public setResource(uri: string, value: IHalResource): void {
-    this.resourceCache.set(uri, value);
+    if (this._isEnabled) {
+      this.resourceCache.set(uri, value);
+    }
   }
+  //#endregion
 }
