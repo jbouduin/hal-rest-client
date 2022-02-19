@@ -1,4 +1,4 @@
-import { HalCacheType, IHalCache } from "./hal-cache.interface";
+import { HalCacheType, IHalCache, KeyValidatorFn } from "./hal-cache.interface";
 import { IHalResource } from "./hal-resource.interface";
 import { IHalRestClient } from "./hal-rest-client.interface";
 
@@ -7,6 +7,8 @@ export class HalCache implements IHalCache {
   //#region private properties ------------------------------------------------
   private clientCache: Map<string, IHalRestClient>;
   private resourceCache: Map<string, IHalResource>;
+  private clientKeyValidator: KeyValidatorFn;
+  private resourceKeyValidator: KeyValidatorFn;
   private _isEnabled: boolean;
   //#endregion
 
@@ -81,7 +83,7 @@ export class HalCache implements IHalCache {
   }
 
   public setClient(uri: string, value: IHalRestClient): void {
-    if (this._isEnabled) {
+    if (this._isEnabled && (!this.clientKeyValidator || this.clientKeyValidator(uri))) {
       this.clientCache.set(uri, value);
     }
   }
@@ -95,9 +97,18 @@ export class HalCache implements IHalCache {
   }
 
   public setResource(uri: string, value: IHalResource): void {
-    if (this._isEnabled) {
+    if (this._isEnabled && (!this.resourceKeyValidator || this.resourceKeyValidator(uri))) {
       this.resourceCache.set(uri, value);
     }
+  }
+
+  public setClientKeyValidator(validator: KeyValidatorFn): void {
+    this.clientKeyValidator = validator;
+
+  }
+
+  public setResourceKeyValidator(validator: KeyValidatorFn): void {
+    this.resourceKeyValidator = validator;
   }
   //#endregion
 }
