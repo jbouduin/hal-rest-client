@@ -83,7 +83,7 @@ describe('hal-resource fetching', () => {
         fetched.setProperty('name', 'modified');
         expect(fetched.getProperty('name')).toBe<string>('modified');
         return fetched
-          .fetch({force: true})
+          .fetch({ force: true })
           .then((refetched: HalResource) => {
             expect(refetched.getProperty('name')).toBe<string>('Project 1');
             scope.done();
@@ -234,7 +234,7 @@ describe('hal-resource fetching', () => {
         expect(fetched).toBeDefined();
         expect(fetched).toBe(resource);
         expect(resource.isLoaded).toBe<boolean>(false);
-    })
+      })
   });
 });
 
