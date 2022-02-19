@@ -15,6 +15,8 @@ afterAll(() => nock.restore());
 afterEach(() => {
   cache.reset();
   cache.enable();
+  cache.setClientKeyValidator(null);
+  cache.setResourceKeyValidator(null);
   nock.cleanAll();
 
 });
@@ -716,3 +718,73 @@ describe('creating a client with cached parameter', () => {
     expect(cache.getKeys('Client')).toHaveLength(0);
   });
 });
+
+describe('using keyValidator functions', () => {
+  const uriBuilder = new UriBuilder();
+
+  test('use client validator', () => {
+    cache.setClientKeyValidator((key: string) => key === uriBuilder.orgBaseURI);
+    createClient(uriBuilder.orgBaseURI);
+    createClient(uriBuilder.comBaseURI);
+    const keys = cache.getKeys('Client');
+    expect(keys).toHaveLength(1);
+    expect(keys[0]).toBe<string>(uriBuilder.orgBaseURI);
+    expect(cache.getClient(uriBuilder.orgBaseURI)).toBeDefined();
+    expect(cache.getClient(uriBuilder.comBaseURI)).toBeUndefined();
+  });
+
+  test('set client validator to null', () => {
+    cache.setClientKeyValidator((key: string) => key !== uriBuilder.orgBaseURI);
+    createClient(uriBuilder.orgBaseURI);
+    expect(cache.getKeys('Client')).toHaveLength(0);
+    cache.setClientKeyValidator(null);
+    createClient(uriBuilder.orgBaseURI);
+    expect(cache.getKeys('Client')).toHaveLength(1);
+  });
+
+  test('set client validator to undefined', () => {
+    cache.setClientKeyValidator((key: string) => key !== uriBuilder.orgBaseURI);
+    createClient(uriBuilder.orgBaseURI);
+    expect(cache.getKeys('Client')).toHaveLength(0);
+    cache.setClientKeyValidator(undefined);
+    createClient(uriBuilder.orgBaseURI);
+    expect(cache.getKeys('Client')).toHaveLength(1);
+  });
+
+  test('use resource validator', () => {
+    const orgUri = uriBuilder.resourceUri('org', false, '/resource');
+    const comUri = uriBuilder.resourceUri('com', false, '/resource');
+    cache.setResourceKeyValidator((key: string) => key === orgUri);
+    const client = createClient(uriBuilder.orgBaseURI);
+    createResource(client, HalResource, orgUri);
+    createResource(client, HalResource, comUri);
+    const keys = cache.getKeys('Resource');
+    expect(keys).toHaveLength(1);
+    expect(keys[0]).toBe<string>(orgUri);
+    expect(cache.getResource(comUri)).toBeUndefined();
+    expect(cache.getResource(orgUri)).toBeDefined();
+
+  });
+
+  test('set resource validator to null', () => {
+    const orgUri = uriBuilder.resourceUri('org', false, '/resource');
+    cache.setResourceKeyValidator((key: string) => key !== orgUri);
+    const client = createClient(uriBuilder.orgBaseURI);
+    createResource(client, HalResource, orgUri);
+    expect(cache.getKeys('Resource')).toHaveLength(0);
+    cache.setResourceKeyValidator(null);
+    createResource(client, HalResource, orgUri);
+    expect(cache.getKeys('Resource')).toHaveLength(1);
+  });
+
+  test('set resource validator to undefined', () => {
+    const orgUri = uriBuilder.resourceUri('org', false, '/resource');
+    cache.setResourceKeyValidator((key: string) => key !== orgUri);
+    const client = createClient(uriBuilder.orgBaseURI);
+    createResource(client, HalResource, orgUri);
+    expect(cache.getKeys('Resource')).toHaveLength(0);
+    cache.setResourceKeyValidator(undefined);
+    createResource(client, HalResource, orgUri);
+    expect(cache.getKeys('Resource')).toHaveLength(1);
+  });
+})
