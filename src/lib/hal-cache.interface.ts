@@ -5,6 +5,19 @@ import { IHalRestClient } from "./hal-rest-client.interface";
 export type HalCacheType = 'Client' | 'Resource';
 
 export interface IHalCache {
+
+  readonly isEnabled: boolean;
+
+  /**
+   * Enables the cache
+   */
+  enable(): void;
+
+  /**
+   * Disables the cache and clears all the contents
+   */
+  disable(): void;
+
   /**
    * Selective purge of a cache. To clear the cache completely use reset.
    *

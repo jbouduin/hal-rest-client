@@ -11,14 +11,17 @@ export const cache: IHalCache = new HalCache();
 
 /**
  * Create hal rest client
- * If not baseUri is provided, a new HalRestClient is created.
- * Othwersie, if a client with same base uri already exists, it is retrieved from the cache and returned. If it does not exists yet, a new client is created and cached.
+ * If no baseUri is provided, a new HalRestClient is created.
+ * Othwerise, if a client with same base uri already exists, it is retrieved from the cache and returned.
+ * If it does not exists yet, a new client is created. If the cached parameter is not set to false this new client is cached.
  *
- * @param {string} baseUri - the baseUri that will be used to configure Axios
+ * @param {string} baseUri - the baseUri that will be used to configure Axios.
  * @param {AxiosRequestConfig} options - the options that will be passed to Axios
+ * @param {boolean} cached - if set to false, the client will not be added to the cache. Remark: even if set to false, an existing cached entry will be returned.
+ * Defaults to 'false'
  * @returns {IHalRestClient} - a IHalrestClient
  */
-export function createClient(baseUri?: string, options: AxiosRequestConfig = {}): IHalRestClient {
+export function createClient(baseUri?: string, options: AxiosRequestConfig = {}, cached = true): IHalRestClient {
   let result: IHalRestClient;
   if (!baseUri) {
     result = new HalRestClient();
@@ -28,7 +31,9 @@ export function createClient(baseUri?: string, options: AxiosRequestConfig = {})
     }
     if (!cache.hasClient(baseUri)) {
       result = new HalRestClient(baseUri, options);
-      cache.setClient(baseUri, result);
+      if (cached) {
+        cache.setClient(baseUri, result);
+      }
     } else {
       result = cache.getClient(baseUri);
     }
