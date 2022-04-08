@@ -10,8 +10,8 @@ export interface ISimpleFactoryResult extends IFactoryResult<IData> {
   sendName: string,
   savedName: string,
   updatedName: string,
-  createRequest: object;
-  updateNameRequest: object;
+  createRequest: Record<string, unknown>;
+  updateNameRequest: Record<string, unknown>;
   updateNameResponse: IData;
 }
 

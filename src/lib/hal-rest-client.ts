@@ -100,7 +100,7 @@ export class HalRestClient implements IHalRestClient {
 
   public update<T extends IHalResource>(
     url: string,
-    data: object,
+    data: Record<string, unknown>,
     full?: boolean,
     type?: IHalResourceConstructor<T>): Promise<T | Record<string, unknown>> {
     const method = full ? "put" : "patch";
@@ -117,7 +117,7 @@ export class HalRestClient implements IHalRestClient {
     });
   }
 
-  public create<T extends IHalResource>(uri: string, data: object, type?: IHalResourceConstructor<T>): Promise<T | Record<string, unknown>> {
+  public create<T extends IHalResource>(uri: string, data: Record<string, unknown>, type?: IHalResourceConstructor<T>): Promise<T | Record<string, unknown>> {
     return new Promise((resolve, reject) => {
       this.axios.post(uri, data).then((response: AxiosResponse<any, any>) => {
         // const fetchedUrl = response.request.res.responseUrl;
