@@ -157,9 +157,9 @@ export type IResourceFetchOptions = {
    */
   force?: boolean;
   /**
-   * @type {object=} - The object containing the query parameters for a templated resource URI.
+   * @type {Record<string, unknown>=} - The object containing the query parameters for a templated resource URI.
    */
-  params?: object;
+  params?: Record<string, unknown>;
 }
 
 

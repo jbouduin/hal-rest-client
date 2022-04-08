@@ -294,6 +294,26 @@ describe('resource.removeFromCache method' , () => {
   });
 });
 
+describe('halRestClient.removeFromCache method', () => {
+  const uriBuilder = new UriBuilder();
+  test('call remove from cache on a cached client', () => {
+    const client = createClient(uriBuilder.orgBaseURI);
+    expect(cache.getKeys('Client')).toHaveLength(1);
+    const result = client.removeFromCache();
+    expect(result).toBe<boolean>(true);
+    expect(cache.getKeys('Client')).toHaveLength(0);
+  });
+
+  test('call remove from cache on non a cached entry', () => {
+    const client = createClient(undefined);
+    createClient(uriBuilder.orgBaseURI);
+    expect(cache.getKeys('Client')).toHaveLength(1);
+    const result = client.removeFromCache();
+    expect(result).toBe<boolean>(false);
+    expect(cache.getKeys('Client')).toHaveLength(1);
+  });
+});
+
 describe('clear resource cache tests', () => {
   const uriBuilder = new UriBuilder();
   const dummyFactory = new DataFactory(uriBuilder);

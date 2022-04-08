@@ -47,7 +47,7 @@ export interface IHalRestClient {
      * @param data request body
      * @returns a record. If the response from the server contains a body, this will be returned. If not the response will be returned.
      */
-    (uri: string, data: object): Promise<Record<string, unknown>>;
+    (uri: string, data: Record<string, unknown>): Promise<Record<string, unknown>>;
     /**
      * sends a post request to the server, which responds with a Hal-Resource
      *
@@ -56,7 +56,7 @@ export interface IHalRestClient {
      * @param type the type of hal resource returned by the server. If no model has been defined, you can use {HalResource}
      * @returns the requested HalResource model
      */
-    <T extends IHalResource>(uri: string, data: object, type: IHalResourceConstructor<T>): Promise<T>;
+    <T extends IHalResource>(uri: string, data: Record<string, unknown>, type: IHalResourceConstructor<T>): Promise<T>;
   };
 
   delete: {
@@ -116,6 +116,11 @@ export interface IHalRestClient {
   fetchArray<T extends IHalResource>(uri: string, type: IHalResourceConstructor<T>): Promise<Array<T>>;
 
   /**
+   * Remove this instance of HalRestClient from cache
+   */
+  removeFromCache(): boolean;
+
+  /**
    * set the json parser of the HalRestClient
    *
    * @param {IJSONParser} parser - the json parser that will convert server responses into HalResources
@@ -128,22 +133,22 @@ export interface IHalRestClient {
      * sends a put or a patch request to the server, expecting a non hal-json answer back.
      *
      * @param {string} uri - the relative or absolute resource url to update
-     * @param {object} data - the request body to send
+     * @param {Record<string, unknown>} data - the request body to send
      * @param {boolean} full - Set true to send a put request, false to send a patch request. Defaults to false.
      * @returns {Record} - if the response from the server contains a body, this will be returned.If not the response will be returned.
      */
-    (uri: string, data: object, full?: boolean): Promise<Record<string, unknown>>;
+    (uri: string, data: Record<string, unknown>, full?: boolean): Promise<Record<string, unknown>>;
     /**
      * sends a put or a patch request to the server, expecting a hal-json answer back.
      *
      * @template T - a resource type extending {IHalResource}
      * @param {string} uri - the relative or absolute resource url to update
-     * @param {object} data - the request body to send
+     * @param {Record<string, unknown>} data - the request body to send
      * @param {boolean} full - Set true to send a put request, false to send a patch request. Defaults to false.
      * @param {IHalResourceConstructor<T>} type - the type of hal resource returned by the server. If no model has been defined, you can use HalResource
      * @returns {T} - the requested HalResource model
      */
-    <T extends IHalResource>(url: string, data: object, full?: boolean, type?: IHalResourceConstructor<T>): Promise<T>;
+    <T extends IHalResource>(url: string, data: Record<string, unknown>, full?: boolean, type?: IHalResourceConstructor<T>): Promise<T>;
   }
   //#endregion
 }

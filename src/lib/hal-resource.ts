@@ -209,7 +209,7 @@ export class HalResource implements IHalResource {
    * @param {IJSONSerializer} serializer - the serializer to use. Defaults to the default serializer of the library
    * @returns {object} - the serialized resources
    */
-  private serialize(props: Array<string>, links: Array<string>, serializer: IJSONSerializer = new DefaultSerializer()): object {
+  private serialize(props: Array<string>, links: Array<string>, serializer: IJSONSerializer = new DefaultSerializer()): Record<string, unknown> {
     const tsToHal = Reflect.getMetadata('halClient:tsToHal', this);
     const result = {};
 
