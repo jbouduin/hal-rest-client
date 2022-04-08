@@ -4,6 +4,7 @@ import { AxiosInstance, AxiosRequestConfig, AxiosResponse } from "axios";
 import { IJSONParser, JSONParser } from "./hal-json-parser";
 import { IHalResourceConstructor, IHalResource } from "./hal-resource.interface";
 import { IHalRestClient } from "./hal-rest-client.interface";
+import { cache } from "./hal-factory";
 
 // TODO 1659 Appropriate Encapsulation
 // hide that internal method
@@ -162,6 +163,15 @@ export class HalRestClient implements IHalRestClient {
         resolve(this.jsonParser.objectToHalResource(this, response.data, uri, type, resource, response.request.res.responseUrl));
       }).catch(reject);
     });
+  }
+
+  public removeFromCache(): boolean {
+    let result = false;
+    if (cache.hasClient(this.axios.defaults.baseURL)) {
+      const removed = cache.clear('Client', this.axios.defaults.baseURL);
+      result = removed.length > 0;
+    }
+    return result;
   }
   //#endregion
 

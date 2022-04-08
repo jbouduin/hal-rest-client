@@ -116,6 +116,11 @@ export interface IHalRestClient {
   fetchArray<T extends IHalResource>(uri: string, type: IHalResourceConstructor<T>): Promise<Array<T>>;
 
   /**
+   * Remove this instance of HalRestClient from cache
+   */
+  removeFromCache(): boolean;
+
+  /**
    * set the json parser of the HalRestClient
    *
    * @param {IJSONParser} parser - the json parser that will convert server responses into HalResources
