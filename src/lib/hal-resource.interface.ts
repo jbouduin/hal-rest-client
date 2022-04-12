@@ -1,6 +1,7 @@
 import { IJSONSerializer } from "./hal-json-serializer.interface";
 import { IHalRestClient } from "./hal-rest-client.interface";
 import { IUriData, UriData } from "./uri-data";
+import { TemplateFillParameters } from "./uri-template";
 
 export interface IHalResource {
 
@@ -157,9 +158,9 @@ export type IResourceFetchOptions = {
    */
   force?: boolean;
   /**
-   * @type {Record<string, unknown>=} - The object containing the query parameters for a templated resource URI.
+   * @type {TemplateFillParameters=} - The object containing the query parameters for a templated resource URI.
    */
-  params?: Record<string, unknown>;
+  params?: TemplateFillParameters;
 }
 
 
