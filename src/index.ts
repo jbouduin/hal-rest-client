@@ -9,3 +9,4 @@ export * from './lib/hal-resource';
 // export * from './hal-rest-client';
 export * from './lib/hal-rest-client.interface';
 export * from './lib/uri-data';
+export * from './lib/uri-template';

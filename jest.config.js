@@ -14,7 +14,8 @@ module.exports = {
     "^.+\\.(ts|tsx)$": "ts-jest"
   },
   "testPathIgnorePatterns": [
-    "<rootDir>/models"
+    "<rootDir>/models",
+    "do-not-commit.*"
   ],
   "collectCoverageFrom": [
     "!**/models/**",
