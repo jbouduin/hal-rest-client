@@ -1,4 +1,4 @@
-import * as uriTemplates from 'uri-templates';
+import { TemplateFillParameters, UriTemplate } from "./uri-template";
 
 export interface IUriData {
   readonly href: string;
@@ -14,7 +14,7 @@ export interface IUriData {
 export class UriData implements IUriData {
   //#region private properties ------------------------------------------------
   private fetchedURI: string;
-  private uriTemplates;
+  private uriTemplate;
   //#endregion
 
   //#region public properties -------------------------------------------------
@@ -47,7 +47,7 @@ export class UriData implements IUriData {
     this.type = type;
     this.fetchedURI = undefined;
     if (templated && uri) {
-      this.uriTemplates = uriTemplates(uri);
+      this.uriTemplate = new UriTemplate(uri);
     }
   }
   //#endregion
@@ -61,9 +61,9 @@ export class UriData implements IUriData {
     }
   }
 
-  public fill(params: object = {}): string {
-    if (this.templated && this.uriTemplates) {
-      return this.uriTemplates.fill(params);
+  public fill(params: TemplateFillParameters = {}): string {
+    if (this.templated && this.uriTemplate) {
+      return this.uriTemplate.fill(params);
     } else {
       return this.href || this.requestedUri;
     }
