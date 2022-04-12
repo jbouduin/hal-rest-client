@@ -1,4 +1,3 @@
-
 export type TemplateFillParameters = Record<string, string | number | Array<string | number>>;
 
 type templateSegmentType = 'fix' | 'var';
@@ -33,7 +32,6 @@ class TemplateSegmentContent {
       if (this.content.indexOf(':') > 0) {
         this.inErrorState = true;
       }
-      // TODO check what follows
       result = true;
     }
     return result;
@@ -48,22 +46,15 @@ class TemplateSegmentContent {
         this.inErrorState = true;
         return -1;
       }
-      // TODO this is not in the official tests
-      // if (result >= 10000) {
-      //   this.inErrorState = true;
-      //   return -1;
-      // }
+      // if (result >= 10000) {} => this is not in the official tests
       this.content = this.content.substring(0, colonIndex);
     }
     return result;
   }
 
   private hasInvalidChars(): boolean {
-    return ! /^[A-Za-z0-9_]*$/.test(this.content);
-    // if (!result) {
-    //   console.log('HERE', this.content);
-    // }
-    // return !result;
+    const clean = this.content.replace(/%[0-9A-Z][0-9A-Z]/g, '');
+    return ! /^[A-Za-z0-9_.]*$/.test(clean);
   }
 }
 
@@ -150,12 +141,8 @@ export class UriTemplate {
               if (segment.named) {
                 return value
                   .map((item: string) => {
-                    if (item !== '') {
-                      return `${segmentContent.content}=${this.calculateValue(item, segmentContent.sub, segment.encodeFn)}`;
-                    } else {
-                      // TODO this is not covered by official tests
-                      return `${segmentContent.content}${segment.ifEmpty}`;
-                    }
+                    // if (value[key] !== '') {} => not covered by official tests
+                    return `${segmentContent.content}=${this.calculateValue(item, segmentContent.sub, segment.encodeFn)}`;
                   })
                   .join(segment.separator);
               } else {
@@ -166,23 +153,16 @@ export class UriTemplate {
                   undefined;
               }
             } else if (typeof value === 'object') {
-              // TODO this is not in the official tests
-              // if (segmentContent.sub > 0) {
-              //   throw new Error();
-              // }
-              // if (templatePart.named) => not required, exploded objects are always named
+              // if (segmentContent.sub > 0) {} => not covered by official tests
               return Object.keys(value)
                 .map((key: string) => {
-                  if (value[key] !== '') {
-                    return `${key}=${this.calculateValue(value[key], segmentContent.sub, segment.encodeFn)}`;
-                  } else {
-                    // TODO this is not covered by official tests
-                    return `${key}${segment.ifEmpty}`;
-                  }
+                  // if (value[key] !== '') => not covered by official tests
+                  return `${this.calculateValue(key, 0, segment.encodeFn)}=${this.calculateValue(value[key], segmentContent.sub, segment.encodeFn)}`;
+
                 })
                 .join(segment.separator);
             } else {
-              // TODO is this case compliant ?
+              return this.calculateValue(value.toString(), segmentContent.sub, segment.encodeFn)
             }
           } else {
             if (Array.isArray(value) || typeof value === 'object') {
@@ -200,11 +180,10 @@ export class UriTemplate {
                   this.calculateValue(value[key], segmentContent.sub, segment.encodeFn)).join(',');
               }
               if (segment.named) {
-                if (joined !== '') {
+                if (joined !== '' && joined != undefined) {
                   return `${segmentContent.content}=${joined}`;
                 } else {
-                  // TODO this is not covered by official tests
-                  return `${segmentContent.content}${segment.ifEmpty}`;
+                  return '';
                 }
               } else {
                 return joined;
@@ -233,9 +212,9 @@ export class UriTemplate {
 
     const processedPart = processedPartArray.join(segment.separator);
     if (processedPart.length > 0) {
-      return segment.first + processedPart; // replace('%%empty%%', '');
+      return segment.first + processedPart;
     } else if (processedPartArray.length > 0) {
-      return segment.first;
+      return segment.first !== '?' ? segment.first : '';
     } else {
       return '';
     }
@@ -312,7 +291,7 @@ export class UriTemplate {
   }
 
   private uAndREncodeFunction(value: string): string {
-    return encodeURI(value).replace(/%25[0-9][0-9]/g, (doubleEncoded: string) => '%' + doubleEncoded.substring(3));
+    return encodeURI(value).replace(/%25[0-9A-Z][0-9A-Z]/g, (doubleEncoded: string) => '%' + doubleEncoded.substring(3));
   }
 
   private calculateValue(value: string, sub: number, encodeFn: encodeFn): string {
