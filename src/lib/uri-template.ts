@@ -1,4 +1,6 @@
 
+export type TemplateFillParameters = Record<string, string | number | Array<string | number>>;
+
 type templateSegmentType = 'fix' | 'var';
 type encodeFn = (value: string) => string;
 
@@ -11,14 +13,26 @@ class TemplateSegmentContent {
   public constructor(content: string, type: templateSegmentType) {
     this.content = content;
     this.inErrorState = false;
-    this.explode = type === 'var' && this.checkExplode();
-    this.sub = type === 'var' ? this.checkSub() : 0;
+    if (type === 'var') {
+      this.explode = this.checkExplode();
+      this.sub = this.checkSub();
+      this.inErrorState ||= this.hasInvalidChars();
+    }
+    else {
+      this.explode = false;
+      this.sub = 0;
+      this.inErrorState = false;
+    }
   }
 
   private checkExplode(): boolean {
     let result = false;
     if (this.content.indexOf('*') > 0) {
       this.content = this.content.replace('*', '')
+      // if we now have a colon => wrong
+      if (this.content.indexOf(':') > 0) {
+        this.inErrorState = true;
+      }
       // TODO check what follows
       result = true;
     }
@@ -30,9 +44,26 @@ class TemplateSegmentContent {
     const colonIndex = this.content.indexOf(':')
     if (colonIndex > 0) {
       result = Number.parseInt(this.content.substring(colonIndex + 1));
+      if (isNaN(result)) {
+        this.inErrorState = true;
+        return -1;
+      }
+      // TODO this is not in the official tests
+      // if (result >= 10000) {
+      //   this.inErrorState = true;
+      //   return -1;
+      // }
       this.content = this.content.substring(0, colonIndex);
     }
     return result;
+  }
+
+  private hasInvalidChars(): boolean {
+    return ! /^[A-Za-z0-9_]*$/.test(this.content);
+    // if (!result) {
+    //   console.log('HERE', this.content);
+    // }
+    // return !result;
   }
 }
 
@@ -64,12 +95,14 @@ export class UriTemplate {
   private readonly template: string;
   private readonly uriTemplateGlobalModifiers: Record<string, boolean>;
   private readonly templateSegments: Array<TemplateSegment>;
+  private _inErrorState: boolean;
 
   public get inErrorState(): boolean {
-    return this.templateSegments.findIndex((part: TemplateSegment) => part.inErrorState) >= 0;
+    return this._inErrorState || this.templateSegments.findIndex((part: TemplateSegment) => part.inErrorState) >= 0;
   }
 
   public constructor(template: string) {
+    this._inErrorState = false;
     this.template = template;
     this.uriTemplateGlobalModifiers = {
       "+": true,
@@ -84,25 +117,30 @@ export class UriTemplate {
     this.processTemplate();
   }
 
-  public fill(values: Record<string, string | Array<string>>): string | undefined {
+  public fill(values: TemplateFillParameters): string | undefined {
+    let result: string | undefined;
+
     if (this.inErrorState) {
-      return undefined;
+      result = undefined;
+    } else {
+      try {
+        result = this.templateSegments
+          .map((segment: TemplateSegment) => {
+            if (segment.type === 'fix') {
+              return segment.contents[0].content;
+            } else {
+              return this.processTemplateSegment(segment, values);
+            }
+          })
+          .join('');
+      } catch (error) {
+        result = undefined
+      }
     }
-
-    const result = this.templateSegments
-      .map((segment: TemplateSegment) => {
-        if (segment.type === 'fix') {
-          return segment.contents[0].content;
-        } else {
-          return this.processTemplateSegment(segment, values);
-        }
-      })
-      .join('');
-
     return result;
   }
 
-  private processTemplateSegment(segment: TemplateSegment, values: Record<string, string | Array<string>>): string {
+  private processTemplateSegment(segment: TemplateSegment, values: TemplateFillParameters): string {
     const processedPartArray = segment.contents
       .map((segmentContent: TemplateSegmentContent) => {
         const value = values[segmentContent.content];
@@ -128,6 +166,10 @@ export class UriTemplate {
                   undefined;
               }
             } else if (typeof value === 'object') {
+              // TODO this is not in the official tests
+              // if (segmentContent.sub > 0) {
+              //   throw new Error();
+              // }
               // if (templatePart.named) => not required, exploded objects are always named
               return Object.keys(value)
                 .map((key: string) => {
@@ -150,6 +192,9 @@ export class UriTemplate {
                   value.map((item: string) => this.calculateValue(item, segmentContent.sub, segment.encodeFn)).join(',') :
                   undefined;
               } else {
+                if (segmentContent.sub > 0) {
+                  throw new Error();
+                }
                 joined = Object.keys(value).map((key: string) =>
                   this.calculateValue(key, segmentContent.sub, segment.encodeFn) + ',' +
                   this.calculateValue(value[key], segmentContent.sub, segment.encodeFn)).join(',');
@@ -166,14 +211,14 @@ export class UriTemplate {
               }
             } else {
               if (segment.named) {
-                 if (value !== '') {
-                  return `${segmentContent.content}=${this.calculateValue(value, segmentContent.sub, segment.encodeFn)}`;
+                if (value !== '') {
+                  return `${segmentContent.content}=${this.calculateValue(value.toString(), segmentContent.sub, segment.encodeFn)}`;
                 } else {
                   return `${segmentContent.content}${segment.ifEmpty}`;
                 }
               } else {
                 if (value !== '') {
-                  return this.calculateValue(value, segmentContent.sub, segment.encodeFn);
+                  return this.calculateValue(value.toString(), segmentContent.sub, segment.encodeFn);
                 } else {
                   return ''
                 }
@@ -197,6 +242,10 @@ export class UriTemplate {
   }
 
   private processTemplate(): void {
+    if ((this.template.match(/{/g) || []).length != (this.template.match(/}/g) || []).length) {
+      this._inErrorState = true;
+      return;
+    }
     const curlyBracesRegex = /{([^}]+)}/gm;
     let matches: RegExpExecArray;
     let lastEnd = 0;

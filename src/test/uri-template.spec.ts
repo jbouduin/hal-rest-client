@@ -8,11 +8,11 @@ interface UriTestSuite {
   testcases: Array<[string, string | Array<string>]>;
 }
 
-// interface NegativeTestSuite {
-//   level: number,
-//   variables: Record<string, string>;
-//   testcases: Array<[string, boolean]>;
-// }
+interface NegativeTestSuite {
+  level: number,
+  variables: Record<string, string>;
+  testcases: Array<[string, boolean]>;
+}
 
 describe.each([
   ['https://www.test.org/root/{alfa}/{beta}/{alfa}/{hello}', 'https://www.test.org/root/first/second/first/Hello%20World%21'],
@@ -41,6 +41,7 @@ describe.each(suites1.concat(suites2))('Spec examples: %s', (_key: string, suite
       test(`${testCase[0]} => ${testCase[1]}`, () => {
         const uriTemplate = new UriTemplate(testCase[0]);
         expect(uriTemplate).toBeDefined();
+        expect(uriTemplate.inErrorState).toBe<boolean>(false);
         const filled = uriTemplate.fill(suite.variables);
         expect(filled.length).toBeGreaterThan(0);
         if (Array.isArray(testCase[1])) {
@@ -52,17 +53,18 @@ describe.each(suites1.concat(suites2))('Spec examples: %s', (_key: string, suite
     });
 });
 
-// let negativeTests = JSON.parse(readFileSync('uritemplate-test/spec-examples.json', 'utf-8')) as Record<string, NegativeTestSuite>;
-// const negativeSuites: Array<[string, NegativeTestSuite]> = Object.keys(negativeTests).map((key: string) => [key, negativeTests[key]]);
-// describe.each(negativeSuites)('Spec examples: %s', (_key: string, suite: NegativeTestSuite) => {
-//   suite.testcases
-//     .forEach((testCase: [string, boolean]) => {
-//       test(`${testCase[0]}`, () => {
-//         const uriTemplate = new UriTemplate(testCase[0]);
-//         expect(uriTemplate).toBeDefined();
-//         expect(uriTemplate.inErrorState).toBe<boolean>(true);
-//         const filled = uriTemplate.fill(suite.variables);
-//         expect(filled).toBeUndefined;
-//       });
-//     });
-// });
+const negativeTests = JSON.parse(readFileSync('uritemplate-test/negative-tests.json', 'utf-8')) as Record<string, NegativeTestSuite>;
+const negativeSuites: Array<[string, NegativeTestSuite]> = Object.keys(negativeTests).map((key: string) => [key, negativeTests[key]]);
+describe.each(negativeSuites)('Spec examples: %s', (_key: string, suite: NegativeTestSuite) => {
+  suite.testcases
+    .forEach((testCase: [string, boolean]) => {
+      test(`${testCase[0]}`, () => {
+        const uriTemplate = new UriTemplate(testCase[0]);
+        expect(uriTemplate).toBeDefined();
+        // next expect is not possible, as there are some cases where parsing runs fine, but filling not
+        // expect(uriTemplate.inErrorState).toBe<boolean>(true);
+        const filled = uriTemplate.fill(suite.variables);
+        expect(filled).toBeUndefined();
+      });
+    });
+});
