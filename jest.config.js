@@ -1,9 +1,4 @@
 module.exports = {
-  globals: {
-    'ts-jest': {
-      tsconfig: 'tsconfig.test.json'
-    }
-  },
   "roots": [
     "./src/test"
   ],
@@ -11,7 +6,10 @@ module.exports = {
     "**/?(*.)+(spec|test).+(ts|tsx|js)"
   ],
   "transform": {
-    "^.+\\.(ts|tsx)$": "ts-jest"
+    "^.+\\.(ts|tsx)$": [
+      "ts-jest",
+      { tsconfig: 'tsconfig.test.json' }
+    ]
   },
   "testPathIgnorePatterns": [
     "<rootDir>/models",
