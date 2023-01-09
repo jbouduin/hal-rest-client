@@ -157,8 +157,8 @@ export class UriTemplate {
               return Object.keys(value)
                 .map((key: string) => {
                   // if (value[key] !== '') => not covered by official tests
+                  // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unnecessary-type-assertion, @typescript-eslint/no-non-null-assertion
                   return `${this.calculateValue(key, 0, segment.encodeFn)}=${this.calculateValue(value![key], segmentContent.sub, segment.encodeFn)}`;
-
                 })
                 .join(segment.separator);
             } else {
