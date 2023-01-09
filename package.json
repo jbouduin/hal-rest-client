@@ -5,7 +5,7 @@
     "Johan Bouduin",
     "Thomas Deblock (original library)"
   ],
-  "version": "0.8.0",
+  "version": "0.8.1",
   "description": "Hal rest client for typescript",
   "tags": [
     "HAL",
