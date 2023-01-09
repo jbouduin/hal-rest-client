@@ -157,7 +157,7 @@ export class UriTemplate {
               return Object.keys(value)
                 .map((key: string) => {
                   // if (value[key] !== '') => not covered by official tests
-                  return `${this.calculateValue(key, 0, segment.encodeFn)}=${this.calculateValue(value[key], segmentContent.sub, segment.encodeFn)}`;
+                  return `${this.calculateValue(key, 0, segment.encodeFn)}=${this.calculateValue(value![key], segmentContent.sub, segment.encodeFn)}`;
 
                 })
                 .join(segment.separator);
