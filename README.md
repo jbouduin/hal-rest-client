@@ -5,6 +5,7 @@
 
 [![NPM](https://nodei.co/npm/@jbouduin/hal-rest-client.png?downloads=true&downloadRank=true&stars=true)](https://nodei.co/npm/@jbouduin/hal-rest-client/)
 
+The hal-rest-client library helps you to work with Hypertext Application Language (HAL) in Typescript.
 
 This is a friendly fork of the original [hal-rest-client](https://github.com/deblockt/hal-rest-client) repository.
 Reason for doing this: the original repository has been archived and is showing some severe vulnerabilities.
@@ -16,9 +17,9 @@ Reason for doing this: the original repository has been archived and is showing 
 * avoid the use of ```any``` and ```object``` whenever possible
 
 ## What I intend to do (without the intention to invest lots of time):
-* Do some clean-up where appropriate
+* Do some more clean-up where appropriate
 * Adapt and extend the library to my own needs and any changes (although not probable) in the HAL-Specification
-* Correct bugs (feel free to create issues if you find one)
+* Correct bugs (feel free to create an issue if you find one)
 
 ## Pull requests
 I am willing to merge any useful Pull Request (feel free to create them), if:
@@ -27,12 +28,7 @@ I am willing to merge any useful Pull Request (feel free to create them), if:
   * no unecessary dependencies are introduced
 The decision to merge is taken at my own discretion.
 
-hal-rest-client library to help you work with Hypertext Application Language (HAL) on Typescript. It's work fine with browser or nodejs app.
-
-It can map rest service return to Typescript object for simply access link or property.
-
 ## Install
-
 Using npm :
 
 ```
@@ -49,7 +45,7 @@ The library provide two access method :
 
 #### Read object
 
-To have access to your service, you need to create an hal-rest-client instance .
+To have access to your service, you need to create a hal-rest-client instance.
 
 ``` ts
 import { createClient } from "hal-rest-client";
@@ -142,7 +138,7 @@ bar.props === resource.links.foo.links.bar.props // true
 
 #### Update a resource
 
-Resource can be updated, an save with a PATCH query.
+Resource can be updated, and saves with a PATCH query.
 
 ``` ts
 resource.prop("name", "new value");
@@ -263,21 +259,21 @@ const infosForFoo = await resource.infos.fetch({path: "foo"});
 
 #### update a resource
 
-Resource can be updated, an save with a PATCH query.
+Resource can be updated, and saved with a PATCH query.
 
 ``` ts
 resource.name = "new value";
 await resource.update()
 ```
-> update return a promise. use `await` to wait end of update.
+> update returns a promise. use `await` to wait end of update.
 
-You can set a link, the new value for a link must be an `HalResource` or an other model, populated or not.
+You can set a link, the new value for a link must be a `HalResource` or an other model, populated or not.
 ``` ts
 // init an HalResource called newPerson
 resource.owner = newPerson
 await resource.update();
 ```
-> on the request send to server, only the uri is sent not all the object.
+> when sending the request send to server, only the uri is sent, not the object complete object.
 
 #### create a resource
 
@@ -293,11 +289,11 @@ To create a resource, you must use method `create` on your client.
 await client.create("/resources", { name: "Thomas" });
 ```
 
-If your server return the new created object as body, you can do this :
+If your server returns the newly created object as body, you can do this :
 ``` ts
 const resource = await client.create("/resources", { name: "Thomas" }, Resource);
 ```
-> Resource is an Resource object if server return a resource or just json if a simple json is returned
+> Resource is a Resource object if server return a resource or just json if a simple json is returned
 
 ##### Create a new Object
 
@@ -318,7 +314,7 @@ Call `create` method
 ``` ts
 const createdResource = await resource.create();
 ```
-> if your server return new created object, create return this object. createdResource have type Resource. create don't populate the existing object.
+> if your server returns a newly created object, create return this object. createdResource is of type Resource. Create doesn't populate the existing object.
 
 ## Configuration
 
@@ -328,7 +324,7 @@ HalClient use axios to run ajax request.
 
 You can configure each parameter describe [here](https://github.com/mzabriskie/axios#request-config)
 
-To do, you have two solution:
+To do, you have two solutions:
 
 ```typescript
 // example to configure CORS withCredentials parameter
@@ -372,7 +368,7 @@ Two parameters can be used for create a client.
 - The base URI. fetchs are done with this base
 - A header. All request are done with this header
 
-an base URL can be used to fetch resources.
+a base URL can be used to fetch resources.
 
 ``` ts
 import { createClient } from 'hal-rest-client';
@@ -456,5 +452,5 @@ const result = await resource.update({
 });
 ```
 
-- parseProp : parse a simple property (not an HalResource)
+- parseProp : parse a simple property (not a HalResource)
 - parseResource : parse a HalResource or model class
