@@ -1,6 +1,6 @@
 import { IJSONSerializer } from "./hal-json-serializer.interface";
 import { IHalRestClient } from "./hal-rest-client.interface";
-import { IUriData, UriData } from "./uri-data";
+import { IUriData } from "./uri-data";
 import { TemplateFillParameters } from "./uri-template";
 
 export interface IHalResource {
@@ -131,7 +131,7 @@ export interface IHalResource {
   reset(): void;
 
   /** @internal */
-  setUri(uri: UriData): void;
+  setUri(uri: IUriData): void;
 
   /** @internal */
   onInitEnded(): void
@@ -142,7 +142,7 @@ export interface IHalResource {
 }
 
 export interface IHalResourceConstructor<T extends IHalResource> {
-  new (restClient: IHalRestClient, uri ?: UriData): T;
+  new (restClient: IHalRestClient, uri ?: IUriData): T;
 }
 
 export interface INewable {
