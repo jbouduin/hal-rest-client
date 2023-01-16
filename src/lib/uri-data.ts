@@ -8,6 +8,14 @@ export interface IUriData {
    * Returns the fetched URI in case of a templated URI, the original href otherwise
    */
   readonly resourceUri: string;
+  /** @internal */
+  requestedUri: string;
+  /** @internal */
+  receivedUri: string;
+  /** @internal */
+  fill(params: TemplateFillParameters): string;
+  /** @internal */
+  calculateCacheKey(clientBaseUrl: string): string;
 }
 
 /** @internal */
@@ -20,7 +28,7 @@ export class UriData implements IUriData {
   //#region public properties -------------------------------------------------
   public href: string;
   public requestedUri: string;
-  public receivedUri: string
+  public receivedUri: string;
   public readonly templated: boolean;
   public readonly type: string;
   //#endregion

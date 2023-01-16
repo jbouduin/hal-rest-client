@@ -11,7 +11,7 @@ export class HalResource implements IHalResource {
   //#region Private properties ------------------------------------------------
   private _isLoaded: boolean;
   private _restClient: IHalRestClient;
-  private _uri: UriData;
+  private _uri: IUriData;
   private readonly settedProps: Array<string>;
   private readonly settedLinks: Array<string>;
   private initEnded: boolean;
