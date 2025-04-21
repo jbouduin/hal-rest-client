@@ -16,7 +16,7 @@ jobs:
           submodules: recursive
       - uses: actions/setup-node@v2
         with:
-          node-version: 16
+          node-version: 'v22.12.0'
           registry-url: https://registry.npmjs.org/
       - run: npm ci
       - run: npm publish
