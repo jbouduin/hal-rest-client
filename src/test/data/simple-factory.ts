@@ -16,30 +16,28 @@ export interface ISimpleFactoryResult extends IFactoryResult<IData> {
 }
 
 export class SimpleFactory extends DataFactory {
-
   private readonly tld: HostTld;
   public readonly id: number;
   public readonly sendName: string;
   public readonly savedName: string;
   public readonly updatedName: string;
 
-  public constructor(uriBuilder: UriBuilder, tld: HostTld = 'org') {
+  public constructor(uriBuilder: UriBuilder, tld: HostTld = "org") {
     super(uriBuilder);
     this.tld = tld;
     this.id = 69;
-    this.sendName = 'FANNY';
-    this.savedName = 'Fanny';
-    this.updatedName = 'Lena';
+    this.sendName = "FANNY";
+    this.savedName = "Fanny";
+    this.updatedName = "Lena";
   }
 
   /**
    *
-   * @param {string} path - relative path to the simple resource(s). Defaults to 'simple'
+   * @param {string} path - relative path to the simple resource(s). Defaults to "simple"
    * @param {SelfOption} selfOption - kind of self link to generate
    * @returns {ISimpleFactoryResult} - the test data
    */
-  public createSimpleData(path = 'simple', selfOption: SelfOption = SelfOption.AbsoluteString): ISimpleFactoryResult {
-
+  public createSimpleData(path = "simple", selfOption: SelfOption = SelfOption.AbsoluteString): ISimpleFactoryResult {
     const fullUri = this.uriBuilder.resourceUri(this.tld, false, path, this.id);
     const relativeUri = this.uriBuilder.resourceUri(this.tld, true, path, this.id);
 
@@ -94,34 +92,33 @@ export class SimpleFactory extends DataFactory {
     return result;
   }
 
-  public getJumpToTemplate(relative: boolean, path = 'simple', offset?: number) {
+  public getJumpToTemplate(relative: boolean, path = "simple", offset?: number) {
     return this.uriBuilder.filledTemplatedResourceUri(
       this.tld,
       relative,
       path,
       {
-        offset: offset ? offset : '{jumpTo}',
-        sort: 'id',
+        offset: offset ? offset : "{jumpTo}",
+        sort: "id",
         pageSize: 20
       }
     );
   }
 
-  public getChangeSizeTemplate(relative: boolean, offset: number, path = 'simple', pageSize?: number) {
+  public getChangeSizeTemplate(relative: boolean, offset: number, path = "simple", pageSize?: number) {
     return this.uriBuilder.filledTemplatedResourceUri(
       this.tld,
       relative,
       path,
       {
         offset: offset,
-        sort: 'id',
-        pageSize:  pageSize ? pageSize : '{pageSize}'
+        sort: "id",
+        pageSize:  pageSize ? pageSize : "{pageSize}"
       }
     );
   }
 
-  public createSimpleListData(offset = 0, path = 'simple'): IFactoryListResult<IData> {
-
+  public createSimpleListData(offset = 0, path = "simple"): IFactoryListResult<IData> {
     const links: ILinkCollection = {
       jumpTo: { href: this.getJumpToTemplate(false), templated: true },
       changeSize: { href: this.getChangeSizeTemplate(false, offset)}

@@ -1,13 +1,13 @@
-export type HostTld = 'com' | 'org';
+export type HostTld = "com" | "org";
 
-export type BasicQueryParameterKey = 'sort' | 'offset' | 'pageSize';
+export type BasicQueryParameterKey = "sort" | "offset" | "pageSize";
 
 export interface IQueryParameters {
   [key: string]: string | number;
 }
 
 export interface IEmbeddedCollection {
-  [key: string]: any
+  [key: string]: unknown
 }
 
 export interface ILink {
@@ -21,7 +21,7 @@ export interface ILinkCollection {
 }
 
 export interface IBase {
-  [key: string]: any
+  [key: string]: unknown
 }
 
 export interface IData extends IBase {

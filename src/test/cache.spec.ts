@@ -1,9 +1,9 @@
-import * as nock from 'nock';
-import { HalRestClient } from '../lib/hal-rest-client';
-import { createClient, cache, createResource, IHalResource, HalResource } from '..';
-import { IFactoryResult, IData, HostTld } from './data/common-definitions';
-import { DataFactory, SelfOption } from './data/data-factory';
-import { UriBuilder } from './data/uri-builder';
+import * as nock from "nock";
+import { HalRestClient } from "../lib/hal-rest-client";
+import { createClient, cache, createResource, IHalResource, HalResource } from "..";
+import { IFactoryResult, IData, HostTld } from "./data/common-definitions";
+import { DataFactory, SelfOption } from "./data/data-factory";
+import { UriBuilder } from "./data/uri-builder";
 
 //#region setup/teardown ------------------------------------------------------
 beforeAll(() => {
@@ -18,53 +18,52 @@ afterEach(() => {
   cache.setClientKeyValidator(null);
   cache.setResourceKeyValidator(null);
   nock.cleanAll();
-
 });
 //#endregion
 
-type FetchType = 'absolute' | 'relative';
+type FetchType = "absolute" | "relative";
 describe.each([
   // if no self-link => No caching
-  [true, 'org', 'relative', SelfOption.NoSelf, 0],
-  [true, 'org', 'relative', SelfOption.NullLink, 0],
-  [true, 'org', 'relative', SelfOption.NullString, 0],
-  [true, 'org', 'absolute', SelfOption.NoSelf, 0],
-  [true, 'org', 'absolute', SelfOption.NullLink, 0],
-  [true, 'org', 'absolute', SelfOption.NullString, 0],
-  [false, 'org', 'absolute', SelfOption.NoSelf, 0],
-  [false, 'org', 'absolute', SelfOption.NullLink, 0],
-  [false, 'org', 'absolute', SelfOption.NullString, 0],
+  [true, "org", "relative", SelfOption.NoSelf, 0],
+  [true, "org", "relative", SelfOption.NullLink, 0],
+  [true, "org", "relative", SelfOption.NullString, 0],
+  [true, "org", "absolute", SelfOption.NoSelf, 0],
+  [true, "org", "absolute", SelfOption.NullLink, 0],
+  [true, "org", "absolute", SelfOption.NullString, 0],
+  [false, "org", "absolute", SelfOption.NoSelf, 0],
+  [false, "org", "absolute", SelfOption.NullLink, 0],
+  [false, "org", "absolute", SelfOption.NullString, 0],
   // if self-link is templated => no caching => covered in another links.spec.ts
   // self-link is absolute => cache using self-link as key
-  [false, 'org', 'absolute', SelfOption.AbsoluteLink, 2],
-  [false, 'org', 'absolute', SelfOption.AbsoluteString, 2],
-  [true, 'org', 'relative', SelfOption.AbsoluteLink, 2],
-  [true, 'org', 'relative', SelfOption.AbsoluteString, 2],
-  [true, 'org', 'absolute', SelfOption.AbsoluteLink, 2],
-  [true, 'org', 'absolute', SelfOption.AbsoluteString, 2],
-  [true, 'com', 'absolute', SelfOption.AbsoluteLink, 2],
-  [true, 'com', 'absolute', SelfOption.AbsoluteString, 2],
+  [false, "org", "absolute", SelfOption.AbsoluteLink, 2],
+  [false, "org", "absolute", SelfOption.AbsoluteString, 2],
+  [true, "org", "relative", SelfOption.AbsoluteLink, 2],
+  [true, "org", "relative", SelfOption.AbsoluteString, 2],
+  [true, "org", "absolute", SelfOption.AbsoluteLink, 2],
+  [true, "org", "absolute", SelfOption.AbsoluteString, 2],
+  [true, "com", "absolute", SelfOption.AbsoluteLink, 2],
+  [true, "com", "absolute", SelfOption.AbsoluteString, 2],
   // rest client has a base URI and self-link resource was fetched with an absolute URL on a different server => no caching
-  [true, 'com', 'absolute', SelfOption.RelativeLink, 0],
-  [true, 'com', 'absolute', SelfOption.RelativeString, 0],
+  [true, "com", "absolute", SelfOption.RelativeLink, 0],
+  [true, "com", "absolute", SelfOption.RelativeString, 0],
   // rest client has a base URI and self-link is relative => cache using combined base URI and self-link
-  [true, 'org', 'relative', SelfOption.RelativeLink, 2],
-  [true, 'org', 'relative', SelfOption.RelativeString, 2],
-  [true, 'org', 'absolute', SelfOption.RelativeLink, 2],
-  [true, 'org', 'absolute', SelfOption.RelativeString, 2],
+  [true, "org", "relative", SelfOption.RelativeLink, 2],
+  [true, "org", "relative", SelfOption.RelativeString, 2],
+  [true, "org", "absolute", SelfOption.RelativeLink, 2],
+  [true, "org", "absolute", SelfOption.RelativeString, 2],
   // rest client has no base URI and self-link is relative => no caching
-  [false, 'org', 'absolute', SelfOption.RelativeLink, 0],
-  [false, 'org', 'absolute', SelfOption.RelativeString, 0],
-  [false, 'com', 'absolute', SelfOption.RelativeLink, 0],
-  [false, 'com', 'absolute', SelfOption.RelativeString, 0]
-])('Caching resources', (clientWithBaseURI: boolean, dummyTld: HostTld, fetch: FetchType, selfOption: SelfOption, cachedEntries: number) => {
+  [false, "org", "absolute", SelfOption.RelativeLink, 0],
+  [false, "org", "absolute", SelfOption.RelativeString, 0],
+  [false, "com", "absolute", SelfOption.RelativeLink, 0],
+  [false, "com", "absolute", SelfOption.RelativeString, 0]
+])("Caching resources", (clientWithBaseURI: boolean, dummyTld: HostTld, fetch: FetchType, selfOption: SelfOption, cachedEntries: number) => {
   const uriBuilder = new UriBuilder();
   const dummyFactory = new DataFactory(uriBuilder);
-  const client = createClient(clientWithBaseURI ? uriBuilder.baseUri('org') : undefined);
+  const client = createClient(clientWithBaseURI ? uriBuilder.baseUri("org") : undefined);
 
-  test(`Fetch resource from ${dummyTld} using ${fetch} uri, client created ${clientWithBaseURI ? 'with baseURL' : 'wihtout baseURL'} - self is ${selfOption}`, () => {
-    const embedded = dummyFactory.createResourceData(dummyTld, 'embedded', 1, undefined, undefined, selfOption);
-    const dummy = dummyFactory.createResourceData(dummyTld, 'dummy', 1, { child: embedded.data }, undefined, selfOption);
+  test(`Fetch resource from ${dummyTld} using ${fetch} uri, client created ${clientWithBaseURI ? "with baseURL" : "wihtout baseURL"} - self is ${selfOption}`, () => {
+    const embedded = dummyFactory.createResourceData(dummyTld, "embedded", 1, undefined, undefined, selfOption);
+    const dummy = dummyFactory.createResourceData(dummyTld, "dummy", 1, { child: embedded.data }, undefined, selfOption);
 
     const scope = nock(uriBuilder.baseUri(dummyTld));
     scope
@@ -72,9 +71,9 @@ describe.each([
       .reply(200, dummy.data);
 
     return client
-      .fetch(fetch === 'absolute' ? dummy.absoluteUri : dummy.relativeUri, HalResource)
+      .fetch(fetch === "absolute" ? dummy.absoluteUri : dummy.relativeUri, HalResource)
       .then(() => {
-        const cacheKeys = cache.getKeys('Resource');
+        const cacheKeys = cache.getKeys("Resource");
         expect(cacheKeys).toHaveLength(cachedEntries);
         if (cachedEntries > 0) {
           expect(cacheKeys).toContainEqual<string>(dummy.absoluteUri);
@@ -85,63 +84,63 @@ describe.each([
   });
 });
 
-describe('creating a resource once with full and one with relative uri', () => {
+describe("creating a resource once with full and one with relative uri", () => {
   const uriBuilder = new UriBuilder();
   const client = createClient(uriBuilder.orgBaseURI);
-  const full = uriBuilder.resourceUri('org', false, 'test', 69);
-  const relative = uriBuilder.resourceUri('org', true, 'test', 69);
-  test('full uri first', () => {
+  const full = uriBuilder.resourceUri("org", false, "test", 69);
+  const relative = uriBuilder.resourceUri("org", true, "test", 69);
+  test("full uri first", () => {
     createResource(client, HalResource, full);
-    expect(cache.getKeys('Resource')).toHaveLength(1);
+    expect(cache.getKeys("Resource")).toHaveLength(1);
     createResource(client, HalResource, relative);
-    expect(cache.getKeys('Resource')).toHaveLength(1);
+    expect(cache.getKeys("Resource")).toHaveLength(1);
   });
 
-  test('relative uri first', () => {
+  test("relative uri first", () => {
     createResource(client, HalResource, relative);
-    expect(cache.getKeys('Resource')).toHaveLength(1);
+    expect(cache.getKeys("Resource")).toHaveLength(1);
     createResource(client, HalResource, full);
-    expect(cache.getKeys('Resource')).toHaveLength(1);
+    expect(cache.getKeys("Resource")).toHaveLength(1);
   });
 });
 
-describe('Caching clients', () => {
+describe("Caching clients", () => {
   const uriBuilder = new UriBuilder();
-  test('Client created with URI is cached', () => {
+  test("Client created with URI is cached", () => {
     const client = createClient(uriBuilder.orgBaseURI);
-    const keys = cache.getKeys('Client');
+    const keys = cache.getKeys("Client");
     expect(client).toBeInstanceOf(HalRestClient);
     expect(keys).toHaveLength(1);
     expect(keys[0]).toBe<string>(uriBuilder.orgBaseURI);
   });
 
-  test('Client created without URI is not cached', () => {
+  test("Client created without URI is not cached", () => {
     const client = createClient();
     expect(client).toBeInstanceOf(HalRestClient);
-    expect(cache.getKeys('Client')).toHaveLength(0);
+    expect(cache.getKeys("Client")).toHaveLength(0);
   });
 
-  test('Client is created and cached without trailing slash', () => {
-    const client = createClient(uriBuilder.orgBaseURI + '/');
-    const keys = cache.getKeys('Client');
+  test("Client is created and cached without trailing slash", () => {
+    const client = createClient(uriBuilder.orgBaseURI + "/");
+    const keys = cache.getKeys("Client");
     expect(keys).toHaveLength(1);
     expect(keys[0]).toBe<string>(uriBuilder.orgBaseURI);
     expect(client.config.baseURL).toBe<string>(uriBuilder.orgBaseURI);
   });
 
-  test('Client is created and cached without trailing slashes', () => {
-    const client = createClient(uriBuilder.orgBaseURI + '///');
-    const keys = cache.getKeys('Client');
+  test("Client is created and cached without trailing slashes", () => {
+    const client = createClient(uriBuilder.orgBaseURI + "///");
+    const keys = cache.getKeys("Client");
     expect(keys).toHaveLength(1);
     expect(keys[0]).toBe<string>(uriBuilder.orgBaseURI);
     expect(client.config.baseURL).toBe<string>(uriBuilder.orgBaseURI);
   });
 });
 
-describe('Reset cache', () => {
+describe("Reset cache", () => {
   const uriBuilder = new UriBuilder();
   const dummyFactory = new DataFactory(uriBuilder);
-  const dummy = dummyFactory.createResourceData('org', 'dummy', 1);
+  const dummy = dummyFactory.createResourceData("org", "dummy", 1);
   let scope: nock.Scope;
   beforeEach(() => {
     scope = nock(uriBuilder.orgBaseURI);
@@ -150,59 +149,58 @@ describe('Reset cache', () => {
       .reply(200, dummy.data);
   });
 
-  test('Reset cache without parameter empties both caches', () => {
+  test("Reset cache without parameter empties both caches", () => {
     const client = createClient(uriBuilder.orgBaseURI);
     return client
       .fetch(dummy.relativeUri, HalResource)
       .then(() => {
         cache.reset();
-        expect(cache.getKeys('Client')).toHaveLength(0);
-        expect(cache.getKeys('Resource')).toHaveLength(0);
+        expect(cache.getKeys("Client")).toHaveLength(0);
+        expect(cache.getKeys("Resource")).toHaveLength(0);
         scope.done();
-      })
+      });
   });
 
-  test('Reset cache with parameter \'Client\' empties only client cache', () => {
+  test("Reset cache with parameter \"Client\" empties only client cache", () => {
     const client = createClient(uriBuilder.orgBaseURI);
     return client
       .fetch(dummy.relativeUri, HalResource)
       .then(() => {
-        cache.reset('Client');
-        expect(cache.getKeys('Client')).toHaveLength(0);
-        expect(cache.getKeys('Resource')).toHaveLength(1);
+        cache.reset("Client");
+        expect(cache.getKeys("Client")).toHaveLength(0);
+        expect(cache.getKeys("Resource")).toHaveLength(1);
         scope.done();
-      })
+      });
   });
 
-  test('Reset cache with parameter \'Resource\' empties only client cache', () => {
+  test("Reset cache with parameter \"Resource\" empties only client cache", () => {
     const client = createClient(uriBuilder.orgBaseURI);
     return client
       .fetch(dummy.relativeUri, HalResource)
       .then(() => {
-        cache.reset('Resource');
-        expect(cache.getKeys('Client')).toHaveLength(1);
-        expect(cache.getKeys('Resource')).toHaveLength(0);
+        cache.reset("Resource");
+        expect(cache.getKeys("Client")).toHaveLength(1);
+        expect(cache.getKeys("Resource")).toHaveLength(0);
         scope.done();
-      })
+      });
   });
 
-  test('cached client is reused', () => {
-    const getClientSpy = jest.spyOn(cache, 'getClient');
-    const setClientSpy = jest.spyOn(cache, 'setClient');
+  test("cached client is reused", () => {
+    const getClientSpy = jest.spyOn(cache, "getClient");
+    const setClientSpy = jest.spyOn(cache, "setClient");
     createClient(uriBuilder.orgBaseURI);
     createClient(uriBuilder.orgBaseURI);
-    expect(cache.getKeys('Client')).toHaveLength(1);
+    expect(cache.getKeys("Client")).toHaveLength(1);
     expect(getClientSpy).toHaveBeenCalledTimes(1);
     expect(setClientSpy).toHaveBeenCalledTimes(1);
     getClientSpy.mockReset();
     getClientSpy.mockRestore();
     setClientSpy.mockReset();
     setClientSpy.mockRestore();
-  })
-
+  });
 });
 
-describe('clear client cache tests', () => {
+describe("clear client cache tests", () => {
   const uriBuilder = new UriBuilder();
   const orgUri = uriBuilder.orgBaseURI;
   const comUri = uriBuilder.comBaseURI;
@@ -216,53 +214,52 @@ describe('clear client cache tests', () => {
     }
   });
 
-  test('clear client cache using a string parameter', () => {
-    const cleared = cache.clear('Client', `${orgUri}/instance1`);
+  test("clear client cache using a string parameter", () => {
+    const cleared = cache.clear("Client", `${orgUri}/instance1`);
     expect(cleared).toHaveLength(1);
     expect(cleared[0]).toBe<string>(`${orgUri}/instance1`);
-    const remaining = cache.getKeys('Client');
+    const remaining = cache.getKeys("Client");
     expect(remaining).toHaveLength(9);
     expect(remaining).not.toContain<string>(`${orgUri}/instance1`);
   });
 
-  test('clear client cache using an array of strings parameter', () => {
+  test("clear client cache using an array of strings parameter", () => {
     const instance1 = `${orgUri}/instance1`;
     const instance2 = `${orgUri}/instance2`;
-    const cleared = cache.clear('Client', [instance1, instance2]);
+    const cleared = cache.clear("Client", [instance1, instance2]);
     expect(cleared).toHaveLength(2);
     expect(cleared).toContain<string>(instance1);
     expect(cleared).toContain<string>(instance2);
-    const remaining = cache.getKeys('Client');
+    const remaining = cache.getKeys("Client");
     expect(remaining).toHaveLength(8);
     expect(remaining).not.toContain<string>(instance1);
     expect(remaining).not.toContain<string>(instance2);
   });
 
-  test('clear client cache using an array of strings parameter with double entry', () => {
+  test("clear client cache using an array of strings parameter with double entry", () => {
     const instance1 = `${orgUri}/instance1`;
-    const cleared = cache.clear('Client', [instance1, instance1]);
+    const cleared = cache.clear("Client", [instance1, instance1]);
     expect(cleared).toHaveLength(1);
     expect(cleared[0]).toBe<string>(instance1);
-    const remaining = cache.getKeys('Client');
+    const remaining = cache.getKeys("Client");
     expect(remaining).toHaveLength(9);
     expect(remaining).not.toContain<string>(instance1);
-
   });
 
-  test('clear client cache using a regular expression', () => {
+  test("clear client cache using a regular expression", () => {
     const instance1 = `${orgUri}/instance1`;
     const instance2 = `${orgUri}/instance2`;
     const instance3 = `${orgUri}/instance3`;
     const instance4 = `${orgUri}/instance4`;
     const instance5 = `${orgUri}/instance5`;
-    const cleared = cache.clear('Client', new RegExp('http://[a-zA-z0-9-.]*.org/[a-zA-z0-9]*'));
+    const cleared = cache.clear("Client", new RegExp("http://[a-zA-z0-9-.]*.org/[a-zA-z0-9]*"));
     expect(cleared).toHaveLength(5);
     expect(cleared).toContain<string>(instance1);
     expect(cleared).toContain<string>(instance2);
     expect(cleared).toContain<string>(instance3);
     expect(cleared).toContain<string>(instance4);
     expect(cleared).toContain<string>(instance5);
-    const remaining = cache.getKeys('Client');
+    const remaining = cache.getKeys("Client");
     expect(remaining).toHaveLength(5);
     expect(remaining).not.toContain<string>(instance1);
     expect(remaining).not.toContain<string>(instance2);
@@ -272,52 +269,52 @@ describe('clear client cache tests', () => {
   });
 });
 
-describe('resource.removeFromCache method' , () => {
+describe("resource.removeFromCache method" , () => {
   const uriBuilder = new UriBuilder();
   const client = createClient(uriBuilder.orgBaseURI);
-  test('call remove from cache on a cached entry', () => {
-    const full = uriBuilder.resourceUri('org', false, 'test', 69);
+  test("call remove from cache on a cached entry", () => {
+    const full = uriBuilder.resourceUri("org", false, "test", 69);
     const resource = createResource(client, HalResource, full);
-    expect(cache.getKeys('Resource')).toHaveLength(1);
+    expect(cache.getKeys("Resource")).toHaveLength(1);
     const result = resource.removeFromCache();
     expect(result).toBe<boolean>(true);
-    expect(cache.getKeys('Resource')).toHaveLength(0);
+    expect(cache.getKeys("Resource")).toHaveLength(0);
   });
 
-  test('call remove from cache on non a cached entry', () => {
-    const full = uriBuilder.resourceUri('org', false, 'test', 69);
+  test("call remove from cache on non a cached entry", () => {
+    const full = uriBuilder.resourceUri("org", false, "test", 69);
     const resource = createResource(client, HalResource, full, true);
-    expect(cache.getKeys('Resource')).toHaveLength(0);
+    expect(cache.getKeys("Resource")).toHaveLength(0);
     const result = resource.removeFromCache();
     expect(result).toBe<boolean>(false);
-    expect(cache.getKeys('Resource')).toHaveLength(0);
+    expect(cache.getKeys("Resource")).toHaveLength(0);
   });
 });
 
-describe('halRestClient.removeFromCache method', () => {
+describe("halRestClient.removeFromCache method", () => {
   const uriBuilder = new UriBuilder();
-  test('call remove from cache on a cached client', () => {
+  test("call remove from cache on a cached client", () => {
     const client = createClient(uriBuilder.orgBaseURI);
-    expect(cache.getKeys('Client')).toHaveLength(1);
+    expect(cache.getKeys("Client")).toHaveLength(1);
     const result = client.removeFromCache();
     expect(result).toBe<boolean>(true);
-    expect(cache.getKeys('Client')).toHaveLength(0);
+    expect(cache.getKeys("Client")).toHaveLength(0);
   });
 
-  test('call remove from cache on non a cached entry', () => {
+  test("call remove from cache on non a cached entry", () => {
     const client = createClient(undefined);
     createClient(uriBuilder.orgBaseURI);
-    expect(cache.getKeys('Client')).toHaveLength(1);
+    expect(cache.getKeys("Client")).toHaveLength(1);
     const result = client.removeFromCache();
     expect(result).toBe<boolean>(false);
-    expect(cache.getKeys('Client')).toHaveLength(1);
+    expect(cache.getKeys("Client")).toHaveLength(1);
   });
 });
 
-describe('clear resource cache tests', () => {
+describe("clear resource cache tests", () => {
   const uriBuilder = new UriBuilder();
   const dummyFactory = new DataFactory(uriBuilder);
-  const dummyPath = 'dummy';
+  const dummyPath = "dummy";
   let dummies: Array<IFactoryResult<IData>>;
   let scope: nock.Scope;
   beforeEach(() => {
@@ -326,7 +323,7 @@ describe('clear resource cache tests', () => {
     uriBuilder.allTld
       .forEach((tld: HostTld) => {
         const baseUri = uriBuilder.baseUri(tld);
-        const client = createClient(baseUri)
+        const client = createClient(baseUri);
         scope = nock(baseUri);
         for (let i = 1; i <= 5; i++) {
           const dummy = dummyFactory.createResourceData(tld, dummyPath, i);
@@ -340,59 +337,59 @@ describe('clear resource cache tests', () => {
     return Promise.all(promises);
   });
 
-  test('clear resource cache using a string parameter', () => {
-    expect(cache.getKeys('Resource')).toHaveLength(10);
+  test("clear resource cache using a string parameter", () => {
+    expect(cache.getKeys("Resource")).toHaveLength(10);
     const dummy = dummies[0].absoluteUri;
-    const cleared = cache.clear('Resource', dummy);
+    const cleared = cache.clear("Resource", dummy);
     expect(cleared).toHaveLength(1);
     expect(cleared[0]).toBe<string>(dummy);
-    const remaining = cache.getKeys('Resource');
+    const remaining = cache.getKeys("Resource");
     expect(remaining).toHaveLength(9);
     expect(remaining).not.toContain<string>(dummy);
     scope.done();
   });
 
-  test('clear resource cache using an array of strings parameter', () => {
-    expect(cache.getKeys('Resource')).toHaveLength(10);
+  test("clear resource cache using an array of strings parameter", () => {
+    expect(cache.getKeys("Resource")).toHaveLength(10);
     const dummy0 = dummies[0].absoluteUri;
     const dummy1 = dummies[1].absoluteUri;
-    const cleared = cache.clear('Resource', [dummy1, dummy0]);
+    const cleared = cache.clear("Resource", [dummy1, dummy0]);
     expect(cleared).toHaveLength(2);
     expect(cleared).toContain<string>(dummy0);
     expect(cleared).toContain<string>(dummy1);
-    const remaining = cache.getKeys('Resource');
+    const remaining = cache.getKeys("Resource");
     expect(remaining).toHaveLength(8);
     expect(remaining).not.toContain<string>(dummy0);
     expect(remaining).not.toContain<string>(dummy1);
     scope.done();
   });
 
-  test('clear resource cache using an array of strings parameter with double entry', () => {
-    expect(cache.getKeys('Resource')).toHaveLength(10);
+  test("clear resource cache using an array of strings parameter with double entry", () => {
+    expect(cache.getKeys("Resource")).toHaveLength(10);
     const dummy = dummies[0].absoluteUri;
-    const cleared = cache.clear('Resource', [dummy, dummy]);
+    const cleared = cache.clear("Resource", [dummy, dummy]);
     expect(cleared).toHaveLength(1);
     expect(cleared[0]).toBe<string>(dummy);
-    const remaining = cache.getKeys('Resource');
+    const remaining = cache.getKeys("Resource");
     expect(remaining).toHaveLength(9);
     expect(remaining).not.toContain<string>(dummy);
     scope.done();
   });
 
-  test('clear resource cache using a regular expression', () => {
-    expect(cache.getKeys('Resource')).toHaveLength(10);
-    const cleared = cache.clear('Resource', new RegExp('http://[a-zA-z0-9-.]*.org/dummy/[a-zA-z0-9]*'));
+  test("clear resource cache using a regular expression", () => {
+    expect(cache.getKeys("Resource")).toHaveLength(10);
+    const cleared = cache.clear("Resource", new RegExp("http://[a-zA-z0-9-.]*.org/dummy/[a-zA-z0-9]*"));
     expect(cleared).toHaveLength(5);
     const expectedToBeRemoved = new Array<string>();
     for (let i = 1; i <= 5; i++) {
-      expectedToBeRemoved.push(uriBuilder.resourceUri('org', false, 'dummy', i));
+      expectedToBeRemoved.push(uriBuilder.resourceUri("org", false, "dummy", i));
     }
     expect(cleared).toContain<string>(expectedToBeRemoved[0]);
     expect(cleared).toContain<string>(expectedToBeRemoved[1]);
     expect(cleared).toContain<string>(expectedToBeRemoved[2]);
     expect(cleared).toContain<string>(expectedToBeRemoved[3]);
     expect(cleared).toContain<string>(expectedToBeRemoved[4]);
-    const remaining = cache.getKeys('Resource');
+    const remaining = cache.getKeys("Resource");
     expect(remaining).toHaveLength(5);
     expect(remaining).not.toContain<string>(expectedToBeRemoved[0]);
     expect(remaining).not.toContain<string>(expectedToBeRemoved[1]);
@@ -403,15 +400,14 @@ describe('clear resource cache tests', () => {
   });
 });
 
-describe('using cache', () => {
+describe("using cache", () => {
   const uriBuilder = new UriBuilder();
   const dummyFactory = new DataFactory(uriBuilder);
 
   // TODO 1660 Remove non compliant feature of retrieving an array of HAL-resources
-  test('Lists are refreshed when calling fetchArray', () => {
-
-    const dummy1 = dummyFactory.createResourceData('org', 'dummy', 1, { done: { count: 1 } });
-    const dummy2 = dummyFactory.createResourceData('org', 'dummy', 1, { testing: { count: 1 } });
+  test("Lists are refreshed when calling fetchArray", () => {
+    const dummy1 = dummyFactory.createResourceData("org", "dummy", 1, { done: { count: 1 } });
+    const dummy2 = dummyFactory.createResourceData("org", "dummy", 1, { testing: { count: 1 } });
 
     const scope = nock(uriBuilder.orgBaseURI);
     scope
@@ -424,24 +420,24 @@ describe('using cache', () => {
     return createClient()
       .fetchArray(dummy1.absoluteUri, HalResource)
       .then((dummies: Array<HalResource>) => {
-        expect((dummies[0].getProperty<IHalResource>('done')).getProperty('count')).toBe<number>(1);
+        expect(dummies[0].getProperty<IHalResource>("done").getProperty("count")).toBe<number>(1);
         return createClient()
           .fetchArray(dummy1.absoluteUri, HalResource)
           .then((dummies2: Array<HalResource>) => {
-            expect(dummies2[0].getProperty('done')).toBeUndefined();
-            expect((dummies2[0].getProperty<IHalResource>('testing')).getProperty('count')).toBe<number>(1);
+            expect(dummies2[0].getProperty("done")).toBeUndefined();
+            expect(dummies2[0].getProperty<IHalResource>("testing").getProperty("count")).toBe<number>(1);
             scope.done();
           });
       });
   });
 
-  test('client with a baseUrl is re-used', () => {
-    const getClientSpy = jest.spyOn(cache, 'getClient')
-    const setClientSpy = jest.spyOn(cache, 'setClient')
+  test("client with a baseUrl is re-used", () => {
+    const getClientSpy = jest.spyOn(cache, "getClient");
+    const setClientSpy = jest.spyOn(cache, "setClient");
     const client = createClient(uriBuilder.orgBaseURI);
     const client2 = createClient(uriBuilder.orgBaseURI);
 
-    expect(cache.getKeys('Client')).toHaveLength(1);
+    expect(cache.getKeys("Client")).toHaveLength(1);
     expect(getClientSpy).toHaveBeenCalledTimes(1);
     expect(setClientSpy).toHaveBeenCalledTimes(1);
     expect(client).toBe(client2);
@@ -450,33 +446,32 @@ describe('using cache', () => {
     setClientSpy.mockReset();
     setClientSpy.mockRestore();
   });
-
 });
 
 describe.each([
   [undefined, undefined, false],
   [undefined, false, false],
   [undefined, true, false],
-  ['test', undefined, true],
-  ['test', false, true],
-  ['test', true, false]
-])('caching of resources created using the factory', (uri: string, templated: boolean, isCached: boolean) => {
+  ["test", undefined, true],
+  ["test", false, true],
+  ["test", true, false]
+])("caching of resources created using the factory", (uri: string, templated: boolean, isCached: boolean) => {
   const uriBuilder = new UriBuilder();
-  const logAs = templated ? 'true' : templated === false ? 'false' : 'undefined'
-  test(`resource created ${uri ? 'with' : 'without'} uri, templated = ${logAs}`, () => {
+  const logAs = templated ? "true" : templated === false ? "false" : "undefined";
+  test(`resource created ${uri ? "with" : "without"} uri, templated = ${logAs}`, () => {
     createResource(createClient(uriBuilder.orgBaseURI), HalResource, uri, templated);
-    expect(cache.getKeys('Resource')).toHaveLength(isCached ? 1 : 0);
+    expect(cache.getKeys("Resource")).toHaveLength(isCached ? 1 : 0);
   });
 });
 
 
-describe('things not to be cached', () => {
+describe("things not to be cached", () => {
   const uriBuilder = new UriBuilder();
-  test('null href in _links', () => {
+  test("null href in _links", () => {
     const client = createClient(uriBuilder.orgBaseURI);
     const scope = nock(uriBuilder.orgBaseURI);
-    const dummyUri = uriBuilder.resourceUri('org', true, 'dummy');
-    const noNullUri = uriBuilder.resourceUri('org', false, 'no-null');
+    const dummyUri = uriBuilder.resourceUri("org", true, "dummy");
+    const noNullUri = uriBuilder.resourceUri("org", false, "no-null");
     const dummyReply = {
       _links: {
         withNull: { href: null },
@@ -491,22 +486,22 @@ describe('things not to be cached', () => {
     return client
       .fetch(dummyUri, HalResource)
       .then((result: HalResource) => {
-        expect(result.getLink('withNull')).toBeInstanceOf(HalResource);
-        expect(result.getLink('noNull')).toBeInstanceOf(HalResource);
-        const cacheKeys = cache.getKeys('Resource');
+        expect(result.getLink("withNull")).toBeInstanceOf(HalResource);
+        expect(result.getLink("noNull")).toBeInstanceOf(HalResource);
+        const cacheKeys = cache.getKeys("Resource");
         expect(cacheKeys).toHaveLength(1);
         expect(cacheKeys[0]).toBe<string>(noNullUri);
-      })
+      });
   });
 
-  test('empty href in _links', () => {
+  test("empty href in _links", () => {
     const client = createClient(uriBuilder.orgBaseURI);
     const scope = nock(uriBuilder.orgBaseURI);
-    const dummyUri = uriBuilder.resourceUri('org', true, 'dummy');
-    const noNullUri = uriBuilder.resourceUri('org', false, 'no-null');
+    const dummyUri = uriBuilder.resourceUri("org", true, "dummy");
+    const noNullUri = uriBuilder.resourceUri("org", false, "no-null");
     const dummyReply = {
       _links: {
-        withNull: { href: '' },
+        withNull: { href: "" },
         noNull: { href: noNullUri }
       }
     };
@@ -518,19 +513,19 @@ describe('things not to be cached', () => {
     return client
       .fetch(dummyUri, HalResource)
       .then((result: HalResource) => {
-        expect(result.getLink('withNull')).toBeInstanceOf(HalResource);
-        expect(result.getLink('noNull')).toBeInstanceOf(HalResource);
-        const cacheKeys = cache.getKeys('Resource');
+        expect(result.getLink("withNull")).toBeInstanceOf(HalResource);
+        expect(result.getLink("noNull")).toBeInstanceOf(HalResource);
+        const cacheKeys = cache.getKeys("Resource");
         expect(cacheKeys).toHaveLength(1);
         expect(cacheKeys[0]).toBe<string>(noNullUri);
-      })
+      });
   });
 
-  test('null string in _links', () => {
+  test("null string in _links", () => {
     const client = createClient(uriBuilder.orgBaseURI);
     const scope = nock(uriBuilder.orgBaseURI);
-    const dummyUri = uriBuilder.resourceUri('org', true, 'dummy');
-    const noNullUri = uriBuilder.resourceUri('org', false, 'no-null');
+    const dummyUri = uriBuilder.resourceUri("org", true, "dummy");
+    const noNullUri = uriBuilder.resourceUri("org", false, "no-null");
     const dummyReply = {
       _links: {
         withNull: null,
@@ -545,22 +540,22 @@ describe('things not to be cached', () => {
     return client
       .fetch(dummyUri, HalResource)
       .then((result: HalResource) => {
-        expect(result.getLink('withNull')).toBeInstanceOf(HalResource);
-        expect(result.getLink('noNull')).toBeInstanceOf(HalResource);
-        const cacheKeys = cache.getKeys('Resource');
+        expect(result.getLink("withNull")).toBeInstanceOf(HalResource);
+        expect(result.getLink("noNull")).toBeInstanceOf(HalResource);
+        const cacheKeys = cache.getKeys("Resource");
         expect(cacheKeys).toHaveLength(1);
         expect(cacheKeys[0]).toBe<string>(noNullUri);
-      })
+      });
   });
 
-  test('empty string in _links', () => {
+  test("empty string in _links", () => {
     const client = createClient(uriBuilder.orgBaseURI);
     const scope = nock(uriBuilder.orgBaseURI);
-    const dummyUri = uriBuilder.resourceUri('org', true, 'dummy');
-    const noNullUri = uriBuilder.resourceUri('org', false, 'no-null');
+    const dummyUri = uriBuilder.resourceUri("org", true, "dummy");
+    const noNullUri = uriBuilder.resourceUri("org", false, "no-null");
     const dummyReply = {
       _links: {
-        withNull: '',
+        withNull: "",
         noNull: noNullUri
       }
     };
@@ -572,30 +567,30 @@ describe('things not to be cached', () => {
     return client
       .fetch(dummyUri, HalResource)
       .then((result: HalResource) => {
-        expect(result.getLink('withNull')).toBeInstanceOf(HalResource);
-        expect(result.getLink('noNull')).toBeInstanceOf(HalResource);
-        const cacheKeys = cache.getKeys('Resource');
+        expect(result.getLink("withNull")).toBeInstanceOf(HalResource);
+        expect(result.getLink("noNull")).toBeInstanceOf(HalResource);
+        const cacheKeys = cache.getKeys("Resource");
         expect(cacheKeys).toHaveLength(1);
         expect(cacheKeys[0]).toBe<string>(noNullUri);
-      })
+      });
   });
 
-  test('links which have a type which is not hal-json', () => {
+  test("links which have a type which is not hal-json", () => {
     const client = createClient(uriBuilder.orgBaseURI);
     const scope = nock(uriBuilder.orgBaseURI);
-    const dummyUri = uriBuilder.resourceUri('org', true, 'dummy');
-    const htmlUri = uriBuilder.resourceUri('org', false, 'html');
-    const typedResourceUri = uriBuilder.resourceUri('org', false, 'typedResource');
-    const nonTypedResourceUri = uriBuilder.resourceUri('org', false, 'nontypedResource');
+    const dummyUri = uriBuilder.resourceUri("org", true, "dummy");
+    const htmlUri = uriBuilder.resourceUri("org", false, "html");
+    const typedResourceUri = uriBuilder.resourceUri("org", false, "typedResource");
+    const nonTypedResourceUri = uriBuilder.resourceUri("org", false, "nontypedResource");
     const dummyReply = {
       _links: {
         htmlLink: {
           href: htmlUri,
-          type: 'text/html'
+          type: "text/html"
         },
         typed: {
           href: typedResourceUri,
-          type: 'application/hal+json'
+          type: "application/hal+json"
         },
         nontyped: {
           href: nonTypedResourceUri
@@ -610,28 +605,28 @@ describe('things not to be cached', () => {
     return client
       .fetch(dummyUri, HalResource)
       .then((result: HalResource) => {
-        expect(result.getLink('typed')).toBeInstanceOf(HalResource);
-        expect(result.getLink('nontyped')).toBeInstanceOf(HalResource);
-        expect(result.getLink('htmlLink')).toBeInstanceOf(HalResource);
-        const cacheKeys = cache.getKeys('Resource');
+        expect(result.getLink("typed")).toBeInstanceOf(HalResource);
+        expect(result.getLink("nontyped")).toBeInstanceOf(HalResource);
+        expect(result.getLink("htmlLink")).toBeInstanceOf(HalResource);
+        const cacheKeys = cache.getKeys("Resource");
         expect(cacheKeys).toHaveLength(2);
         expect(cacheKeys).toContainEqual(nonTypedResourceUri);
         expect(cacheKeys).toContainEqual(typedResourceUri);
-      })
-  })
+      });
+  });
 });
 
 describe.each([
   [true, true],
   [true, false],
   [false, false]
-])('createResource uses cache', (clientWithBaseUri: boolean, fetchWithRelativeUri: boolean) => {
+])("createResource uses cache", (clientWithBaseUri: boolean, fetchWithRelativeUri: boolean) => {
   const uriBuilder = new UriBuilder();
   const dummyFactory = new DataFactory(uriBuilder);
 
-  test(`Client created ${clientWithBaseUri ? 'with' : 'without'} baseUri, fetching with ${fetchWithRelativeUri ? 'relative' : 'absolute'} uri`, () => {
+  test(`Client created ${clientWithBaseUri ? "with" : "without"} baseUri, fetching with ${fetchWithRelativeUri ? "relative" : "absolute"} uri`, () => {
     const client = createClient(clientWithBaseUri ? uriBuilder.orgBaseURI : undefined);
-    const dummy = dummyFactory.createResourceData('org', 'dummy', 1);
+    const dummy = dummyFactory.createResourceData("org", "dummy", 1);
     const scope = nock(uriBuilder.orgBaseURI);
     scope
       .get(dummy.relativeUri)
@@ -649,162 +644,160 @@ describe.each([
   });
 });
 
-describe('Enable and disabling the cache', () => {
+describe("Enable and disabling the cache", () => {
   const uriBuilder = new UriBuilder();
 
-  test('cache is enabled by default', () => {
+  test("cache is enabled by default", () => {
     expect(cache.isEnabled).toBe<boolean>(true);
   });
 
-  test('disabling the cache sets the isEnabled property', () => {
+  test("disabling the cache sets the isEnabled property", () => {
     cache.disable();
     expect(cache.isEnabled).toBe<boolean>(false);
   });
 
-  test('re-enabling the cache sets the isEnabled property', () => {
+  test("re-enabling the cache sets the isEnabled property", () => {
     cache.disable();
     cache.enable();
     expect(cache.isEnabled).toBe<boolean>(true);
   });
 
-  test('a disabled cache does not cache clients', () => {
+  test("a disabled cache does not cache clients", () => {
     cache.disable();
     createClient(uriBuilder.orgBaseURI);
     expect(cache.getClient(uriBuilder.orgBaseURI)).toBeUndefined();
-    expect(cache.getKeys('Client')).toHaveLength(0);
+    expect(cache.getKeys("Client")).toHaveLength(0);
   });
 
-  test('a disabled cache does not cache resources', () => {
+  test("a disabled cache does not cache resources", () => {
     cache.disable();
-    const resourceUri = uriBuilder.resourceUri('org', false, '/resource');
+    const resourceUri = uriBuilder.resourceUri("org", false, "/resource");
     const client = createClient(uriBuilder.orgBaseURI);
     createResource(client, HalResource, resourceUri);
     expect(cache.getResource(resourceUri)).toBeUndefined();
-    expect(cache.getKeys('Resource')).toHaveLength(0);
+    expect(cache.getKeys("Resource")).toHaveLength(0);
   });
 
-  test('a re-enabled cache caches clients', () => {
+  test("a re-enabled cache caches clients", () => {
     cache.disable();
     cache.enable();
     createClient(uriBuilder.orgBaseURI);
     expect(cache.getClient(uriBuilder.orgBaseURI)).toBeDefined();
-    expect(cache.getKeys('Client')).toHaveLength(1);
+    expect(cache.getKeys("Client")).toHaveLength(1);
   });
 
-  test('a re-enabled cache caches resources', () => {
+  test("a re-enabled cache caches resources", () => {
     cache.disable();
     cache.enable();
-    const resourceUri = uriBuilder.resourceUri('org', false, '/resource');
+    const resourceUri = uriBuilder.resourceUri("org", false, "/resource");
     const client = createClient(uriBuilder.orgBaseURI);
     createResource(client, HalResource, resourceUri);
     expect(cache.getResource(resourceUri)).toBeDefined();
-    expect(cache.getKeys('Resource')).toHaveLength(1);
+    expect(cache.getKeys("Resource")).toHaveLength(1);
   });
 
-  test('disabling the cache empties the cache', () => {
-    const resourceUri = uriBuilder.resourceUri('org', false, '/resource');
+  test("disabling the cache empties the cache", () => {
+    const resourceUri = uriBuilder.resourceUri("org", false, "/resource");
     const client = createClient(uriBuilder.orgBaseURI);
     createResource(client, HalResource, resourceUri);
     expect(cache.getClient(uriBuilder.orgBaseURI)).toBeDefined();
-    expect(cache.getKeys('Client')).toHaveLength(1);
+    expect(cache.getKeys("Client")).toHaveLength(1);
     expect(cache.getResource(resourceUri)).toBeDefined();
-    expect(cache.getKeys('Resource')).toHaveLength(1);
+    expect(cache.getKeys("Resource")).toHaveLength(1);
     cache.disable();
     expect(cache.getClient(uriBuilder.orgBaseURI)).toBeUndefined();
-    expect(cache.getKeys('Client')).toHaveLength(0);
+    expect(cache.getKeys("Client")).toHaveLength(0);
     expect(cache.getResource(resourceUri)).toBeUndefined();
-    expect(cache.getKeys('Resource')).toHaveLength(0);
+    expect(cache.getKeys("Resource")).toHaveLength(0);
   });
-
 });
 
-describe('creating a client with cached parameter', () => {
+describe("creating a client with cached parameter", () => {
   const uriBuilder = new UriBuilder();
-  test('cached parameter not provided', () => {
+  test("cached parameter not provided", () => {
     createClient(uriBuilder.orgBaseURI);
     expect(cache.getClient(uriBuilder.orgBaseURI)).toBeDefined();
-    expect(cache.getKeys('Client')).toHaveLength(1);
+    expect(cache.getKeys("Client")).toHaveLength(1);
   });
 
-  test('cached parameter set to true', () => {
+  test("cached parameter set to true", () => {
     createClient(uriBuilder.orgBaseURI, undefined, true);
     expect(cache.getClient(uriBuilder.orgBaseURI)).toBeDefined();
-    expect(cache.getKeys('Client')).toHaveLength(1);
+    expect(cache.getKeys("Client")).toHaveLength(1);
   });
 
-  test('cached parameter set to false', () => {
+  test("cached parameter set to false", () => {
     createClient(uriBuilder.orgBaseURI, undefined, false);
     expect(cache.getClient(uriBuilder.orgBaseURI)).toBeUndefined();
-    expect(cache.getKeys('Client')).toHaveLength(0);
+    expect(cache.getKeys("Client")).toHaveLength(0);
   });
 });
 
-describe('using keyValidator functions', () => {
+describe("using keyValidator functions", () => {
   const uriBuilder = new UriBuilder();
 
-  test('use client validator', () => {
+  test("use client validator", () => {
     cache.setClientKeyValidator((key: string) => key === uriBuilder.orgBaseURI);
     createClient(uriBuilder.orgBaseURI);
     createClient(uriBuilder.comBaseURI);
-    const keys = cache.getKeys('Client');
+    const keys = cache.getKeys("Client");
     expect(keys).toHaveLength(1);
     expect(keys[0]).toBe<string>(uriBuilder.orgBaseURI);
     expect(cache.getClient(uriBuilder.orgBaseURI)).toBeDefined();
     expect(cache.getClient(uriBuilder.comBaseURI)).toBeUndefined();
   });
 
-  test('set client validator to null', () => {
+  test("set client validator to null", () => {
     cache.setClientKeyValidator((key: string) => key !== uriBuilder.orgBaseURI);
     createClient(uriBuilder.orgBaseURI);
-    expect(cache.getKeys('Client')).toHaveLength(0);
+    expect(cache.getKeys("Client")).toHaveLength(0);
     cache.setClientKeyValidator(null);
     createClient(uriBuilder.orgBaseURI);
-    expect(cache.getKeys('Client')).toHaveLength(1);
+    expect(cache.getKeys("Client")).toHaveLength(1);
   });
 
-  test('set client validator to undefined', () => {
+  test("set client validator to undefined", () => {
     cache.setClientKeyValidator((key: string) => key !== uriBuilder.orgBaseURI);
     createClient(uriBuilder.orgBaseURI);
-    expect(cache.getKeys('Client')).toHaveLength(0);
+    expect(cache.getKeys("Client")).toHaveLength(0);
     cache.setClientKeyValidator(undefined);
     createClient(uriBuilder.orgBaseURI);
-    expect(cache.getKeys('Client')).toHaveLength(1);
+    expect(cache.getKeys("Client")).toHaveLength(1);
   });
 
-  test('use resource validator', () => {
-    const orgUri = uriBuilder.resourceUri('org', false, '/resource');
-    const comUri = uriBuilder.resourceUri('com', false, '/resource');
+  test("use resource validator", () => {
+    const orgUri = uriBuilder.resourceUri("org", false, "/resource");
+    const comUri = uriBuilder.resourceUri("com", false, "/resource");
     cache.setResourceKeyValidator((key: string) => key === orgUri);
     const client = createClient(uriBuilder.orgBaseURI);
     createResource(client, HalResource, orgUri);
     createResource(client, HalResource, comUri);
-    const keys = cache.getKeys('Resource');
+    const keys = cache.getKeys("Resource");
     expect(keys).toHaveLength(1);
     expect(keys[0]).toBe<string>(orgUri);
     expect(cache.getResource(comUri)).toBeUndefined();
     expect(cache.getResource(orgUri)).toBeDefined();
-
   });
 
-  test('set resource validator to null', () => {
-    const orgUri = uriBuilder.resourceUri('org', false, '/resource');
+  test("set resource validator to null", () => {
+    const orgUri = uriBuilder.resourceUri("org", false, "/resource");
     cache.setResourceKeyValidator((key: string) => key !== orgUri);
     const client = createClient(uriBuilder.orgBaseURI);
     createResource(client, HalResource, orgUri);
-    expect(cache.getKeys('Resource')).toHaveLength(0);
+    expect(cache.getKeys("Resource")).toHaveLength(0);
     cache.setResourceKeyValidator(null);
     createResource(client, HalResource, orgUri);
-    expect(cache.getKeys('Resource')).toHaveLength(1);
+    expect(cache.getKeys("Resource")).toHaveLength(1);
   });
 
-  test('set resource validator to undefined', () => {
-    const orgUri = uriBuilder.resourceUri('org', false, '/resource');
+  test("set resource validator to undefined", () => {
+    const orgUri = uriBuilder.resourceUri("org", false, "/resource");
     cache.setResourceKeyValidator((key: string) => key !== orgUri);
     const client = createClient(uriBuilder.orgBaseURI);
     createResource(client, HalResource, orgUri);
-    expect(cache.getKeys('Resource')).toHaveLength(0);
+    expect(cache.getKeys("Resource")).toHaveLength(0);
     cache.setResourceKeyValidator(undefined);
     createResource(client, HalResource, orgUri);
-    expect(cache.getKeys('Resource')).toHaveLength(1);
+    expect(cache.getKeys("Resource")).toHaveLength(1);
   });
-})
+});

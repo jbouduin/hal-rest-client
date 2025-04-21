@@ -5,13 +5,13 @@ import { UriBuilder } from "./uri-builder";
  * the type of self link that will be created
  */
 export enum SelfOption {
-  RelativeString = 'a relative string',
-  RelativeLink = 'a relative link',
-  AbsoluteString = 'an absolute string',
-  AbsoluteLink = 'an absolute link',
-  NullString = 'a null string',
-  NullLink = 'a null link',
-  NoSelf = 'not present'
+  RelativeString = "a relative string",
+  RelativeLink = "a relative link",
+  AbsoluteString = "an absolute string",
+  AbsoluteLink = "an absolute link",
+  NullString = "a null string",
+  NullLink = "a null link",
+  NoSelf = "not present"
 }
 
 /**
@@ -32,11 +32,11 @@ export class DataFactory {
   /**
    * Create test data for a single resource
    *
-   * @param {HostTld} tld - one of 'org' or 'com'
+   * @param {HostTld} tld - one of "org" or "com"
    * @param {string} path - the relative path to the resource
-   * @param {number } id - the optional id of the resource. Will be added as property and written in the 'self' link
+   * @param {number } id - the optional id of the resource. Will be added as property and written in the "self" link
    * @param {IEmbeddedCollection } data - the data that goes into the _embedded property
-   * @param {ILinkCollection} links - the links that go into the _links property. The 'self' link will automatically be created
+   * @param {ILinkCollection} links - the links that go into the _links property. The "self" link will automatically be created
    * @param {SelfOption} selfOption - the kind of self link to create
    * @returns {IFactoryResult} - the factory result
    */
@@ -53,10 +53,10 @@ export class DataFactory {
   /**
    * Create test data for resource containing an array of resources.
    *
-   * @param {HostTld} tld - one of 'org' or 'com'
+   * @param {HostTld} tld - one of "org" or "com"
    * @param {string} path - the relative path to the list resource
    * @param {IListData} data - the listdata
-   * @param {ILinkCollection} links - the links that go into the _links property. The 'self' link will automatically be created
+   * @param {ILinkCollection} links - the links that go into the _links property. The "self" link will automatically be created
    * @param {SelfOption} selfOption - the kind of self link to create   *
    * @returns {IFactoryListResult} - a List result
    */
@@ -86,9 +86,7 @@ export class DataFactory {
     if (!data._links) {
       data._links = {};
     }
-    const toUse: ILink = typeof link === 'string' ?
-      { href: link } :
-      link
+    const toUse: ILink = typeof link === "string" ? { href: link } : link;
     data._links[key] = toUse;
   }
 
@@ -96,7 +94,7 @@ export class DataFactory {
     if (!data._links) {
       data._links = {};
     }
-    const toUse: Array<ILink> = links.map((link: string) => { return { href: link } });
+    const toUse: Array<ILink> = links.map((link: string) => { return { href: link }; });
     data._links[key] = toUse;
   }
   //#endregion
@@ -108,8 +106,8 @@ export class DataFactory {
     selfOption: SelfOption,
     data?: IEmbeddedCollection,
     id?: number,
-    links?: ILinkCollection): IData {
-
+    links?: ILinkCollection
+  ): IData {
     const result: IData = {
       _links: this.getLinks(absoluteUri, relativeUri, selfOption, links)
     };
@@ -119,7 +117,7 @@ export class DataFactory {
     }
 
     if (id) {
-      result['id'] = id;
+      result["id"] = id;
     }
 
     return result;
@@ -130,7 +128,7 @@ export class DataFactory {
       count: data.listData.length,
       _embedded: {},
       _links: this.getLinks(absolute, relative, selfOption, links)
-    }
+    };
     Object.keys(data.queryParameters).forEach((key: string) => {
       result[key] = data.queryParameters[key];
     });
@@ -141,7 +139,7 @@ export class DataFactory {
   private getLinks(absoluteUri: string, relativeUri: string, selfOption: SelfOption, links?: ILinkCollection): ILinkCollection {
     const result: ILinkCollection = links || {};
     let selfLink: ILink | string;
-    if (selfOption != SelfOption.NoSelf && !result['self']) {
+    if (selfOption != SelfOption.NoSelf && !result["self"]) {
       switch (selfOption) {
         case SelfOption.AbsoluteLink:
           selfLink = {
@@ -149,7 +147,7 @@ export class DataFactory {
           };
           break;
         case SelfOption.AbsoluteString:
-          selfLink = absoluteUri
+          selfLink = absoluteUri;
           break;
         case SelfOption.NullLink:
           selfLink = {
@@ -170,9 +168,9 @@ export class DataFactory {
         default:
           selfLink = null;
       }
-      result['self'] = selfLink;
+      result["self"] = selfLink;
     }
-    return result
+    return result;
   }
   //#endregion
 }

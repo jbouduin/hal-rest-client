@@ -1,8 +1,8 @@
-import { AxiosResponse } from 'axios';
-import * as nock from 'nock';
-import { createClient, HalResource, cache } from '..';
-import { DataFactory } from './data/data-factory';
-import { UriBuilder } from './data/uri-builder';
+import { AxiosResponse } from "axios";
+import * as nock from "nock";
+import { createClient, HalResource, cache } from "..";
+import { DataFactory } from "./data/data-factory";
+import { UriBuilder } from "./data/uri-builder";
 
 //#region setup/teardown ------------------------------------------------------
 afterAll(() => nock.restore());
@@ -11,11 +11,11 @@ afterEach(() => {
 });
 //#endregion
 
-describe('test request headers and interceptor', () => {
+describe("test request headers and interceptor", () => {
   const uriBuilder = new UriBuilder();
   const dataFactory = new DataFactory(uriBuilder);
   const baseUri = uriBuilder.orgBaseURI;
-  const me = dataFactory.createResourceData('org', 'profiles', 1, { name: 'Johan' });
+  const me = dataFactory.createResourceData("org", "profiles", 1, { name: "Johan" });
 
   beforeAll(() => {
     nock.cleanAll();
@@ -25,7 +25,7 @@ describe('test request headers and interceptor', () => {
   const createScope = () => {
     const scope = nock(baseUri, {
       reqheaders: {
-        authorization: 'Basic Auth',
+        authorization: "Basic Auth",
       },
     });
 
@@ -34,68 +34,68 @@ describe('test request headers and interceptor', () => {
       .reply(200, me.data);
     return scope;
   };
-  test('pass header in constructor', () => {
+  test("pass header in constructor", () => {
     const scope = createScope();
-    return createClient(baseUri, { headers: { authorization: 'Basic Auth' } })
+    return createClient(baseUri, { headers: { authorization: "Basic Auth" } })
       .fetch(me.relativeUri, HalResource)
       .then((project: HalResource) => {
-        expect(project.getProperty('name')).toBe<string>('Johan');
+        expect(project.getProperty("name")).toBe<string>("Johan");
         scope.done();
       });
   });
 
-  test('configure header using axios configuration', () => {
+  test("configure header using axios configuration", () => {
     const scope = createScope();
     const client = createClient(baseUri);
-    client.config.headers.common.authorization = 'Basic Auth';
+    client.config.headers.common.authorization = "Basic Auth";
     return client
       .fetch(me.relativeUri, HalResource)
       .then((project: HalResource) => {
-        expect(project.getProperty('name')).toBe<string>('Johan');
+        expect(project.getProperty("name")).toBe<string>("Johan");
         scope.done();
       });
   });
 
-  test('configure header using addHeader method', () => {
+  test("configure header using addHeader method", () => {
     const scope = createScope();
     return createClient(baseUri)
-      .addHeader('authorization', 'Basic Auth')
+      .addHeader("authorization", "Basic Auth")
       .fetch(me.relativeUri, HalResource)
       .then((project: HalResource) => {
-        expect(project.getProperty('name')).toBe<string>('Johan');
+        expect(project.getProperty("name")).toBe<string>("Johan");
         scope.done();
       });
   });
 
-  test('use request interceptor', () => {
+  test("use request interceptor", () => {
     const scope = createScope();
     const client = createClient(baseUri)
-      .addHeader('authorization', 'Basic Auth');
+      .addHeader("authorization", "Basic Auth");
     client.requestInterceptors.use((config) => {
-      config.url += '/1';
+      config.url += "/1";
       return config;
     });
-    const uri = uriBuilder.resourceUri('org', true, 'profiles');
+    const uri = uriBuilder.resourceUri("org", true, "profiles");
     return client
       .fetch(uri, HalResource)
       .then((project: HalResource) => {
-        expect(project.getProperty('name')).toBe<string>('Johan');
+        expect(project.getProperty("name")).toBe<string>("Johan");
         scope.done();
       });
   });
 
-  test('use response interceptor', () => {
+  test("use response interceptor", () => {
     const scope = createScope();
     const client = createClient(baseUri)
-      .addHeader('authorization', 'Basic Auth');
-    client.responseInterceptors.use((response: AxiosResponse<any, any>) => {
-      response.data.name = 'You\'ve been hacked';
+      .addHeader("authorization", "Basic Auth");
+    client.responseInterceptors.use((response: AxiosResponse<{name: string}, unknown>) => {
+      response.data.name = "You\"ve been hacked";
       return response;
     });
     return client
       .fetch(me.absoluteUri, HalResource)
       .then((project: HalResource) => {
-        expect(project.getProperty('name')).toBe<string>('You\'ve been hacked');
+        expect(project.getProperty("name")).toBe<string>("You\"ve been hacked");
         scope.done();
       });
   });
