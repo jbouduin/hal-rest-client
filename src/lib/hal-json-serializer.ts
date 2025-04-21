@@ -1,13 +1,14 @@
 import { IJSONSerializer } from "./hal-json-serializer.interface";
 import { IHalResource } from "./hal-resource.interface";
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 /**
  * convert a resource to json
  * for prop simply do a toString
  * for link simply get uri
  */
 export class DefaultSerializer implements IJSONSerializer {
-
   /**
    * parse a prop value to to a server-comprehensible value
    *

@@ -1,10 +1,10 @@
-import * as nock from 'nock';
-import { cache, createClient, createResource, IResourceFetchOptions } from '..';
-import { SelfOption } from './data/data-factory';
-import { SimpleFactory } from './data/simple-factory';
+import * as nock from "nock";
+import { cache, createClient, createResource, IResourceFetchOptions } from "..";
+import { SelfOption } from "./data/data-factory";
+import { SimpleFactory } from "./data/simple-factory";
 
-import { UriBuilder } from './data/uri-builder';
-import { SimpleListModel, SimpleModel } from './models';
+import { UriBuilder } from "./data/uri-builder";
+import { SimpleListModel, SimpleModel } from "./models";
 
 //#region setup/teardown ------------------------------------------------------
 beforeAll(() => {
@@ -25,8 +25,8 @@ describe.each([
   { force: false },
   { force: undefined },
   { force: true, params: { test: 15 } },
-  { force: false, params: { test: 15 }  },
-  { force: undefined, params: { test: 15 }  },
+  { force: false, params: { test: 15 } },
+  { force: undefined, params: { test: 15 } },
   { force: true, params: {} },
   { force: false, params: {} },
   { force: undefined, params: {} },
@@ -36,15 +36,15 @@ describe.each([
   { params: { test: 15 } },
   { params: {} },
   { params: undefined }
-])('fetching resources without uri', (fetchOptions: IResourceFetchOptions) => {
+])("fetching resources without uri", (fetchOptions: IResourceFetchOptions) => {
   const uriBuilder = new UriBuilder();
   const client = createClient(uriBuilder.orgBaseURI);
 
-  test(`create without uri and fetch with options: ${JSON.stringify(fetchOptions)}` , () => {
+  test(`create without uri and fetch with options: ${JSON.stringify(fetchOptions)}`, () => {
     const resource = createResource(client, SimpleModel);
-    let uri = resource['_uri'];
+    let uri = resource["_uri"];
     expect(uri.href).toBeUndefined();
-    expect(uri.templated).toBe<boolean>(false)
+    expect(uri.templated).toBe<boolean>(false);
     expect(uri.receivedUri).toBeUndefined();
     expect(uri.requestedUri).toBeUndefined();
     expect(uri.type).toBeUndefined();
@@ -52,33 +52,33 @@ describe.each([
     return resource
       .fetch(fetchOptions)
       .then((fetched: SimpleModel) => {
-        uri = fetched['_uri'];
+        uri = fetched["_uri"];
         expect(uri.href).toBeUndefined();
-        expect(uri.templated).toBe<boolean>(false)
+        expect(uri.templated).toBe<boolean>(false);
         expect(uri.receivedUri).toBeUndefined();
         expect(uri.requestedUri).toBeUndefined();
         expect(uri.type).toBeUndefined();
         expect(uri.resourceUri).toBeUndefined();
       });
   });
-})
+});
 
-describe('uri data when fetching resources', () => {
+describe("uri data when fetching resources", () => {
   const uriBuilder = new UriBuilder();
   const client = createClient(uriBuilder.orgBaseURI);
   const simpleFactory = new SimpleFactory(uriBuilder);
 
-  test('create with non-templated uri (templated: undefined) and fetch', () => {
+  test("create with non-templated uri (templated: undefined) and fetch", () => {
     const simple = simpleFactory.createSimpleData();
     const resource = createResource(client, SimpleModel, simple.relativeUri);
-    const uri = resource['_uri'];
+    const uri = resource["_uri"];
     expect(uri.href).toBe<string>(simple.relativeUri);
-    expect(uri.templated).toBe<boolean>(false)
+    expect(uri.templated).toBe<boolean>(false);
     expect(uri.receivedUri).toBeUndefined();
     expect(uri.requestedUri).toBeUndefined();
     expect(uri.type).toBeUndefined();
     expect(uri.resourceUri).toBe<string>(simple.relativeUri);
-    let cacheKeys = cache.getKeys('Resource');
+    let cacheKeys = cache.getKeys("Resource");
     expect(cacheKeys).toHaveLength(1);
     expect(cacheKeys[0]).toBe<string>(simple.absoluteUri);
     const scope = nock(uriBuilder.orgBaseURI);
@@ -93,24 +93,24 @@ describe('uri data when fetching resources', () => {
         expect(model.name).toBe<string>(simpleFactory.savedName);
         expect(model).toBe(resource);
         expect(uri.href).toBe<string>(simple.absoluteUri);
-        expect(uri.templated).toBe<boolean>(false)
+        expect(uri.templated).toBe<boolean>(false);
         expect(uri.receivedUri).toBe<string>(simple.absoluteUri);
         expect(uri.requestedUri).toBe<string>(simple.relativeUri);
         expect(uri.type).toBeUndefined();
         expect(uri.resourceUri).toBe<string>(simple.absoluteUri);
-        cacheKeys = cache.getKeys('Resource');
+        cacheKeys = cache.getKeys("Resource");
         expect(cacheKeys).toHaveLength(1);
         expect(cacheKeys[0]).toBe<string>(simple.absoluteUri);
         scope.done();
       });
   });
 
-  test('create with non-templated uri (templated: false) and fetch', () => {
+  test("create with non-templated uri (templated: false) and fetch", () => {
     const simple = simpleFactory.createSimpleData();
     const resource = createResource(client, SimpleModel, simple.relativeUri, false);
-    const uri = resource['_uri'];
+    const uri = resource["_uri"];
     expect(uri.href).toBe<string>(simple.relativeUri);
-    expect(uri.templated).toBe<boolean>(false)
+    expect(uri.templated).toBe<boolean>(false);
     expect(uri.receivedUri).toBeUndefined();
     expect(uri.requestedUri).toBeUndefined();
     expect(uri.type).toBeUndefined();
@@ -125,9 +125,9 @@ describe('uri data when fetching resources', () => {
       .then((model: SimpleModel) => {
         expect(model.id).toBe<number>(simpleFactory.id);
         expect(model.name).toBe<string>(simpleFactory.savedName);
-        const modelUri = model['_uri'];
+        const modelUri = model["_uri"];
         expect(modelUri.href).toBe<string>(simple.absoluteUri);
-        expect(modelUri.templated).toBe<boolean>(false)
+        expect(modelUri.templated).toBe<boolean>(false);
         expect(modelUri.receivedUri).toBe<string>(simple.absoluteUri);
         expect(modelUri.requestedUri).toBe<string>(simple.relativeUri);
         expect(modelUri.type).toBeUndefined();
@@ -136,15 +136,15 @@ describe('uri data when fetching resources', () => {
       });
   });
 
-  test('create with templated uri and fetch', () => {
+  test("create with templated uri and fetch", () => {
     const simpleListData = simpleFactory.createSimpleListData();
     const simpleData = simpleFactory.createSimpleData();
     const defaultParameters = uriBuilder.getDefaultQueryParameters();
 
     const resource = createResource(client, SimpleListModel, simpleListData.relativeTemplateUri, true);
-    const uri = resource['_uri'];
+    const uri = resource["_uri"];
     expect(uri.href).toBe<string>(simpleListData.relativeTemplateUri);
-    expect(uri.templated).toBe<boolean>(true)
+    expect(uri.templated).toBe<boolean>(true);
     expect(uri.receivedUri).toBeUndefined();
     expect(uri.requestedUri).toBeUndefined();
     expect(uri.type).toBeUndefined();
@@ -152,7 +152,7 @@ describe('uri data when fetching resources', () => {
     const scope = nock(uriBuilder.orgBaseURI);
     scope
       .get(simpleListData.relativeUri)
-      .reply(200, simpleListData.data)
+      .reply(200, simpleListData.data);
 
     return resource
       .fetch({ params: defaultParameters })
@@ -161,8 +161,8 @@ describe('uri data when fetching resources', () => {
         expect(list.offset).toBe<number>(0);
         expect(list.pageSize).toBe<number>(20);
         expect(list.results).toHaveLength(1);
-        const listUri = list['_uri'];
-        expect(listUri.href).toBe<string>(simpleListData.relativeTemplateUri)
+        const listUri = list["_uri"];
+        expect(listUri.href).toBe<string>(simpleListData.relativeTemplateUri);
         expect(listUri.templated).toBe<boolean>(true);
         expect(listUri.receivedUri).toBe<string>(simpleListData.absoluteUri);
         expect(listUri.requestedUri).toBe<string>(simpleListData.relativeUri);
@@ -172,8 +172,8 @@ describe('uri data when fetching resources', () => {
         expect(model).toBeInstanceOf(SimpleModel);
         expect(model.id).toBe<number>(simpleFactory.id);
         expect(model.name).toBe<string>(simpleFactory.savedName);
-        const modelUri = model['_uri'];
-        expect(modelUri.href).toBe<string>(simpleData.absoluteUri)
+        const modelUri = model["_uri"];
+        expect(modelUri.href).toBe<string>(simpleData.absoluteUri);
         expect(modelUri.templated).toBe<boolean>(false);
         expect(modelUri.receivedUri).toBeUndefined();
         expect(modelUri.requestedUri).toBe<string>(simpleListData.relativeUri);
@@ -183,15 +183,15 @@ describe('uri data when fetching resources', () => {
       });
   });
 
-  test('jumpTo link fetching', () => {
+  test("jumpTo link fetching", () => {
     const startListData = simpleFactory.createSimpleListData(0);
     const offsetListData = simpleFactory.createSimpleListData(666);
     const defaultParameters = uriBuilder.getDefaultQueryParameters();
-    const simplePath = 'simple';
+    const simplePath = "simple";
     const resource = createResource(client, SimpleListModel, startListData.relativeTemplateUri, true);
-    const uri = resource['_uri'];
+    const uri = resource["_uri"];
     expect(uri.href).toBe<string>(startListData.relativeTemplateUri);
-    expect(uri.templated).toBe<boolean>(true)
+    expect(uri.templated).toBe<boolean>(true);
     expect(uri.receivedUri).toBeUndefined();
     expect(uri.requestedUri).toBeUndefined();
     expect(uri.type).toBeUndefined();
@@ -207,8 +207,8 @@ describe('uri data when fetching resources', () => {
     return resource
       .fetch({ params: defaultParameters })
       .then((list: SimpleListModel) => {
-        const jumpTo = list.jumpTo
-        const jumpToUri = jumpTo['_uri'];
+        const jumpTo = list.jumpTo;
+        const jumpToUri = jumpTo["_uri"];
         expect(jumpToUri.href).toBe<string>(simpleFactory.getJumpToTemplate(false, simplePath));
         expect(jumpToUri.templated).toBe<boolean>(true);
         expect(jumpToUri.receivedUri).toBeUndefined();
@@ -224,8 +224,8 @@ describe('uri data when fetching resources', () => {
             expect(jumped.offset).toBe<number>(666);
             expect(jumped.pageSize).toBe<number>(20);
             expect(jumped.results).toHaveLength(1);
-            const jumpedUri = jumped['_uri'];
-            expect(jumpedUri.href).toBe<string>(simpleFactory.getJumpToTemplate(false))
+            const jumpedUri = jumped["_uri"];
+            expect(jumpedUri.href).toBe<string>(simpleFactory.getJumpToTemplate(false));
             expect(jumpedUri.templated).toBe<boolean>(true);
             expect(jumpedUri.receivedUri).toBe<string>(simpleFactory.getJumpToTemplate(false, simplePath, 666));
             expect(jumpedUri.requestedUri).toBe<string>(simpleFactory.getJumpToTemplate(false, simplePath, 666));
@@ -236,7 +236,7 @@ describe('uri data when fetching resources', () => {
       });
   });
 
-  test('fetch using hal-rest-client', () => {
+  test("fetch using hal-rest-client", () => {
     const simple = simpleFactory.createSimpleData();
     const client = createClient(uriBuilder.orgBaseURI);
     const scope = nock(uriBuilder.orgBaseURI);
@@ -249,9 +249,9 @@ describe('uri data when fetching resources', () => {
       .then((fetched: SimpleModel) => {
         expect(fetched.id).toBe<number>(simpleFactory.id);
         expect(fetched.name).toBe<string>(simpleFactory.savedName);
-        const uri = fetched['_uri'];
+        const uri = fetched["_uri"];
         expect(uri.href).toBe<string>(simple.absoluteUri);
-        expect(uri.templated).toBe<boolean>(false)
+        expect(uri.templated).toBe<boolean>(false);
         expect(uri.receivedUri).toBe<string>(simple.absoluteUri);
         expect(uri.requestedUri).toBe<string>(simple.relativeUri);
         expect(uri.type).toBeUndefined();
@@ -261,12 +261,12 @@ describe('uri data when fetching resources', () => {
   });
 });
 
-describe('uri data when updating or creating a resource', () => {
+describe("uri data when updating or creating a resource", () => {
   const uriBuilder = new UriBuilder();
   const client = createClient(uriBuilder.orgBaseURI);
   const simpleFactory = new SimpleFactory(uriBuilder);
 
-  test('create using client', () => {
+  test("create using client", () => {
     const simple = simpleFactory.createSimpleData();
     const scope = nock(uriBuilder.orgBaseURI);
     scope
@@ -278,18 +278,18 @@ describe('uri data when updating or creating a resource', () => {
       .then((model: SimpleModel) => {
         expect(model.id).toBe<number>(simpleFactory.id);
         expect(model.name).toBe<string>(simpleFactory.savedName);
-        const uri = model['_uri'];
+        const uri = model["_uri"];
         expect(uri.href).toBe<string>(simple.absoluteUri);
-        expect(uri.templated).toBe<boolean>(false)
+        expect(uri.templated).toBe<boolean>(false);
         expect(uri.receivedUri).toBe<string>(simple.absoluteCreateUri);
         expect(uri.requestedUri).toBe<string>(simple.relativeCreateUri);
         expect(uri.type).toBeUndefined();
         expect(uri.resourceUri).toBe<string>(simple.absoluteUri);
         scope.done();
-      })
+      });
   });
 
-  test('create using resource.create', () => {
+  test("create using resource.create", () => {
     const simple = simpleFactory.createSimpleData();
     const client = createClient(uriBuilder.orgBaseURI);
     const resource = createResource(client, SimpleModel, simple.relativeCreateUri);
@@ -303,9 +303,9 @@ describe('uri data when updating or creating a resource', () => {
       .create(SimpleModel).then((created: SimpleModel) => {
         expect(created.id).toBe<number>(simpleFactory.id);
         expect(created.name).toBe<string>(simpleFactory.savedName);
-        const uri = created['_uri'];
+        const uri = created["_uri"];
         expect(uri.href).toBe<string>(simple.absoluteUri);
-        expect(uri.templated).toBe<boolean>(false)
+        expect(uri.templated).toBe<boolean>(false);
         expect(uri.receivedUri).toBe<string>(simple.absoluteCreateUri);
         expect(uri.requestedUri).toBe<string>(simple.relativeCreateUri);
         expect(uri.type).toBeUndefined();
@@ -314,7 +314,7 @@ describe('uri data when updating or creating a resource', () => {
       });
   });
 
-  test('update using client.update method', () => {
+  test("update using client.update method", () => {
     const simple = simpleFactory.createSimpleData();
     const scope = nock(uriBuilder.orgBaseURI);
     scope
@@ -326,9 +326,9 @@ describe('uri data when updating or creating a resource', () => {
       .then((model: SimpleModel) => {
         expect(model.id).toBe<number>(simpleFactory.id);
         expect(model.name).toBe<string>(simpleFactory.updatedName);
-        const uri = model['_uri'];
+        const uri = model["_uri"];
         expect(uri.href).toBe<string>(simple.absoluteUri);
-        expect(uri.templated).toBe<boolean>(false)
+        expect(uri.templated).toBe<boolean>(false);
         expect(uri.receivedUri).toBe<string>(simple.absoluteUri);
         expect(uri.requestedUri).toBe<string>(simple.relativeUri);
         expect(uri.type).toBeUndefined();
@@ -337,7 +337,7 @@ describe('uri data when updating or creating a resource', () => {
       });
   });
 
-  test('update using resource.update method', () => {
+  test("update using resource.update method", () => {
     const simple = simpleFactory.createSimpleData();
     const resource = createResource(client, SimpleModel, simple.relativeUri);
 
@@ -358,9 +358,9 @@ describe('uri data when updating or creating a resource', () => {
           .then((updated: SimpleModel) => {
             expect(updated).toBe(model);
             expect(updated.name).toBe<string>(simpleFactory.updatedName);
-            const uri = updated['_uri'];
+            const uri = updated["_uri"];
             expect(uri.href).toBe<string>(simple.absoluteUri);
-            expect(uri.templated).toBe<boolean>(false)
+            expect(uri.templated).toBe<boolean>(false);
             expect(uri.receivedUri).toBe<string>(simple.absoluteUri);
             expect(uri.requestedUri).toBe<string>(simple.absoluteUri);
             expect(uri.type).toBeUndefined();
@@ -369,17 +369,16 @@ describe('uri data when updating or creating a resource', () => {
           });
       });
   });
-
 });
 
-describe('redirect on halresource methods', () => {
+describe("redirect on halresource methods", () => {
   const uriBuilder = new UriBuilder();
-  const orgFactory = new SimpleFactory(uriBuilder, 'org');
-  const comFactory = new SimpleFactory(uriBuilder, 'com');
+  const orgFactory = new SimpleFactory(uriBuilder, "org");
+  const comFactory = new SimpleFactory(uriBuilder, "com");
 
-  test('redirect to same host on halresource create', () => {
+  test("redirect to same host on halresource create", () => {
     const simple = orgFactory.createSimpleData();
-    const redirectedSimple = orgFactory.createSimpleData('new-simple');
+    const redirectedSimple = orgFactory.createSimpleData("new-simple");
     const client = createClient(uriBuilder.orgBaseURI);
     const resource = createResource(client, SimpleModel, simple.relativeCreateUri);
     resource.name = orgFactory.sendName;
@@ -396,9 +395,9 @@ describe('redirect on halresource methods', () => {
       .then((created: SimpleModel) => {
         expect(created.id).toBe<number>(orgFactory.id);
         expect(created.name).toBe<string>(orgFactory.savedName);
-        const uri = created['_uri'];
+        const uri = created["_uri"];
         expect(uri.href).toBe<string>(redirectedSimple.absoluteUri);
-        expect(uri.templated).toBe<boolean>(false)
+        expect(uri.templated).toBe<boolean>(false);
         expect(uri.receivedUri).toBe<string>(redirectedSimple.absoluteCreateUri);
         expect(uri.requestedUri).toBe<string>(simple.relativeCreateUri);
         expect(uri.type).toBeUndefined();
@@ -407,9 +406,9 @@ describe('redirect on halresource methods', () => {
       });
   });
 
-  test('redirect to same host on halresource create, self link is a string', () => {
+  test("redirect to same host on halresource create, self link is a string", () => {
     const simple = orgFactory.createSimpleData(undefined, SelfOption.AbsoluteString);
-    const redirectedSimple = orgFactory.createSimpleData('new-simple', SelfOption.AbsoluteString);
+    const redirectedSimple = orgFactory.createSimpleData("new-simple", SelfOption.AbsoluteString);
     const client = createClient(uriBuilder.orgBaseURI);
     const resource = createResource(client, SimpleModel, simple.relativeCreateUri);
     resource.name = orgFactory.sendName;
@@ -426,9 +425,9 @@ describe('redirect on halresource methods', () => {
       .then((created: SimpleModel) => {
         expect(created.id).toBe<number>(orgFactory.id);
         expect(created.name).toBe<string>(orgFactory.savedName);
-        const uri = created['_uri'];
+        const uri = created["_uri"];
         expect(uri.href).toBe<string>(redirectedSimple.absoluteUri);
-        expect(uri.templated).toBe<boolean>(false)
+        expect(uri.templated).toBe<boolean>(false);
         expect(uri.receivedUri).toBe<string>(redirectedSimple.absoluteCreateUri);
         expect(uri.requestedUri).toBe<string>(simple.relativeCreateUri);
         expect(uri.type).toBeUndefined();
@@ -437,7 +436,7 @@ describe('redirect on halresource methods', () => {
       });
   });
 
-  test('redirect to different host on halresource create', () => {
+  test("redirect to different host on halresource create", () => {
     const simple = orgFactory.createSimpleData();
     const redirectedSimple = comFactory.createSimpleData();
     const client = createClient(uriBuilder.orgBaseURI);
@@ -456,9 +455,9 @@ describe('redirect on halresource methods', () => {
       .create(SimpleModel).then((created: SimpleModel) => {
         expect(created.id).toBe<number>(orgFactory.id);
         expect(created.name).toBe<string>(orgFactory.savedName);
-        const uri = created['_uri'];
+        const uri = created["_uri"];
         expect(uri.href).toBe<string>(redirectedSimple.absoluteUri);
-        expect(uri.templated).toBe<boolean>(false)
+        expect(uri.templated).toBe<boolean>(false);
         expect(uri.receivedUri).toBe<string>(redirectedSimple.absoluteCreateUri);
         expect(uri.requestedUri).toBe<string>(simple.relativeCreateUri);
         expect(uri.type).toBeUndefined();
@@ -468,9 +467,9 @@ describe('redirect on halresource methods', () => {
       });
   });
 
-  test('redirect to same host on halresource fetch', () => {
+  test("redirect to same host on halresource fetch", () => {
     const simple = orgFactory.createSimpleData();
-    const redirectedSimple = orgFactory.createSimpleData('new-simple');
+    const redirectedSimple = orgFactory.createSimpleData("new-simple");
     const client = createClient(uriBuilder.orgBaseURI);
     const resource = createResource(client, SimpleModel, simple.relativeUri);
 
@@ -486,9 +485,9 @@ describe('redirect on halresource methods', () => {
       .fetch().then((fetched: SimpleModel) => {
         expect(fetched.id).toBe<number>(orgFactory.id);
         expect(fetched.name).toBe<string>(orgFactory.savedName);
-        const uri = fetched['_uri'];
+        const uri = fetched["_uri"];
         expect(uri.href).toBe<string>(redirectedSimple.absoluteUri);
-        expect(uri.templated).toBe<boolean>(false)
+        expect(uri.templated).toBe<boolean>(false);
         expect(uri.receivedUri).toBe<string>(redirectedSimple.absoluteUri);
         expect(uri.requestedUri).toBe<string>(simple.relativeUri);
         expect(uri.type).toBeUndefined();
@@ -497,7 +496,7 @@ describe('redirect on halresource methods', () => {
       });
   });
 
-  test('redirect to different host on halresource fetch', () => {
+  test("redirect to different host on halresource fetch", () => {
     const simple = orgFactory.createSimpleData();
     const redirectedSimple = comFactory.createSimpleData();
     const client = createClient(uriBuilder.orgBaseURI);
@@ -516,9 +515,9 @@ describe('redirect on halresource methods', () => {
       .fetch().then((created: SimpleModel) => {
         expect(created.id).toBe<number>(orgFactory.id);
         expect(created.name).toBe<string>(orgFactory.savedName);
-        const uri = created['_uri'];
+        const uri = created["_uri"];
         expect(uri.href).toBe<string>(redirectedSimple.absoluteUri);
-        expect(uri.templated).toBe<boolean>(false)
+        expect(uri.templated).toBe<boolean>(false);
         expect(uri.receivedUri).toBe<string>(redirectedSimple.absoluteUri);
         expect(uri.requestedUri).toBe<string>(simple.relativeUri);
         expect(uri.type).toBeUndefined();
@@ -528,9 +527,9 @@ describe('redirect on halresource methods', () => {
       });
   });
 
-  test('redirect to same host on halresource update, redirected self-link is a string', () => {
+  test("redirect to same host on halresource update, redirected self-link is a string", () => {
     const simple = orgFactory.createSimpleData();
-    const redirectedSimple = orgFactory.createSimpleData('new-simple', SelfOption.AbsoluteString);
+    const redirectedSimple = orgFactory.createSimpleData("new-simple", SelfOption.AbsoluteString);
     const client = createClient(uriBuilder.orgBaseURI);
     const resource = createResource(client, SimpleModel, simple.relativeUri);
 
@@ -554,9 +553,9 @@ describe('redirect on halresource methods', () => {
         return fetched
           .update(SimpleModel)
           .then((updated: SimpleModel) => {
-            const uri = updated['_uri'];
+            const uri = updated["_uri"];
             expect(uri.href).toBe<string>(redirectedSimple.absoluteUri);
-            expect(uri.templated).toBe<boolean>(false)
+            expect(uri.templated).toBe<boolean>(false);
             expect(uri.receivedUri).toBe<string>(redirectedSimple.absoluteUri);
             expect(uri.requestedUri).toBe<string>(simple.absoluteUri);
             expect(uri.type).toBeUndefined();
@@ -566,9 +565,9 @@ describe('redirect on halresource methods', () => {
       });
   });
 
-  test('redirect to same host on halresource update, redirected self-link is a link', () => {
+  test("redirect to same host on halresource update, redirected self-link is a link", () => {
     const simple = orgFactory.createSimpleData();
-    const redirectedSimple = orgFactory.createSimpleData('new-simple', SelfOption.AbsoluteLink);
+    const redirectedSimple = orgFactory.createSimpleData("new-simple", SelfOption.AbsoluteLink);
     const client = createClient(uriBuilder.orgBaseURI);
     const resource = createResource(client, SimpleModel, simple.relativeUri);
 
@@ -592,9 +591,9 @@ describe('redirect on halresource methods', () => {
         return fetched
           .update(SimpleModel)
           .then((updated: SimpleModel) => {
-            const uri = updated['_uri'];
+            const uri = updated["_uri"];
             expect(uri.href).toBe<string>(redirectedSimple.absoluteUri);
-            expect(uri.templated).toBe<boolean>(false)
+            expect(uri.templated).toBe<boolean>(false);
             expect(uri.receivedUri).toBe<string>(redirectedSimple.absoluteUri);
             expect(uri.requestedUri).toBe<string>(simple.absoluteUri);
             expect(uri.type).toBeUndefined();
@@ -604,9 +603,9 @@ describe('redirect on halresource methods', () => {
       });
   });
 
-  test('redirect to same host on halresource update, redirected self-link is a null-link', () => {
+  test("redirect to same host on halresource update, redirected self-link is a null-link", () => {
     const simple = orgFactory.createSimpleData();
-    const redirectedSimple = orgFactory.createSimpleData('new-simple', SelfOption.NullLink);
+    const redirectedSimple = orgFactory.createSimpleData("new-simple", SelfOption.NullLink);
     const client = createClient(uriBuilder.orgBaseURI);
     const resource = createResource(client, SimpleModel, simple.relativeUri);
 
@@ -630,9 +629,9 @@ describe('redirect on halresource methods', () => {
         return fetched
           .update(SimpleModel)
           .then((updated: SimpleModel) => {
-            const uri = updated['_uri'];
+            const uri = updated["_uri"];
             expect(uri.href).toBeNull();
-            expect(uri.templated).toBe<boolean>(false)
+            expect(uri.templated).toBe<boolean>(false);
             expect(uri.receivedUri).toBe<string>(redirectedSimple.absoluteUri);
             expect(uri.requestedUri).toBe<string>(simple.absoluteUri);
             expect(uri.type).toBeUndefined();
@@ -642,9 +641,9 @@ describe('redirect on halresource methods', () => {
       });
   });
 
-  test('redirect to same host on halresource update, redirected self-link is a null-string', () => {
+  test("redirect to same host on halresource update, redirected self-link is a null-string", () => {
     const simple = orgFactory.createSimpleData();
-    const redirectedSimple = orgFactory.createSimpleData('new-simple', SelfOption.NullString);
+    const redirectedSimple = orgFactory.createSimpleData("new-simple", SelfOption.NullString);
     const client = createClient(uriBuilder.orgBaseURI);
     const resource = createResource(client, SimpleModel, simple.relativeUri);
 
@@ -668,9 +667,9 @@ describe('redirect on halresource methods', () => {
         return fetched
           .update(SimpleModel)
           .then((updated: SimpleModel) => {
-            const uri = updated['_uri'];
+            const uri = updated["_uri"];
             expect(uri.href).toBeNull();
-            expect(uri.templated).toBe<boolean>(false)
+            expect(uri.templated).toBe<boolean>(false);
             expect(uri.receivedUri).toBe<string>(redirectedSimple.absoluteUri);
             expect(uri.requestedUri).toBe<string>(simple.absoluteUri);
             expect(uri.type).toBeUndefined();
@@ -680,9 +679,9 @@ describe('redirect on halresource methods', () => {
       });
   });
 
-  test('redirect to same host on halresource update, redirected self-link is missing', () => {
+  test("redirect to same host on halresource update, redirected self-link is missing", () => {
     const simple = orgFactory.createSimpleData();
-    const redirectedSimple = orgFactory.createSimpleData('new-simple', SelfOption.NoSelf);
+    const redirectedSimple = orgFactory.createSimpleData("new-simple", SelfOption.NoSelf);
     const client = createClient(uriBuilder.orgBaseURI);
     const resource = createResource(client, SimpleModel, simple.relativeUri);
 
@@ -706,9 +705,9 @@ describe('redirect on halresource methods', () => {
         return fetched
           .update(SimpleModel)
           .then((updated: SimpleModel) => {
-            const uri = updated['_uri'];
+            const uri = updated["_uri"];
             expect(uri.href).toBeNull();
-            expect(uri.templated).toBe<boolean>(false)
+            expect(uri.templated).toBe<boolean>(false);
             expect(uri.receivedUri).toBe<string>(redirectedSimple.absoluteUri);
             expect(uri.requestedUri).toBe<string>(simple.absoluteUri);
             expect(uri.type).toBeUndefined();
@@ -718,9 +717,9 @@ describe('redirect on halresource methods', () => {
       });
   });
 
-  test('redirect to same host on halresource update, redirected has no links at all', () => {
+  test("redirect to same host on halresource update, redirected has no links at all", () => {
     const simple = orgFactory.createSimpleData();
-    const redirectedSimple = orgFactory.createSimpleData('new-simple', SelfOption.NoSelf);
+    const redirectedSimple = orgFactory.createSimpleData("new-simple", SelfOption.NoSelf);
     delete redirectedSimple.updateNameResponse._links;
     const client = createClient(uriBuilder.orgBaseURI);
     const resource = createResource(client, SimpleModel, simple.relativeUri);
@@ -745,9 +744,9 @@ describe('redirect on halresource methods', () => {
         return fetched
           .update(SimpleModel)
           .then((updated: SimpleModel) => {
-            const uri = updated['_uri'];
+            const uri = updated["_uri"];
             expect(uri.href).toBeNull();
-            expect(uri.templated).toBe<boolean>(false)
+            expect(uri.templated).toBe<boolean>(false);
             expect(uri.receivedUri).toBe<string>(redirectedSimple.absoluteUri);
             expect(uri.requestedUri).toBe<string>(simple.absoluteUri);
             expect(uri.type).toBeUndefined();
@@ -757,10 +756,10 @@ describe('redirect on halresource methods', () => {
       });
   });
 
-  test('redirect to different host on halresource update', () => {
+  test("redirect to different host on halresource update", () => {
     const uriBuilder = new UriBuilder();
-    const orgFactory = new SimpleFactory(uriBuilder, 'org');
-    const comFactory = new SimpleFactory(uriBuilder, 'com');
+    const orgFactory = new SimpleFactory(uriBuilder, "org");
+    const comFactory = new SimpleFactory(uriBuilder, "com");
     const simple = orgFactory.createSimpleData();
     const redirectedSimple = comFactory.createSimpleData();
     const client = createClient(uriBuilder.orgBaseURI);
@@ -774,7 +773,7 @@ describe('redirect on halresource methods', () => {
       .patch(simple.relativeUri, JSON.stringify(simple.updateNameRequest))
       .reply(307, undefined, { Location: redirectedSimple.absoluteUri });
 
-    const comScope = nock(uriBuilder.comBaseURI)
+    const comScope = nock(uriBuilder.comBaseURI);
     comScope
       .patch(simple.relativeUri, JSON.stringify(simple.updateNameRequest))
       .reply(200, redirectedSimple.updateNameResponse);
@@ -787,9 +786,9 @@ describe('redirect on halresource methods', () => {
           .update(SimpleModel)
           .then((updated: SimpleModel) => {
             expect(updated.name).toBe<string>(orgFactory.updatedName);
-            const uri = updated['_uri'];
+            const uri = updated["_uri"];
             expect(uri.href).toBe<string>(redirectedSimple.absoluteUri);
-            expect(uri.templated).toBe<boolean>(false)
+            expect(uri.templated).toBe<boolean>(false);
             expect(uri.receivedUri).toBe<string>(redirectedSimple.absoluteUri);
             expect(uri.requestedUri).toBe<string>(simple.absoluteUri);
             expect(uri.type).toBeUndefined();
@@ -801,14 +800,14 @@ describe('redirect on halresource methods', () => {
   });
 });
 
-describe('redirect on hal-rest-client', () => {
+describe("redirect on hal-rest-client", () => {
   const uriBuilder = new UriBuilder();
-  const orgFactory = new SimpleFactory(uriBuilder, 'org');
-  const comFactory = new SimpleFactory(uriBuilder, 'com');
+  const orgFactory = new SimpleFactory(uriBuilder, "org");
+  const comFactory = new SimpleFactory(uriBuilder, "com");
 
-  test('redirect to same host on hal-rest-client create', () => {
+  test("redirect to same host on hal-rest-client create", () => {
     const simple = orgFactory.createSimpleData();
-    const redirectedSimple = orgFactory.createSimpleData('new-simple');
+    const redirectedSimple = orgFactory.createSimpleData("new-simple");
     const client = createClient(uriBuilder.orgBaseURI);
 
     const scope = nock(uriBuilder.orgBaseURI);
@@ -822,18 +821,18 @@ describe('redirect on hal-rest-client', () => {
     return client
       .create<SimpleModel>(simple.relativeCreateUri, simple.createRequest, SimpleModel)
       .then((model: SimpleModel) => {
-        const uri = model['_uri'];
+        const uri = model["_uri"];
         expect(uri.href).toBe<string>(redirectedSimple.absoluteUri);
-        expect(uri.templated).toBe<boolean>(false)
+        expect(uri.templated).toBe<boolean>(false);
         expect(uri.receivedUri).toBe<string>(redirectedSimple.absoluteCreateUri);
         expect(uri.requestedUri).toBe<string>(simple.relativeCreateUri);
         expect(uri.type).toBeUndefined();
         expect(uri.resourceUri).toBe<string>(redirectedSimple.absoluteUri);
         scope.done();
-      })
+      });
   });
 
-  test('redirect to different host on hal-rest-client create', () => {
+  test("redirect to different host on hal-rest-client create", () => {
     const simple = orgFactory.createSimpleData();
     const redirectedSimple = comFactory.createSimpleData();
     const client = createClient(uriBuilder.orgBaseURI);
@@ -849,21 +848,21 @@ describe('redirect on hal-rest-client', () => {
     return client
       .create<SimpleModel>(simple.relativeCreateUri, simple.createRequest, SimpleModel)
       .then((model: SimpleModel) => {
-        const uri = model['_uri'];
+        const uri = model["_uri"];
         expect(uri.href).toBe<string>(redirectedSimple.absoluteUri);
-        expect(uri.templated).toBe<boolean>(false)
+        expect(uri.templated).toBe<boolean>(false);
         expect(uri.receivedUri).toBe<string>(redirectedSimple.absoluteCreateUri);
         expect(uri.requestedUri).toBe<string>(redirectedSimple.relativeCreateUri);
         expect(uri.type).toBeUndefined();
         expect(uri.resourceUri).toBe<string>(redirectedSimple.absoluteUri);
         orgScope.done();
         comScope.done();
-      })
+      });
   });
 
-  test('redirect to same host on hal-rest-client update', () => {
+  test("redirect to same host on hal-rest-client update", () => {
     const simple = orgFactory.createSimpleData();
-    const redirectedSimple = orgFactory.createSimpleData('new-simple');
+    const redirectedSimple = orgFactory.createSimpleData("new-simple");
     const client = createClient(uriBuilder.orgBaseURI);
     const scope = nock(uriBuilder.orgBaseURI);
     scope
@@ -876,9 +875,9 @@ describe('redirect on hal-rest-client', () => {
     return client
       .update<SimpleModel>(simple.relativeUri, simple.updateNameRequest, false, SimpleModel)
       .then((model: SimpleModel) => {
-        const uri = model['_uri'];
+        const uri = model["_uri"];
         expect(uri.href).toBe<string>(redirectedSimple.absoluteUri);
-        expect(uri.templated).toBe<boolean>(false)
+        expect(uri.templated).toBe<boolean>(false);
         expect(uri.receivedUri).toBe<string>(redirectedSimple.absoluteUri);
         expect(uri.requestedUri).toBe<string>(simple.relativeUri);
         expect(uri.type).toBeUndefined();
@@ -887,7 +886,7 @@ describe('redirect on hal-rest-client', () => {
       });
   });
 
-  test('redirect to different host on hal-rest-client update', () => {
+  test("redirect to different host on hal-rest-client update", () => {
     const simple = orgFactory.createSimpleData();
     const redirectedSimple = comFactory.createSimpleData();
     const client = createClient(uriBuilder.orgBaseURI);
@@ -905,9 +904,9 @@ describe('redirect on hal-rest-client', () => {
     return client
       .update<SimpleModel>(simple.relativeUri, simple.updateNameRequest, false, SimpleModel)
       .then((model: SimpleModel) => {
-        const uri = model['_uri'];
+        const uri = model["_uri"];
         expect(uri.href).toBe<string>(redirectedSimple.absoluteUri);
-        expect(uri.templated).toBe<boolean>(false)
+        expect(uri.templated).toBe<boolean>(false);
         expect(uri.receivedUri).toBe<string>(redirectedSimple.absoluteUri);
         expect(uri.requestedUri).toBe<string>(simple.relativeUri);
         expect(uri.type).toBeUndefined();
@@ -917,9 +916,9 @@ describe('redirect on hal-rest-client', () => {
       });
   });
 
-  test('redirect to same host on hal-rest-client fetch', () => {
+  test("redirect to same host on hal-rest-client fetch", () => {
     const simple = orgFactory.createSimpleData();
-    const redirectedSimple = orgFactory.createSimpleData('new-simple');
+    const redirectedSimple = orgFactory.createSimpleData("new-simple");
     const client = createClient(uriBuilder.orgBaseURI);
     const scope = nock(uriBuilder.orgBaseURI);
     scope
@@ -934,9 +933,9 @@ describe('redirect on hal-rest-client', () => {
       .then((fetched: SimpleModel) => {
         expect(fetched.id).toBe<number>(orgFactory.id);
         expect(fetched.name).toBe<string>(orgFactory.savedName);
-        const uri = fetched['_uri'];
+        const uri = fetched["_uri"];
         expect(uri.href).toBe<string>(redirectedSimple.absoluteUri);
-        expect(uri.templated).toBe<boolean>(false)
+        expect(uri.templated).toBe<boolean>(false);
         expect(uri.receivedUri).toBe<string>(redirectedSimple.absoluteUri);
         expect(uri.requestedUri).toBe<string>(simple.relativeUri);
         expect(uri.type).toBeUndefined();
@@ -945,7 +944,7 @@ describe('redirect on hal-rest-client', () => {
       });
   });
 
-  test('redirect to different host on hal-rest-client fetch', () => {
+  test("redirect to different host on hal-rest-client fetch", () => {
     const simple = orgFactory.createSimpleData();
     const redirectedSimple = comFactory.createSimpleData();
     const client = createClient(uriBuilder.orgBaseURI);
@@ -964,9 +963,9 @@ describe('redirect on hal-rest-client', () => {
       .then((fetched: SimpleModel) => {
         expect(fetched.id).toBe<number>(orgFactory.id);
         expect(fetched.name).toBe<string>(orgFactory.savedName);
-        const uri = fetched['_uri'];
+        const uri = fetched["_uri"];
         expect(uri.href).toBe<string>(redirectedSimple.absoluteUri);
-        expect(uri.templated).toBe<boolean>(false)
+        expect(uri.templated).toBe<boolean>(false);
         expect(uri.receivedUri).toBe<string>(redirectedSimple.absoluteUri);
         expect(uri.requestedUri).toBe<string>(simple.relativeUri);
         expect(uri.type).toBeUndefined();
@@ -975,6 +974,4 @@ describe('redirect on hal-rest-client', () => {
         comScope.done();
       });
   });
-
-
 });

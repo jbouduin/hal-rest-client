@@ -1,4 +1,4 @@
-import * as nock from 'nock';
+import * as nock from "nock";
 import { cache, createClient, createResource, HalResource, IHalResource } from "..";
 import { IQueryParameters, IListData, ILink, ILinkCollection } from "./data/common-definitions";
 import { DataFactory } from "./data/data-factory";
@@ -13,33 +13,33 @@ beforeAll(() => {
   cache.reset();
 });
 
-afterEach(() => { cache.reset(); })
+afterEach(() => { cache.reset(); });
 afterAll(() => nock.restore());
 //#endregion
 
-// these are not real 'tests' but the easiest way to visually check what a JSON looks like
-describe('toJSON', () => {
-  const uriBuilder = new UriBuilder()
+// these are not real "tests" but the easiest way to visually check what a JSON looks like
+describe("toJSON", () => {
+  const uriBuilder = new UriBuilder();
   const dataFactory = new DataFactory(uriBuilder);
 
-  test('JSON.stringify cyclicals', () => {
-    const cyclical1 = dataFactory.createResourceData('org', 'cyclicals', 1, { property: 'name' });
+  test("JSON.stringify cyclicals", () => {
+    const cyclical1 = dataFactory.createResourceData("org", "cyclicals", 1, { property: "name" });
     const queryParameters: IQueryParameters = {
-      sort: 'id',
+      sort: "id",
       offset: 0,
       pageSize: 20,
     };
     const listData: IListData = {
       queryParameters,
-      listKey: 'cyclicals',
+      listKey: "cyclicals",
       listData: [cyclical1.data]
     };
 
-    const refreshUri = uriBuilder.resourceUri('org', true, 'cyclicals', undefined, 'refresh');
+    const refreshUri = uriBuilder.resourceUri("org", true, "cyclicals", undefined, "refresh");
     const refreshLink: ILink = { href: refreshUri };
     const links: ILinkCollection = { refresh: refreshLink };
 
-    const cyclicals = dataFactory.createResourceListData('org', 'cyclicals', listData, links);
+    const cyclicals = dataFactory.createResourceListData("org", "cyclicals", listData, links);
     const baseUri = uriBuilder.orgBaseURI;
     const scope = nock(baseUri);
     scope
@@ -61,15 +61,15 @@ describe('toJSON', () => {
               .then(() => {
                 const asJson = JSON.stringify(cyclicals, null, 2);
                 expect(asJson).toBeDefined();
-                expect(asJson.length).toBeGreaterThan(0)
+                expect(asJson.length).toBeGreaterThan(0);
                 scope.done();
               });
           });
       });
   });
 
-  test('JSON.stringify project', () => {
-    const projectFactory = new ProjectFactory('org', uriBuilder);
+  test("JSON.stringify project", () => {
+    const projectFactory = new ProjectFactory("org", uriBuilder);
     const project = projectFactory.createProject(1);
     const firstChild = projectFactory.createProject(2);
 
@@ -84,20 +84,20 @@ describe('toJSON', () => {
     return createClient()
       .fetch(project.absoluteUri, HalResource)
       .then((fetched: HalResource) => {
-        const related = fetched.getLink<Array<IHalResource>>('children');
+        const related = fetched.getLink<Array<IHalResource>>("children");
         return related[0]
           .fetch()
           .then(() => {
             const asJson = JSON.stringify(fetched, null, 2);
             expect(asJson).toBeDefined();
-            expect(asJson.length).toBeGreaterThan(0)
+            expect(asJson.length).toBeGreaterThan(0);
             scope.done();
           });
       });
   });
 
-  test('JSON stringify person', () => {
-    const personFactory = new PersonFactory('org', uriBuilder);
+  test("JSON stringify person", () => {
+    const personFactory = new PersonFactory("org", uriBuilder);
     const person = personFactory.createPerson(1);
     const scope = nock(uriBuilder.orgBaseURI);
     scope
@@ -127,16 +127,16 @@ describe('toJSON', () => {
             const asJson = JSON.stringify(fetched, null, 2);
             expect(asJson).toBeDefined();
             expect(asJson.length).toBeGreaterThan(0);
-            scope.done()
+            scope.done();
           });
       });
   });
 
-  test('JSON stringify a non fetched resource', () => {
+  test("JSON stringify a non fetched resource", () => {
     const uri = uriBuilder.orgBaseURI;
     const resource = createResource(createClient(uri), HalResource);
     const asJson = JSON.stringify(resource, null, 2);
     expect(asJson).toBeDefined();
-    expect(asJson.length).toBeGreaterThan(0)
-  })
+    expect(asJson.length).toBeGreaterThan(0);
+  });
 });

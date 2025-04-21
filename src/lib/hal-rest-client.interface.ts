@@ -4,6 +4,7 @@ import { AxiosRequestConfig, AxiosResponse } from "axios";
 import { IJSONParser } from "./hal-json-parser";
 import { IHalResourceConstructor, IHalResource } from "./hal-resource.interface";
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
 export interface IHalRestClient {
   //#region read-only properties ----------------------------------------------
   /**

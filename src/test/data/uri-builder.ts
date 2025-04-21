@@ -8,20 +8,20 @@ export class UriBuilder {
 
   //#region Constructor & C° --------------------------------------------------
   constructor() {
-    this.protocol = 'http://'
+    this.protocol = "http://";
     this.hosts = new Map<HostTld, string>();
-    this.hosts.set('org', 'test.hal-rest-client.org');
-    this.hosts.set('com','test.hal-rest-client.com');
+    this.hosts.set("org", "test.hal-rest-client.org");
+    this.hosts.set("com","test.hal-rest-client.com");
   }
   //#endregion
 
   //#region public getters ----------------------------------------------------
   public get orgBaseURI(): string {
-    return this.buildUri('org', false, undefined);
+    return this.buildUri("org", false, undefined);
   }
 
   public get comBaseURI(): string {
-    return this.buildUri('com', false, undefined);
+    return this.buildUri("com", false, undefined);
   }
 
   public get allTld(): Array<HostTld> {
@@ -39,19 +39,19 @@ export class UriBuilder {
   }
 
   public templatedResourceUri(tld: HostTld, relative: boolean,resource: string, queryParameters?: IQueryParameters): string {
-    const queryString = `{?${Object.keys(queryParameters || this.getDefaultQueryParameters()).join(',')}}`;
+    const queryString = `{?${Object.keys(queryParameters || this.getDefaultQueryParameters()).join(",")}}`;
     return this.buildUri(tld, relative, queryString, resource);
   }
 
   public filledTemplatedResourceUri(tld: HostTld, relative: boolean,resource: string, queryParameters: IQueryParameters): string {
-    const queryString = '?' + Array.from(Object.keys(queryParameters)).map((key: string) => `${key}=${queryParameters[key]}`).join('&');
+    const queryString = "?" + Array.from(Object.keys(queryParameters)).map((key: string) => `${key}=${queryParameters[key]}`).join("&");
     return this.buildUri(tld, relative, queryString, resource);
   }
 
 
   public getDefaultQueryParameters(offset = 0): IQueryParameters {
     const queryParameters: IQueryParameters = {
-      sort: 'id',
+      sort: "id",
       offset: offset,
       pageSize: 20,
     };
@@ -69,10 +69,10 @@ export class UriBuilder {
     if (parts) {
       asArray.push(...parts
         .filter((part: string | number) => part || part == 0 ? true : false)
-        .map((part: string | number) => typeof part === 'string' ? part : part.toString())
+        .map((part: string | number) => typeof part === "string" ? part : part.toString())
       );
     }
-    return `${relative ? '/' : this.protocol}${asArray.join('/')}${queryParameters || ''}`;
+    return `${relative ? "/" : this.protocol}${asArray.join("/")}${queryParameters || ""}`;
   }
   //#endregion
 }

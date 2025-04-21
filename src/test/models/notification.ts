@@ -16,5 +16,4 @@ export class HalNotification extends HalResource {
 
   @HalProperty({ resourceType: NotificationConfig })
   public embeddedArray: Array<NotificationConfig>;
-
 }

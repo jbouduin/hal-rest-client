@@ -1,13 +1,13 @@
-import { cache } from './hal-factory';
-import { DefaultSerializer } from './hal-json-serializer';
-import { IJSONSerializer } from './hal-json-serializer.interface';
-import { IHalResource, IHalResourceConstructor, IResourceFetchOptions } from './hal-resource.interface';
-import { HalRestClient } from './hal-rest-client';
-import { IHalRestClient } from './hal-rest-client.interface';
-import { IUriData, UriData } from './uri-data';
+import { cache } from "./hal-factory";
+import { DefaultSerializer } from "./hal-json-serializer";
+import { IJSONSerializer } from "./hal-json-serializer.interface";
+import { IHalResource, IHalResourceConstructor, IResourceFetchOptions } from "./hal-resource.interface";
+import { HalRestClient } from "./hal-rest-client";
+import { IHalRestClient } from "./hal-rest-client.interface";
+import { IUriData, UriData } from "./uri-data";
 
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access ,  @typescript-eslint/no-unsafe-assignment*/
 export class HalResource implements IHalResource {
-
   //#region Private properties ------------------------------------------------
   private _isLoaded: boolean;
   private _restClient: IHalRestClient;
@@ -75,7 +75,7 @@ export class HalResource implements IHalResource {
   public setProperty<T>(name: string, value?: T): void {
     if (this.links[name]) {
       if (Array.isArray(value)) {
-        this.setLink(name, value)
+        this.setLink(name, value);
       } else {
         this.setLink(name, (value as unknown) as IHalResource);
       }
@@ -93,7 +93,6 @@ export class HalResource implements IHalResource {
     if (this.props[name] !== undefined) {
       return this.props[name] as T;
     } else if (this.links[name]) {
-
       return (this.links[name] as unknown) as T;
     }
     return undefined;
@@ -141,12 +140,12 @@ export class HalResource implements IHalResource {
 
   public convert<N extends IHalResource>(type: IHalResourceConstructor<N>): N {
     const result = new type(this.restClient, this._uri);
-    result['links'] = this.links;
-    result['props'] = this.props;
-    // result['settedLinks'].push(...this.settedLinks);
-    // result['settedProps'].push(...this.settedProps);
-    result['_isLoaded'] = false;
-    result['initEnded'] = false;
+    result["links"] = this.links;
+    result["props"] = this.props;
+    // result["settedLinks"].push(...this.settedLinks);
+    // result["settedProps"].push(...this.settedProps);
+    result["_isLoaded"] = false;
+    result["initEnded"] = false;
     return result;
   }
 
@@ -154,7 +153,7 @@ export class HalResource implements IHalResource {
     let result = false;
     const myCacheKey = (this.uri as UriData).calculateCacheKey(this.restClient.config.baseURL);
     if (cache.hasResource(myCacheKey)) {
-      cache.clear('Resource', myCacheKey);
+      cache.clear("Resource", myCacheKey);
       result = true;
     }
     return result;
@@ -210,7 +209,7 @@ export class HalResource implements IHalResource {
    * @returns {object} - the serialized resources
    */
   private serialize(props: Array<string>, links: Array<string>, serializer: IJSONSerializer = new DefaultSerializer()): Record<string, unknown> {
-    const tsToHal = Reflect.getMetadata('halClient:tsToHal', this);
+    const tsToHal = Reflect.getMetadata("halClient:tsToHal", this);
     const result = {};
 
     for (const prop of props) {
@@ -225,7 +224,7 @@ export class HalResource implements IHalResource {
 
     for (const link of links) {
       const jsonKey = tsToHal ? tsToHal[link] : link;
-      const theLink = this.links[link] as IHalResource
+      const theLink = this.links[link] as IHalResource;
       result[jsonKey] = Array.isArray(theLink) ?
         theLink.map((link: IHalResource) => serializer.parseResource(link)) :
         serializer.parseResource(theLink);
@@ -249,33 +248,34 @@ export class HalResource implements IHalResource {
   //#region toJSON ------------------------------------------------------------
   private toJSON(): Record<string, string> {
     const result = {};
-    result['restClient'] = this._restClient;
-    result['uri'] = this._uri;
-    result['cacheKey'] = this._uri.calculateCacheKey(this._restClient.config.baseURL);
-    result['links'] = {};
+    result["restClient"] = this._restClient;
+    result["uri"] = this._uri;
+    result["cacheKey"] = this._uri.calculateCacheKey(this._restClient.config.baseURL);
+    result["links"] = {};
     this.linkKeys.forEach((linkKey: string) => {
       const linkInstance = this.getLink(linkKey);
       if (Array.isArray(linkInstance)) {
-        result['links'][linkKey] = linkInstance.map((l: IHalResource) => this.linkToJson(l))
+        result["links"][linkKey] = linkInstance.map((l: IHalResource) => this.linkToJson(l));
       } else {
-        result['links'][linkKey] = this.linkToJson(linkInstance)
+        result["links"][linkKey] = this.linkToJson(linkInstance);
       }
     });
-    result['properties'] = {};
+    result["properties"] = {};
     this.propertyKeys.forEach((propertyKey: string) => {
-      result['properties'][propertyKey] = this.getProperty(propertyKey);
+      result["properties"][propertyKey] = this.getProperty(propertyKey);
     });
     return result;
   }
 
   private linkToJson(link: IHalResource): Record<string, string> {
     const result = {};
-    result['uri'] = link.uri;
-    result['cacheKey'] = link['_uri'].calculateCacheKey(this._restClient.config.baseURL);
-    result['type'] = link['type'];
-    result['name'] = link['name'];
-    result['title'] = link['title'];
-    result['isLoaded'] = link.isLoaded;
+    result["uri"] = link.uri;
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+    result["cacheKey"] = link["_uri"].calculateCacheKey(this._restClient.config.baseURL);
+    result["type"] = link["type"];
+    result["name"] = link["name"];
+    result["title"] = link["title"];
+    result["isLoaded"] = link.isLoaded;
     return result;
   }
   //#endregion

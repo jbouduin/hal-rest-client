@@ -1,6 +1,6 @@
 export type TemplateFillParameters = Record<string, string | number | Array<string | number>>;
 
-type templateSegmentType = 'fix' | 'var';
+type templateSegmentType = "fix" | "var";
 type encodeFn = (value: string) => string;
 
 class TemplateSegmentContent {
@@ -12,7 +12,7 @@ class TemplateSegmentContent {
   public constructor(content: string, type: templateSegmentType) {
     this.content = content;
     this.inErrorState = false;
-    if (type === 'var') {
+    if (type === "var") {
       this.explode = this.checkExplode();
       this.sub = this.checkSub();
       this.inErrorState ||= this.hasInvalidChars();
@@ -26,10 +26,10 @@ class TemplateSegmentContent {
 
   private checkExplode(): boolean {
     let result = false;
-    if (this.content.indexOf('*') > 0) {
-      this.content = this.content.replace('*', '')
+    if (this.content.indexOf("*") > 0) {
+      this.content = this.content.replace("*", "");
       // if we now have a colon => wrong
-      if (this.content.indexOf(':') > 0) {
+      if (this.content.indexOf(":") > 0) {
         this.inErrorState = true;
       }
       result = true;
@@ -39,7 +39,7 @@ class TemplateSegmentContent {
 
   private checkSub(): number {
     let result = 0;
-    const colonIndex = this.content.indexOf(':')
+    const colonIndex = this.content.indexOf(":");
     if (colonIndex > 0) {
       result = Number.parseInt(this.content.substring(colonIndex + 1));
       if (isNaN(result)) {
@@ -53,7 +53,7 @@ class TemplateSegmentContent {
   }
 
   private hasInvalidChars(): boolean {
-    const clean = this.content.replace(/%[0-9A-Z][0-9A-Z]/g, '');
+    const clean = this.content.replace(/%[0-9A-Z][0-9A-Z]/g, "");
     return ! /^[A-Za-z0-9_.]*$/.test(clean);
   }
 }
@@ -73,16 +73,15 @@ class TemplateSegment {
 
   public constructor(type: templateSegmentType, content: string) {
     this.type = type;
-    this.contents = content.split(',').map((part: string) => new TemplateSegmentContent(part, type));
-    this.first = '';
-    this.separator = ',';
+    this.contents = content.split(",").map((part: string) => new TemplateSegmentContent(part, type));
+    this.first = "";
+    this.separator = ",";
     this.named = false;
-    this.ifEmpty = '';
+    this.ifEmpty = "";
   }
 }
 
 export class UriTemplate {
-
   private readonly template: string;
   private readonly uriTemplateGlobalModifiers: Record<string, boolean>;
   private readonly templateSegments: Array<TemplateSegment>;
@@ -117,15 +116,15 @@ export class UriTemplate {
       try {
         result = this.templateSegments
           .map((segment: TemplateSegment) => {
-            if (segment.type === 'fix') {
+            if (segment.type === "fix") {
               return segment.contents[0].content;
             } else {
               return this.processTemplateSegment(segment, values);
             }
           })
-          .join('');
-      } catch (error) {
-        result = undefined
+          .join("");
+      } catch {
+        result = undefined;
       }
     }
     return result;
@@ -141,7 +140,7 @@ export class UriTemplate {
               if (segment.named) {
                 return value
                   .map((item: string) => {
-                    // if (value[key] !== '') {} => not covered by official tests
+                    // if (value[key] !== "") {} => not covered by official tests
                     return `${segmentContent.content}=${this.calculateValue(item, segmentContent.sub, segment.encodeFn)}`;
                   })
                   .join(segment.separator);
@@ -152,54 +151,54 @@ export class UriTemplate {
                     .join(segment.separator) :
                   undefined;
               }
-            } else if (typeof value === 'object') {
+            } else if (typeof value === "object") {
               // if (segmentContent.sub > 0) {} => not covered by official tests
               return Object.keys(value)
                 .map((key: string) => {
-                  // if (value[key] !== '') => not covered by official tests
-                  // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unnecessary-type-assertion, @typescript-eslint/no-non-null-assertion
+                  // if (value[key] !== "") => not covered by official tests
+                  // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unnecessary-type-assertion
                   return `${this.calculateValue(key, 0, segment.encodeFn)}=${this.calculateValue(value![key], segmentContent.sub, segment.encodeFn)}`;
                 })
                 .join(segment.separator);
             } else {
-              return this.calculateValue(value.toString(), segmentContent.sub, segment.encodeFn)
+              return this.calculateValue(value.toString(), segmentContent.sub, segment.encodeFn);
             }
           } else {
-            if (Array.isArray(value) || typeof value === 'object') {
+            if (Array.isArray(value) || typeof value === "object") {
               let joined: string;
               if (Array.isArray(value)) {
                 joined = value.length > 0 ?
-                  value.map((item: string) => this.calculateValue(item, segmentContent.sub, segment.encodeFn)).join(',') :
+                  value.map((item: string) => this.calculateValue(item, segmentContent.sub, segment.encodeFn)).join(",") :
                   undefined;
               } else {
                 if (segmentContent.sub > 0) {
                   throw new Error();
                 }
                 joined = Object.keys(value).map((key: string) =>
-                  this.calculateValue(key, segmentContent.sub, segment.encodeFn) + ',' +
-                  this.calculateValue(value[key], segmentContent.sub, segment.encodeFn)).join(',');
+                  this.calculateValue(key, segmentContent.sub, segment.encodeFn) + "," +
+                  this.calculateValue(value[key], segmentContent.sub, segment.encodeFn)).join(",");
               }
               if (segment.named) {
-                if (joined !== '' && joined != undefined) {
+                if (joined !== "" && joined != undefined) {
                   return `${segmentContent.content}=${joined}`;
                 } else {
-                  return '';
+                  return "";
                 }
               } else {
                 return joined;
               }
             } else {
               if (segment.named) {
-                if (value !== '') {
+                if (value !== "") {
                   return `${segmentContent.content}=${this.calculateValue(value.toString(), segmentContent.sub, segment.encodeFn)}`;
                 } else {
                   return `${segmentContent.content}${segment.ifEmpty}`;
                 }
               } else {
-                if (value !== '') {
+                if (value !== "") {
                   return this.calculateValue(value.toString(), segmentContent.sub, segment.encodeFn);
                 } else {
-                  return ''
+                  return "";
                 }
               }
             }
@@ -214,9 +213,9 @@ export class UriTemplate {
     if (processedPart.length > 0) {
       return segment.first + processedPart;
     } else if (processedPartArray.length > 0) {
-      return segment.first !== '?' ? segment.first : '';
+      return segment.first !== "?" ? segment.first : "";
     } else {
-      return '';
+      return "";
     }
   }
 
@@ -228,53 +227,53 @@ export class UriTemplate {
     const curlyBracesRegex = /{([^}]+)}/gm;
     let matches: RegExpExecArray;
     let lastEnd = 0;
-    matches = curlyBracesRegex.exec(this.template)
+    matches = curlyBracesRegex.exec(this.template);
     while (matches) {
       if (matches.index > lastEnd) {
-        const partBefore = new TemplateSegment('fix', matches.input.substring(lastEnd, matches.index));
+        const partBefore = new TemplateSegment("fix", matches.input.substring(lastEnd, matches.index));
         this.templateSegments.push(partBefore);
       }
       let part: TemplateSegment;
       if (this.uriTemplateGlobalModifiers[matches[1][0]]) {
-        part = new TemplateSegment('var', matches[1].substring(1));
+        part = new TemplateSegment("var", matches[1].substring(1));
         const prefix = matches[1][0];
         switch (prefix) {
-          case '+':
+          case "+":
             part.encodeFn = (value: string) => this.uAndREncodeFunction(value);
             break;
-          case '.':
-          case '/':
+          case ".":
+          case "/":
             part.first = prefix;
             part.separator = prefix;
             part.encodeFn = (value: string) => this.uEncodeFunction(value);
             break;
-          case ';':
+          case ";":
             part.first = prefix;
             part.named = true;
             part.separator = prefix;
             part.encodeFn = (value: string) => this.uEncodeFunction(value);
             break;
-          case '?':
+          case "?":
             part.first = prefix;
             part.named = true;
-            part.separator = '&';
-            part.ifEmpty = '=';
+            part.separator = "&";
+            part.ifEmpty = "=";
             part.encodeFn = (value: string) => this.uEncodeFunction(value);
             break;
-          case '&':
+          case "&":
             part.first = prefix;
             part.named = true;
             part.separator = prefix;
-            part.ifEmpty = '=';
+            part.ifEmpty = "=";
             part.encodeFn = (value: string) => this.uEncodeFunction(value);
             break;
-          case '#':
+          case "#":
             part.first = prefix;
             part.encodeFn = (value: string) => this.uAndREncodeFunction(value);
             break;
         }
       } else {
-        part = new TemplateSegment('var', matches[1]);
+        part = new TemplateSegment("var", matches[1]);
         part.encodeFn = (value: string) => this.uEncodeFunction(value);
       }
       this.templateSegments.push(part);
@@ -282,7 +281,7 @@ export class UriTemplate {
       matches = curlyBracesRegex.exec(this.template);
     }
     if (lastEnd < this.template.length) {
-      this.templateSegments.push(new TemplateSegment('fix', this.template.substring(lastEnd)));
+      this.templateSegments.push(new TemplateSegment("fix", this.template.substring(lastEnd)));
     }
   }
 
@@ -291,7 +290,7 @@ export class UriTemplate {
   }
 
   private uAndREncodeFunction(value: string): string {
-    return encodeURI(value).replace(/%25[0-9A-Z][0-9A-Z]/g, (doubleEncoded: string) => '%' + doubleEncoded.substring(3));
+    return encodeURI(value).replace(/%25[0-9A-Z][0-9A-Z]/g, (doubleEncoded: string) => "%" + doubleEncoded.substring(3));
   }
 
   private calculateValue(value: string, sub: number, encodeFn: encodeFn): string {
@@ -301,5 +300,4 @@ export class UriTemplate {
       return encodeFn(value);
     }
   }
-
 }

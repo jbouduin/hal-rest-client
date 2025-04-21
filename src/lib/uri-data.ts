@@ -63,7 +63,7 @@ export class UriData implements IUriData {
   //#region public methods ----------------------------------------------------
   public setFetchedUri(fetchedUri: string): void {
     if (!this.templated) {
-      throw new Error('You can not set the fetched URI of a non templated URI')
+      throw new Error("You can not set the fetched URI of a non templated URI");
     } else {
       this.fetchedURI = fetchedUri;
     }
@@ -71,6 +71,7 @@ export class UriData implements IUriData {
 
   public fill(params: TemplateFillParameters = {}): string {
     if (this.templated && this.uriTemplate) {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
       return this.uriTemplate.fill(params);
     } else {
       return this.href || this.requestedUri;
@@ -103,7 +104,7 @@ export class UriData implements IUriData {
     // the href is required
     // the uri may not be templated
     // if there is a type, it must be hal+json
-    if (this.href && !this.templated && (!this.type || this.type === 'application/hal+json')) {
+    if (this.href && !this.templated && (!this.type || this.type === "application/hal+json")) {
       if (this.isAbsolute(this.href)) {
         result = this.href;
       } else if (clientBaseUrl) {
@@ -119,6 +120,6 @@ export class UriData implements IUriData {
   //#endregion
 
   private isAbsolute(href: string): boolean {
-    return href ? href.toLowerCase().startsWith('http') : false;
+    return href ? href.toLowerCase().startsWith("http") : false;
   }
 }
