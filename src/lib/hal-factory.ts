@@ -1,10 +1,10 @@
-import { AxiosRequestConfig } from 'axios';
-import { HalCache } from './hal-cache';
-import { IHalCache } from './hal-cache.interface';
-import { IHalResource, IHalResourceConstructor } from './hal-resource.interface';
-import { HalRestClient } from './hal-rest-client';
-import { IHalRestClient } from './hal-rest-client.interface';
-import { UriData } from './uri-data';
+import { AxiosRequestConfig } from "axios";
+import { HalCache } from "./hal-cache";
+import { IHalCache } from "./hal-cache.interface";
+import { IHalResource, IHalResourceConstructor } from "./hal-resource.interface";
+import { HalRestClient } from "./hal-rest-client";
+import { IHalRestClient } from "./hal-rest-client.interface";
+import { UriData } from "./uri-data";
 
 /** The cache containing instantiated clients and resources */
 export const cache: IHalCache = new HalCache();
@@ -18,7 +18,7 @@ export const cache: IHalCache = new HalCache();
  * @param {string} baseUri - the baseUri that will be used to configure Axios.
  * @param {AxiosRequestConfig} options - the options that will be passed to Axios
  * @param {boolean} cached - if set to false, the client will not be added to the cache. Remark: even if set to false, an existing cached entry will be returned.
- * Defaults to 'false'
+ * Defaults to "false"
  * @returns {IHalRestClient} - a IHalrestClient
  */
 export function createClient(baseUri?: string, options: AxiosRequestConfig = {}, cached = true): IHalRestClient {
@@ -26,7 +26,7 @@ export function createClient(baseUri?: string, options: AxiosRequestConfig = {},
   if (!baseUri) {
     result = new HalRestClient();
   } else {
-    while (baseUri.endsWith('/')) {
+    while (baseUri.endsWith("/")) {
       baseUri = baseUri.slice(0, -1);
     }
     if (!cache.hasClient(baseUri)) {
@@ -42,7 +42,7 @@ export function createClient(baseUri?: string, options: AxiosRequestConfig = {},
 }
 
 /**
- * Create a HalResource of the given type. If no uri is specified, an 'empty' resource is created.
+ * Create a HalResource of the given type. If no uri is specified, an "empty" resource is created.
  * If templated, the resource is created without caching it.
  * Otherwise the cache is searched for an existing entry. If found it is returned, eventually converting it to the requested type.
  * If not found, it is created and cached.
@@ -76,14 +76,14 @@ export function createResource<T extends IHalResource>(
 export function createResourceInternal<T extends IHalResource>(
   client: IHalRestClient,
   resourceType: IHalResourceConstructor<T>,
-  uri: UriData) {
-  let result: T
-
+  uri: UriData
+) {
+  let result: T;
   if (uri.templated) {
     result = new resourceType(client, uri);
   } else {
     const cacheKey = uri.calculateCacheKey(client.config.baseURL);
-    // console.log(`key ${cacheKey} ${cache.hasResource(cacheKey) ? 'is' : 'is not'} in cache`)
+    // console.log(`key ${cacheKey} ${cache.hasResource(cacheKey) ? "is" : "is not"} in cache`)
     if (cacheKey) {
       if (cache.hasResource(cacheKey)) {
         const cached = cache.getResource(cacheKey);

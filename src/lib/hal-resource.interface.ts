@@ -3,6 +3,7 @@ import { IHalRestClient } from "./hal-rest-client.interface";
 import { IUriData } from "./uri-data";
 import { TemplateFillParameters } from "./uri-template";
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
 export interface IHalResource {
 
   //#region readoly properties ------------------------------------------------
@@ -161,6 +162,4 @@ export type IResourceFetchOptions = {
    * @type {TemplateFillParameters=} - The object containing the query parameters for a templated resource URI.
    */
   params?: TemplateFillParameters;
-}
-
-
+};

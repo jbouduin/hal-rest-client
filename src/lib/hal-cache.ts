@@ -36,17 +36,17 @@ export class HalCache implements IHalCache {
   }
 
   public reset(type?: HalCacheType): void {
-    if (!type || type === 'Client') {
+    if (!type || type === "Client") {
       this.clientCache.clear();
     }
-    if (!type || type === 'Resource') {
+    if (!type || type === "Resource") {
       this.resourceCache.clear();
     }
   }
 
   public getKeys(type: HalCacheType): Array<string> {
     let result: Array<string>;
-    if (type === 'Client') {
+    if (type === "Client") {
       result = Array.from(this.clientCache.keys());
     } else {
       result = Array.from(this.resourceCache.keys());
@@ -56,9 +56,9 @@ export class HalCache implements IHalCache {
 
   public clear(type: HalCacheType, key: string | RegExp): Array<string> {
     const keysToClear = new Array<string>();
-    const cacheToClear = type === 'Client' ? this.clientCache : this.resourceCache;
+    const cacheToClear = type === "Client" ? this.clientCache : this.resourceCache;
 
-    if (typeof key === 'string') {
+    if (typeof key === "string") {
       keysToClear.push(key);
     } else if (Array.isArray(key)) {
       keysToClear.push(...key);
@@ -104,7 +104,6 @@ export class HalCache implements IHalCache {
 
   public setClientKeyValidator(validator: KeyValidatorFn): void {
     this.clientKeyValidator = validator;
-
   }
 
   public setResourceKeyValidator(validator: KeyValidatorFn): void {

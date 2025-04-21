@@ -13,6 +13,7 @@ import { cache } from "./hal-factory";
  * The Hal-Rest client
  */
 
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access */
 export class HalRestClient implements IHalRestClient {
   //#region private properties ------------------------------------------------
   private axios: AxiosInstance;
@@ -54,6 +55,7 @@ export class HalRestClient implements IHalRestClient {
             const embedded: unknown = value.data._embedded;
             const firstKey = Object.keys(embedded)[0];
             if (firstKey) {
+              // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
               array = embedded[firstKey];
               if (!Array.isArray(array)) {
                 reject(new Error("property _embedded." + Object.keys(embedded)[0] + " is not an array"));
@@ -61,7 +63,6 @@ export class HalRestClient implements IHalRestClient {
             } else {
               reject(new Error("property _embedded does not contain an array"));
             }
-
           } else {
             reject(new Error("Unparsable array: it's neither an array nor an halResource"));
           }
@@ -121,7 +122,7 @@ export class HalRestClient implements IHalRestClient {
     return new Promise((resolve, reject) => {
       this.axios.post(uri, data).then((response: AxiosResponse<any, any>) => {
         // const fetchedUrl = response.request.res.responseUrl;
-        // console.log(Object.keys(response.request.res).join(', '));
+        // console.log(Object.keys(response.request.res).join(", "));
         // console.log(`uri: ${uri}, response.config.url: ${response.config.url}, fetched: ${fetchedUrl}`)
         if (type) {
           // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
@@ -151,7 +152,7 @@ export class HalRestClient implements IHalRestClient {
    *
    * @template T - a resource type extending {IHalResource}
    * @param {string} uri - the uri of resource to fetch
-   * @param {IHalResourceConstructor<T>} type : the resulting HalResource class to use to fetch. If you don't want to write a model, use HalResource
+   * @param {IHalResourceConstructor<T>} type : the resulting HalResource class to use to fetch. If you don"t want to write a model, use HalResource
    * @param {T} resource - an existing resource to be fetched. If undefined or null, a new resource is created
    * @returns {T} - a resource of type T
    */
@@ -168,7 +169,7 @@ export class HalRestClient implements IHalRestClient {
   public removeFromCache(): boolean {
     let result = false;
     if (cache.hasClient(this.axios.defaults.baseURL)) {
-      const removed = cache.clear('Client', this.axios.defaults.baseURL);
+      const removed = cache.clear("Client", this.axios.defaults.baseURL);
       result = removed.length > 0;
     }
     return result;

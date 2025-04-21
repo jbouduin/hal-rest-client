@@ -1,5 +1,6 @@
 import { IHalResource } from "./hal-resource.interface";
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
 export interface IJSONSerializer {
   /**
    * parse any prop value to server comprehensible value
@@ -10,4 +11,3 @@ export interface IJSONSerializer {
    */
   parseResource(value: IHalResource): unknown;
 }
-

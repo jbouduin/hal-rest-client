@@ -32,7 +32,7 @@ export default tseslint.config(
     rules: {
       // es-lint rules
       "no-console": "error",
-      "quotes": ["error", "single"],
+      "quotes": ["error", "double"],
       // typescript es-lint rules
       "@typescript-eslint/no-unused-vars": ["error", { "argsIgnorePattern": "^_" }],
       "@typescript-eslint/array-type": ["error", { "default": "generic" }],

@@ -2,7 +2,7 @@
 import { IHalResource } from "./hal-resource.interface";
 import { IHalRestClient } from "./hal-rest-client.interface";
 
-export type HalCacheType = 'Client' | 'Resource';
+export type HalCacheType = "Client" | "Resource";
 
 /**
  * a function that accepts the calculated cachekey and returns true if the resource or client may be cached
@@ -58,4 +58,3 @@ export interface IHalCache {
   setClientKeyValidator(validator: KeyValidatorFn): void;
   setResourceKeyValidator(validator: KeyValidatorFn): void;
 }
-
