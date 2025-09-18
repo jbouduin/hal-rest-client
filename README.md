@@ -10,34 +10,41 @@ The hal-rest-client library helps you to work with Hypertext Application Languag
 This is a friendly fork of the original [hal-rest-client](https://github.com/deblockt/hal-rest-client) repository.
 Reason for doing this: the original repository has been archived and is showing some severe vulnerabilities.
 
-## What I did:
+## What I did
+
 * updated the dependencies (the main reason I forked)
 * switched from tslint to eslint and linted the sources (causing a lot of work and I still had to throw a few eslint-disable's in)
 * switched the testing framework to jest
 * avoid the use of ```any``` and ```object``` whenever possible
 
-## What I intend to do (without the intention to invest lots of time):
+## What I intend to do (without the intention to invest lots of time)
+
 * Do some more clean-up where appropriate
 * Adapt and extend the library to my own needs and any changes (although not probable) in the HAL-Specification
 * Correct bugs (feel free to create an issue if you find one)
 
 ## Pull requests
+
 I am willing to merge any useful Pull Request (feel free to create them), if:
-  * the change is covered by new tests
-  * the implementation is compliant to the [Hal-Specification](https://datatracker.ietf.org/doc/html/draft-kelly-json-hal)
-  * no unecessary dependencies are introduced
+
+* the change is covered by new tests
+* the implementation is compliant to the [Hal-Specification](https://datatracker.ietf.org/doc/html/draft-kelly-json-hal)
+* no unecessary dependencies are introduced
+
 The decision to merge is taken at my own discretion.
 
 ## Install
-Using npm :
 
-```
+Using npm:
+
+```bash
 npm install @jbouduin/hal-rest-client
 ```
 
 ## How to use (mostly original documentation - to be updated as there are some breaking changes)
 
 The library provide two access method :
+
 1. use generic object `HalResource` to map service return
 2. map service return on typescript object `model`
 
@@ -62,25 +69,30 @@ const resource = await client.fetchResource("http://exemple.com/api/resources/5"
 or
 const resource = await client.fetchResource("/resources/5");
 ```
+
 > fetchResource return a promise. you can use `then` and `catch` to get result.
 you can get resource property, embedded property or link using `prop` method.
+
 ``` ts
 const name = resource.prop("name");
 const resourceURI = resource.uri;
 ```
+
 for a link, on `link` service return
+
 ```ts
 const link = resource.prop("link_name");
 // or
 const link = resource.link("link_name");
 ```
+
 > link attribute type is `HalResource`
 
-#### Follow a link
+#### Follow a link (2)
 
 Links are made to be followed. So you can simply fetch a link using `fetch` method.
-``` ts
 
+``` ts
 const link = resource.link("link_name");
 await link.fetch();
 const name = link.prop("name");
@@ -99,6 +111,7 @@ const name = link.prop("name");
 #### Follow a templated link
 
 If you link is templated, you can set parameter to fetch to compute fetch URL.
+
 ```ts
 // link "link_name" is a templated link like this
 // /bookings{?projection}
@@ -106,6 +119,7 @@ const link = resource.link("link_name");
 const bookings = await link.fetch(); // fetch /bookings
 const bookingsWithName = await link.fetch({projection : "name"}); // fetch /bookings?projection=name
 ```
+
 ```ts
 // link "link_infos" is like this
 // /infos{/path*}
@@ -113,7 +127,6 @@ const link = resource.link("link_infos");
 const infos = await link.fetch(); // fetch /infos
 const infosForFoo = await link.fetch({path: "foo"});
 ```
-
 
 #### Links as props
 
@@ -144,14 +157,17 @@ Resource can be updated, and saves with a PATCH query.
 resource.prop("name", "new value");
 await resource.update()
 ```
+
 > update return a promise. use `await` to wait end of update.
 
 To set a link, you can use `prop` or `link` function. the new value for a link must be an `HalResource` populated or not.
+
 ``` ts
 // init an HalResource called newResource
 resource.prop("link_name", newResource);
 await resource.update();
 ```
+
 > on the request send to server, only the uri is sent not all the object.
 
 #### Create a resource
@@ -161,12 +177,14 @@ To create a resource, you must use method `create` on your client.
 ``` ts
 await client.create("/resources", { name: "Thomas" });
 ```
+
 If your server return the new created object as body, you can do this :
+
 ``` ts
 const resource = await client.create("/resources", { name: "Thomas" });
 ```
-> Resource is an HalResource if server return a resource or just json if a simple json is returned
 
+> Resource is an HalResource if server return a resource or just json if a simple json is returned
 
 ### With model usage
 
@@ -196,6 +214,7 @@ class Resource extends HalResource {
 
 }
 ```
+
 > your model musT extends IHalResource
 >
 > each property must be annoted with `@HalProperty`.
@@ -219,6 +238,7 @@ call fetch method
 import { Resource } "./resource.model";
 const resource = await client.fetch("/resource/5", Resource);
 ```
+
 > fetch return a promise. you can use `then` and `catch` to get result. Otherwise you can use `await` see [this article](https://blog.mariusschulz.com/2016/12/09/typescript-2-1-async-await-for-es3-es5)
 
 Read props is simply call object attributes.
@@ -231,21 +251,25 @@ const uri = resource.uri;
 #### Follow a link
 
 links are made to be followed. So you can simply fetch a link using `fetch` method.
+
 ``` ts
 await resource.owner.fetch();
 const ownerName = resource.owner.name;
 ```
+
 > mapped links return an empty `HalResource`, just `uri` is setted. Call `fetch` populate the HalResource.
 >
 > if ower is not a link but an embedded resource, you don't need to call `fetch`. Object is populate with embedded resource
 
 fetch return the fetched object, so you can do that :
+
 ``` ts
 const resourceOwner = await resource.owner.fetch();
 const ownerName = resourceOwner.name;
 ```
 
 you can fetch a templated link like this
+
 ``` ts
 // link "booking" is a templated link like this
 // /bookings{?projection}
@@ -265,19 +289,23 @@ Resource can be updated, and saved with a PATCH query.
 resource.name = "new value";
 await resource.update()
 ```
+
 > update returns a promise. use `await` to wait end of update.
 
 You can set a link, the new value for a link must be a `HalResource` or an other model, populated or not.
+
 ``` ts
 // init an HalResource called newPerson
 resource.owner = newPerson
 await resource.update();
 ```
+
 > when sending the request send to server, only the uri is sent, not the object complete object.
 
 #### create a resource
 
 To create a resource, you have two choices :
+
 1. use `create` method on client
 2. create a resource object and call `create` method on this object
 
@@ -290,9 +318,11 @@ await client.create("/resources", { name: "Thomas" });
 ```
 
 If your server returns the newly created object as body, you can do this :
+
 ``` ts
 const resource = await client.create("/resources", { name: "Thomas" }, Resource);
 ```
+
 > Resource is a Resource object if server return a resource or just json if a simple json is returned
 
 ##### Create a new Object
@@ -305,31 +335,34 @@ const resource = createResource(client, "/resources", Resource);
 ```
 
 After resource creation, set properties
+
 ``` ts
 resource.name = "my resource";
 resource.owner = owner;
 ```
 
 Call `create` method
+
 ``` ts
 const createdResource = await resource.create();
 ```
+
 > if your server returns a newly created object, create return this object. createdResource is of type Resource. Create doesn't populate the existing object.
 
 ## Configuration
 
 ### request configuration
+
 You can configure some parameter on you client.
 HalClient use axios to run ajax request.
 
-You can configure each parameter describe [here](https://github.com/mzabriskie/axios#request-config)
+You can configure each parameter as described in the [Axios documentation](https://github.com/mzabriskie/axios#request-config)
 
 To do, you have two solutions:
 
 ```typescript
 // example to configure CORS withCredentials parameter
 createClient('http://test.fr', {withCredentials : true})
-
 // or
 client.config.withCredentials = true
 ```
@@ -337,8 +370,9 @@ client.config.withCredentials = true
 ### interceptor
 
 You can configure interceptors, you have two interceptor types :
-- request interceptor : configure request information
-- response interceptor: do something with server response. This interceptor is called before object parsing to HalResource
+
+* request interceptor : configure request information
+* response interceptor: do something with server response. This interceptor is called before object parsing to HalResource
 
 ```typescript
 // Add a request interceptor
@@ -365,8 +399,9 @@ halClient.interceptors.response.use(function (response) {
 ### Client creation
 
 Two parameters can be used for create a client.
-- The base URI. fetchs are done with this base
-- A header. All request are done with this header
+
+* The base URI. fetchs are done with this base
+* A header. All request are done with this header
 
 a base URL can be used to fetch resources.
 
@@ -376,6 +411,7 @@ const client = await createClient('http://foo.bar');
 ```
 
 header can be set to HalRestClient
+
 ``` ts
 const client = await createClient('http://foo.bar', {'headers' : {'authorization': 'Basic Auth'}});
 // or
@@ -395,8 +431,9 @@ client.setJsonParser(myParser);
 
 `HalProperty` annotation is used to map model with service body.
 HalProperty have two parameters:
-- name of property on service body. default it's the same name
-- type. model to use for embedded or link.
+
+* name of property on service body. default it's the same name
+* type. model to use for embedded or link.
 
 ``` ts
 @HalProperty("property-name")
@@ -419,6 +456,7 @@ client.fetchResource('http://test.fr/resources/5');
 #### fetch
 
 Fetch a service and return a model class. Parameter is the URI and model class.
+
 ``` ts
 client.fetch('/resources/5', Resource);
 // or
@@ -429,8 +467,9 @@ client.fetch('http://test.fr/resources/5', Resource);
 
 Fetch an array service. Return an array of object (HalResource or model class).
 The service can return :
-- A simple array of HAL resources
-- A HAL resource containing a list of HAL resource on \_embedded
+
+* A simple array of HAL resources
+* A HAL resource containing a list of HAL resource on \_embedded
 
 ``` ts
 client.fetchArray('/resources', Resource);
@@ -452,5 +491,5 @@ const result = await resource.update({
 });
 ```
 
-- parseProp : parse a simple property (not a HalResource)
-- parseResource : parse a HalResource or model class
+* parseProp : parse a simple property (not a HalResource)
+* parseResource : parse a HalResource or model class
