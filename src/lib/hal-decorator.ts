@@ -39,9 +39,8 @@ function getOrCreateMetaData(metaDataKey: string, target: object): object {
  * @param {IHalPropertyOptions} options - the {@link IHalPropertyOptions} for the property
  * @returns {Function} -
  */
-export function HalProperty<T extends IHalResource>(
-  options: IHalPropertyOptions<T> = {}):
-  (targetHalResource: object, propertyName: string) => void {
+export function HalProperty<T extends IHalResource>(options: IHalPropertyOptions<T> = {}):
+(targetHalResource: object, propertyName: string) => void {
   return (targetHalResource: object, propertyName: string) => {
     const baseType = Reflect.getMetadata("design:type", targetHalResource, propertyName);
 
